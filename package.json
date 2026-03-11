@@ -1,0 +1,68 @@
+{
+  "name": "custom-intellij-nav",
+  "displayName": "custom-intellij-nav",
+  "description": "IntelliJ-style Go to Declaration or Usages for VS Code.",
+  "version": "0.0.1",
+  "publisher": "jungsehui",
+  "engines": {
+    "vscode": "^1.106.0"
+  },
+  "categories": [
+    "Keymaps",
+    "Other"
+  ],
+  "keywords": [
+    "intellij",
+    "navigation",
+    "declaration",
+    "usages",
+    "keymap"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jungsehui/custom-intellij-nav.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jungsehui/custom-intellij-nav/issues"
+  },
+  "homepage": "https://github.com/jungsehui/custom-intellij-nav#readme",
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "intellij.goToDeclarationOrUsages",
+        "title": "Go to Declaration or Usages",
+        "category": "IntelliJ Navigation"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "check": "tsc --noEmit -p ./",
+    "package:vsix": "vsce package",
+    "deploy": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.106.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
+    "eslint": "^9.32.0",
+    "typescript": "^5.9.2",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1"
+  }
+}
