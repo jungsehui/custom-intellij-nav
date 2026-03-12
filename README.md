@@ -1,71 +1,73 @@
-# custom-intellij-nav README
+# Custom IntelliJ Navigation
 
-This is the README for your extension "custom-intellij-nav". After writing up a brief description, we recommend including the following sections.
+IntelliJ-style **Go to Declaration or Usages** for VS Code.
 
-## Features
+## What it does
+This extension provides a custom command:
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- `IntelliJ Navigation: Go to Declaration or Usages`
 
-For example if there is an image subfolder under your extension project workspace:
+Behavior:
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Try **Go to Declaration** first.
+2. If an external declaration exists, navigate to it.
+3. If declaration resolves to the current location, show **Usages** in a peek view.
+4. If no declaration exists, try **Go to Definition**.
+5. If definition also resolves to the current location, show **Usages**.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Why this extension exists
+VS Code splits navigation into separate actions such as:
 
-## Requirements
+- Go to Definition
+- Go to Declaration
+- Find References
+- Peek References
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+This extension combines those behaviors to approximate IntelliJ IDEA's `⌘B` experience.
 
-## Extension Settings
+## Command
+- `intellij.goToDeclarationOrUsages`
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Recommended keybinding (macOS)
+Add this to your `keybindings.json`:
 
-For example:
+```json
+{
+  "key": "cmd+b",
+  "command": "-workbench.action.toggleSidebarVisibility"
+},
+{
+  "key": "cmd+b",
+  "command": "-editor.action.goToDeclaration",
+  "when": "editorTextFocus"
+},
+{
+  "key": "cmd+b",
+  "command": "intellij.goToDeclarationOrUsages",
+  "when": "editorTextFocus"
+}
+```
 
-This extension contributes the following settings:
+## Local development
+```bash
+npm install
+npm run check
+npm run compile
+```
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+Then press `F5` in VS Code to open an **Extension Development Host** window.
 
-## Known Issues
+## Packaging
+Requires Node.js 20+.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+```bash
+npm run check
+npm run compile
+npx vsce package
+```
 
-## Release Notes
+## Publish
+Publishing to the Visual Studio Marketplace requires a Marketplace publisher and a Personal Access Token (PAT).
 
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+## Status
+Experimental. Tested first with a small TypeScript sample workspace before real-project integration.

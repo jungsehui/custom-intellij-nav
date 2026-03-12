@@ -1,9 +1,10 @@
 {
   "name": "custom-intellij-nav",
-  "displayName": "custom-intellij-nav",
+  "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style Go to Declaration or Usages for VS Code.",
   "version": "0.0.1",
   "publisher": "jungsehui",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "vscode": "^1.106.0"
   },
@@ -26,7 +27,6 @@
     "url": "https://github.com/jungsehui/custom-intellij-nav/issues"
   },
   "homepage": "https://github.com/jungsehui/custom-intellij-nav#readme",
-  "activationEvents": [],
   "main": "./out/extension.js",
   "capabilities": {
     "untrustedWorkspaces": {

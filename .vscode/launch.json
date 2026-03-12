@@ -2,20 +2,71 @@
 // Use IntelliSense to learn about possible attributes.
 // Hover to view descriptions of existing attributes.
 // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+// {
+// 	"version": "0.2.0",
+// 	"configurations": [
+// 		{
+// 			"name": "Run Extension",
+// 			"type": "extensionHost",
+// 			"request": "launch",
+// 			"args": [
+// 				"--extensionDevelopmentPath=${workspaceFolder}"
+// 			],
+// 			"outFiles": [
+// 				"${workspaceFolder}/out/**/*.js"
+// 			],
+// 			"preLaunchTask": "${defaultBuildTask}"
+// 		}
+// 	]
+// }
+
+// {
+//   "version": "0.2.0",
+//   "configurations": [
+//     {
+//       "name": "Run Extension",
+//       "type": "extensionHost",
+//       "request": "launch",
+//       "args": [
+//         "${workspaceFolder}/sample-workspace",
+//         "--extensionDevelopmentPath=${workspaceFolder}"
+//       ],
+//       "outFiles": [
+//         "${workspaceFolder}/out/**/*.js"
+//       ],
+//       "preLaunchTask": "${defaultBuildTask}"
+//     }
+//   ]
+// }
+
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"name": "Run Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
-			],
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"preLaunchTask": "${defaultBuildTask}"
-		}
-	]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension (Sample Workspace)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "${workspaceFolder}/sample-workspace",
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
+      "name": "Run Extension (Linkareer Workspace)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "/Users/linkareer_123/linkareer/linkareer.code-workspace",
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "preLaunchTask": "${defaultBuildTask}"
+    }
+  ]
 }

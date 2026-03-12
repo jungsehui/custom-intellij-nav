@@ -3,3 +3,13 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+
+.vscode/**
+src/**
+sample-workspace/**
+out/test/**
+tsconfig.json
+eslint.config.mjs
+.vscode-test.mjs
+vsc-extension-quickstart.md
+**/*.map

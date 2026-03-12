@@ -306,6 +306,12 @@ class IntelliJNavigator implements vscode.Disposable {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  console.log("[custom-intellij-nav] activate");
+  vscode.window.setStatusBarMessage(
+    "Custom IntelliJ Navigation activated",
+    1500,
+  );
+
   const navigator = new IntelliJNavigator();
 
   context.subscriptions.push(
