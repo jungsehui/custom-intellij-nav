@@ -40,6 +40,95 @@
         "title": "Go to Declaration or Usages",
         "category": "IntelliJ Navigation"
       }
+    ],
+    "configuration": {
+      "title": "Custom IntelliJ Navigation",
+      "properties": {
+        "customIntellijNav.enableBundledMacKeymap": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable the bundled macOS keybinding for IntelliJ-style cmd+b navigation."
+        },
+        "customIntellijNav.enableExtendedMacKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable additional macOS keybindings beyond the primary cmd+b binding. Some shortcuts can still overlap with built-in VS Code or third-party keymaps."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "intellij.goToDeclarationOrUsages",
+        "key": "ctrl+b",
+        "mac": "cmd+b",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableBundledMacKeymap"
+      },
+      {
+        "command": "editor.action.goToTypeDefinition",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "isMac && editorHasTypeDefinitionProvider && editorTextFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "workbench.action.showAllSymbols",
+        "key": "ctrl+alt+shift+n",
+        "mac": "cmd+alt+shift+n",
+        "when": "isMac && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "explorer.newFile",
+        "key": "ctrl+n",
+        "mac": "cmd+n",
+        "when": "isMac && explorerViewletFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "explorer.newFolder",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+n",
+        "when": "isMac && explorerViewletFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "workbench.view.explorer",
+        "key": "ctrl+1",
+        "mac": "cmd+1",
+        "when": "isMac && !sideBarFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "workbench.action.toggleSidebarVisibility",
+        "key": "ctrl+1",
+        "mac": "cmd+1",
+        "when": "isMac && sideBarFocus && activeViewlet == 'workbench.view.explorer' && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "workbench.action.splitEditor",
+        "key": "ctrl+\\",
+        "mac": "cmd+\\",
+        "when": "isMac && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "testing.runAtCursor",
+        "key": "ctrl+shift+r",
+        "mac": "ctrl+shift+r",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "testing.debugAtCursor",
+        "key": "ctrl+shift+d",
+        "mac": "ctrl+shift+d",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "editor.action.addSelectionToNextFindMatch",
+        "key": "alt+j",
+        "mac": "alt+j",
+        "when": "isMac && editorFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "editor.action.selectHighlights",
+        "key": "ctrl+alt+g",
+        "mac": "cmd+ctrl+g",
+        "when": "isMac && editorFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      }
     ]
   },
   "scripts": {
