@@ -14,3 +14,14 @@ sample-workspace/**
 out/test/**
 .vscode-test.mjs
 
+# Workspace tooling artifacts (not part of the published extension)
+.omc/**
+.planning/**
+.claude/**
+.cursor/**
+.idea/**
+.github/**
+node_modules/**
+*.vsix
+.DS_Store
+

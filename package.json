@@ -1,8 +1,8 @@
 {
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
-  "description": "IntelliJ-style Go to Declaration or Usages for VS Code.",
-  "version": "0.0.1",
+  "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
+  "version": "1.0.0",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -39,6 +39,26 @@
         "command": "intellij.goToDeclarationOrUsages",
         "title": "Go to Declaration or Usages",
         "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.extractVariable",
+        "title": "Extract Variable",
+        "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.extractMethod",
+        "title": "Extract Method",
+        "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.extractConstant",
+        "title": "Extract Constant",
+        "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.inline",
+        "title": "Inline",
+        "category": "IntelliJ Navigation"
       }
     ],
     "configuration": {
@@ -53,6 +73,56 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable additional macOS keybindings beyond the primary cmd+b binding. Some shortcuts can still overlap with built-in VS Code or third-party keymaps."
+        },
+        "customIntellijNav.showErrorToasts": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Show error toasts when provider calls fail. Disabled by default to avoid noise from TypeScript server hiccups (vue.volar inlay hint internal failures, etc). Errors are always written to the `Custom IntelliJ Navigation` output channel."
+        },
+        "customIntellijNav.showRefactorNotifications": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Show information notifications when an Extract refactoring (cmd+opt+v/m/c/n) cannot be applied at the current cursor position. Helps disambiguate 'extension not invoked' from 'TS Language Service has no action at this position'. Set to `false` to silence."
+        },
+        "customIntellijNav.enableEditingKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style editing keys (cmd+/ comment, cmd+d duplicate, cmd+backspace delete line, alt+up/down expand/shrink, cmd+alt+l format, etc). Disable `IntelliJ IDEA Keybindings` (k--kato) extension to avoid conflicts."
+        },
+        "customIntellijNav.enableNavigationKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style navigation keys (cmd+e recent files, cmd+l go to line, cmd+f12 file structure, cmd+alt+left/right back/forward, alt+f7 find usages, etc)."
+        },
+        "customIntellijNav.enableSearchKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style search keys (cmd+shift+a find action, cmd+shift+space search everywhere chord, cmd+r replace, cmd+shift+f find in files, etc)."
+        },
+        "customIntellijNav.enableRefactoringKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style refactoring keys (shift+f6 rename, f6 move, etc). Extract Variable/Method/Constant/Inline are controlled by `enableExtendedMacKeymap`."
+        },
+        "customIntellijNav.enableVcsKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style VCS keys (cmd+k commit, cmd+alt+k push, cmd+t pull, cmd+alt+z revert). cmd+alt+z reverts selected ranges — use with care."
+        },
+        "customIntellijNav.enableToolWindowKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style tool window keys (cmd+3 search view, cmd+5 debug, cmd+9 scm, cmd+0 problems, alt+f12 terminal)."
+        },
+        "customIntellijNav.enableExplorerTreeKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style ← / → navigation in the Explorer tree. Expanded folder collapses on ←; collapsed folder / file moves focus up. Mirrored for →. Off by default since it overrides VS Code's standard list expand/collapse behavior."
+        },
+        "customIntellijNav.enableDebuggingKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style debugging keys (f7 step into, f8 step over, shift+f8 step out, cmd+f8 toggle breakpoint, cmd+f2 stop, cmd+alt+r resume, alt+f9 run to cursor, ctrl+d start debugging)."
         }
       }
     },
@@ -128,6 +198,408 @@
         "key": "ctrl+alt+g",
         "mac": "cmd+ctrl+g",
         "when": "isMac && editorFocus && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "intellij.extractVariable",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "intellij.extractMethod",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "intellij.extractConstant",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "intellij.inline",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableExtendedMacKeymap"
+      },
+      {
+        "command": "editor.action.commentLine",
+        "key": "ctrl+/",
+        "mac": "cmd+/",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.blockComment",
+        "key": "ctrl+shift+/",
+        "mac": "cmd+alt+/",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.formatDocument",
+        "key": "ctrl+alt+l",
+        "mac": "cmd+alt+l",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.organizeImports",
+        "key": "ctrl+alt+o",
+        "mac": "ctrl+alt+o",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.copyLinesDownAction",
+        "key": "ctrl+d",
+        "mac": "cmd+d",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.deleteLines",
+        "key": "ctrl+y",
+        "mac": "cmd+backspace",
+        "when": "isMac && textInputFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.moveLinesUpAction",
+        "key": "shift+alt+up",
+        "mac": "shift+alt+up",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.moveLinesDownAction",
+        "key": "shift+alt+down",
+        "mac": "shift+alt+down",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.smartSelect.expand",
+        "key": "ctrl+w",
+        "mac": "alt+up",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.smartSelect.shrink",
+        "key": "ctrl+shift+w",
+        "mac": "alt+down",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.quickFix",
+        "key": "alt+enter",
+        "mac": "alt+enter",
+        "when": "isMac && editorHasCodeActionsProvider && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.insertLineAfter",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.transformToUppercase",
+        "key": "ctrl+shift+u",
+        "mac": "cmd+shift+u",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.triggerParameterHints",
+        "key": "ctrl+p",
+        "mac": "cmd+p",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.showHover",
+        "key": "ctrl+q",
+        "mac": "ctrl+j",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "workbench.action.closeActiveEditor",
+        "key": "ctrl+f4",
+        "mac": "cmd+w",
+        "when": "isMac && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "workbench.action.openRecent",
+        "key": "ctrl+e",
+        "mac": "cmd+e",
+        "when": "isMac && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.gotoLine",
+        "key": "ctrl+g",
+        "mac": "cmd+l",
+        "when": "isMac && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.gotoSymbol",
+        "key": "ctrl+f12",
+        "mac": "cmd+f12",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.quickOpen",
+        "key": "ctrl+n",
+        "mac": "cmd+o",
+        "when": "isMac && !explorerViewletFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.quickOpen",
+        "key": "ctrl+shift+n",
+        "mac": "cmd+shift+o",
+        "when": "isMac && !explorerViewletFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "editor.action.referenceSearch.trigger",
+        "key": "alt+f7",
+        "mac": "alt+f7",
+        "when": "isMac && editorHasReferenceProvider && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "editor.action.referenceSearch.trigger",
+        "key": "ctrl+f7",
+        "mac": "cmd+f7",
+        "when": "isMac && editorHasReferenceProvider && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.navigateBack",
+        "key": "ctrl+alt+left",
+        "mac": "cmd+alt+left",
+        "when": "isMac && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.navigateForward",
+        "key": "ctrl+alt+right",
+        "mac": "cmd+alt+right",
+        "when": "isMac && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.navigateToLastEditLocation",
+        "key": "ctrl+shift+backspace",
+        "mac": "cmd+shift+backspace",
+        "when": "isMac && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "editor.action.goToImplementation",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
+        "when": "isMac && editorHasImplementationProvider && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "editor.action.marker.next",
+        "key": "f2",
+        "mac": "f2",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "editor.action.marker.prev",
+        "key": "shift+f2",
+        "mac": "shift+f2",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.gotoPrevSymbol",
+        "key": "alt+up",
+        "mac": "ctrl+up",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.gotoNextSymbol",
+        "key": "alt+down",
+        "mac": "ctrl+down",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "editor.action.jumpToBracket",
+        "key": "ctrl+]",
+        "mac": "cmd+]",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+      },
+      {
+        "command": "workbench.action.showCommands",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a",
+        "when": "isMac && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "workbench.action.quickOpen",
+        "key": "ctrl+shift+space",
+        "mac": "cmd+shift+space",
+        "when": "isMac && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "editor.action.startFindReplaceAction",
+        "key": "ctrl+r",
+        "mac": "cmd+r",
+        "when": "isMac && editorFocus && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "workbench.action.findInFiles",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f",
+        "when": "isMac && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "workbench.action.replaceInFiles",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+r",
+        "when": "isMac && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "editor.action.rename",
+        "key": "shift+f6",
+        "mac": "shift+f6",
+        "when": "isMac && editorHasRenameProvider && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+      },
+      {
+        "command": "workbench.action.files.move",
+        "key": "f6",
+        "mac": "f6",
+        "when": "isMac && config.customIntellijNav.enableRefactoringKeymap"
+      },
+      {
+        "command": "git.commit",
+        "key": "ctrl+alt+k",
+        "mac": "cmd+k",
+        "when": "isMac && scmProvider == 'git' && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "git.push",
+        "key": "ctrl+shift+k",
+        "mac": "cmd+alt+k",
+        "when": "isMac && scmProvider == 'git' && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "git.pull",
+        "key": "ctrl+t",
+        "mac": "cmd+t",
+        "when": "isMac && scmProvider == 'git' && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "git.revertSelectedRanges",
+        "key": "ctrl+alt+z",
+        "mac": "cmd+alt+z",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "workbench.view.search",
+        "key": "alt+3",
+        "mac": "cmd+3",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.view.debug",
+        "key": "alt+5",
+        "mac": "cmd+5",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.view.scm",
+        "key": "alt+9",
+        "mac": "cmd+9",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.actions.view.problems",
+        "key": "alt+0",
+        "mac": "cmd+0",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.action.terminal.toggleTerminal",
+        "key": "alt+f12",
+        "mac": "alt+f12",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "-list.collapse",
+        "key": "left",
+        "when": "listFocus && !inputFocus && config.customIntellijNav.enableExplorerTreeKeymap"
+      },
+      {
+        "command": "-list.expand",
+        "key": "right",
+        "when": "listFocus && !inputFocus && config.customIntellijNav.enableExplorerTreeKeymap"
+      },
+      {
+        "command": "list.collapse",
+        "key": "left",
+        "when": "listFocus && !inputFocus && treeElementCanCollapse && config.customIntellijNav.enableExplorerTreeKeymap"
+      },
+      {
+        "command": "list.focusUp",
+        "key": "left",
+        "when": "listFocus && !inputFocus && !treeElementCanCollapse && config.customIntellijNav.enableExplorerTreeKeymap"
+      },
+      {
+        "command": "list.expand",
+        "key": "right",
+        "when": "listFocus && !inputFocus && treeElementCanExpand && config.customIntellijNav.enableExplorerTreeKeymap"
+      },
+      {
+        "command": "list.focusDown",
+        "key": "right",
+        "when": "listFocus && !inputFocus && !treeElementCanExpand && config.customIntellijNav.enableExplorerTreeKeymap"
+      },
+      {
+        "command": "git-graph.view",
+        "key": "ctrl+alt+shift+g",
+        "mac": "cmd+alt+shift+g",
+        "when": "isMac && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "editor.action.joinLines",
+        "key": "ctrl+shift+j",
+        "mac": "ctrl+shift+j",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "workbench.action.debug.stepInto",
+        "key": "f7",
+        "mac": "f7",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.action.debug.stepOver",
+        "key": "f8",
+        "mac": "f8",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.action.debug.stepOut",
+        "key": "shift+f8",
+        "mac": "shift+f8",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.action.debug.stop",
+        "key": "ctrl+f2",
+        "mac": "cmd+f2",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "editor.debug.action.toggleBreakpoint",
+        "key": "ctrl+f8",
+        "mac": "cmd+f8",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.action.debug.continue",
+        "key": "f9",
+        "mac": "cmd+alt+r",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "editor.debug.action.runToCursor",
+        "key": "alt+f9",
+        "mac": "alt+f9",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.action.debug.start",
+        "key": "ctrl+d",
+        "mac": "ctrl+d",
+        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
       }
     ]
   },

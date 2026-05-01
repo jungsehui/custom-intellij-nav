@@ -5,11 +5,15 @@ node_modules
 *.vsix
 
 .vscode/**
-src/**
 sample-workspace/**
 out/test/**
-tsconfig.json
-eslint.config.mjs
 .vscode-test.mjs
 vsc-extension-quickstart.md
 **/*.map
+
+# IDE / workspace tooling metadata (not part of repo)
+.idea/
+.planning/
+.omc/
+.claude/
+.cursor/
