@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'changed=$(git -C \"$CLAUDE_PROJECT_DIR\" diff --name-only HEAD 2>/dev/null; git -C \"$CLAUDE_PROJECT_DIR\" diff --name-only --cached 2>/dev/null) && if echo \"$changed\" | grep -qE \"^(src/|package\\.json|\\.github/workflows/)\" && ! echo \"$changed\" | grep -qE \"^(README\\.md|CHANGELOG\\.md|CLAUDE\\.md|\\.claude/)\"; then echo \"\\n[keep-docs-current] Code changed but docs (README/CHANGELOG/.claude/) were not updated this session. Consider running /docs-sync before wrapping.\\n\"; fi'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(npm run check)",
+      "Bash(npm run compile)",
+      "Bash(npm run lint)",
+      "Bash(node -e:*)",
+      "Bash(node -p:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)"
+    ]
+  }
+}

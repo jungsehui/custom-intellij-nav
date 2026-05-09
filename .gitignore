@@ -15,5 +15,8 @@ vsc-extension-quickstart.md
 .idea/
 .planning/
 .omc/
-.claude/
 .cursor/
+
+# .claude/ is tracked — it's the AI session context for this repo.
+# Only ignore user-local overrides under .claude/local/.
+.claude/local/
