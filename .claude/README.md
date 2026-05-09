@@ -12,6 +12,7 @@ machines.
 ├── architecture.md      # module graph, domain layers, critical flows
 ├── workflows.md         # build, package, install, release, gh quirks
 ├── conventions.md       # DO / DON'T rules, code style
+├── multi-ai-playbook.md # when to reach for ccg/ultrawork/sub-agents
 ├── settings.json        # hooks (docs-staleness reminder) + permissions
 ├── commands/
 │   ├── ship.md          # /ship — dev iteration loop

@@ -24,6 +24,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 | What's the current state, what's next? | `.claude/handoff/` (latest dated file) |
 | What slash commands does this repo provide? | `.claude/commands/` |
 | What skills auto-trigger? | `.claude/skills/` |
+| When should I reach for ccg / ultrawork / sub-agents? | `.claude/multi-ai-playbook.md` |
 
 ## Hard rules
 
