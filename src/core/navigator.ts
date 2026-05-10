@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import type { IntelliJAction } from "../types";
-import { goToDeclarationOrUsages } from "../navigation/goToDeclaration";
-import { runRefactor } from "../refactor/runRefactor";
+import { goToDeclarationOrUsages } from "../navigation/go-to-declaration";
+import { runRefactor } from "../refactor/run-refactor";
 import { Logger } from "./logger";
 
 /**

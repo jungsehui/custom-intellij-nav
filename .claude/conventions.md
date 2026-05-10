@@ -63,8 +63,54 @@
 - Imports: relative paths. No path aliases (extension hosts can be
   picky).
 - File header JSDoc on the main exported symbol of every file. The big
-  comment in `runRefactor.ts` and `languageActionTable.ts` is the
+  comment in `run-refactor.ts` and `language-action-table.ts` is the
   template.
 - Korean comments are fine for inline rationale; English for exported
   doc-comments (so users reading the source from the Marketplace
   install dir can follow).
+
+## TypeScript naming conventions (2026, project-wide)
+
+The 2026 community consensus is **kebab-case for file and folder names,
+PascalCase for type-shaped exports, camelCase for value-shaped exports.**
+This repo follows that. References:
+
+- [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) (Google uses lowercase with `_`; we standardize on `-` for cross-OS safety on case-insensitive filesystems like macOS APFS)
+- [Angular Style Guide — symbols and file names](https://angular.dev/style-guide) (canonical `<feature>.<role>.ts` kebab-case)
+- [Biome `useFilenamingConvention`](https://biomejs.dev/linter/rules/use-filenaming-convention/) (lints this automatically)
+
+### File & folder names
+
+| Kind | Style | Example |
+|---|---|---|
+| Source file | `kebab-case.ts` | `go-to-declaration.ts`, `language-action-table.ts` |
+| Folder | `kebab-case` | `src/navigation/`, `src/refactor/` |
+| Test file | `<name>.test.ts` | `extension.test.ts` |
+| Single-word file | `lowercase.ts` (still kebab-compliant) | `types.ts`, `logger.ts`, `config.ts` |
+| Domain entry (optional) | `<domain>.<role>.ts` | (not used here — folders carry the domain) |
+| React component (if ever added) | `PascalCase.tsx` | `StatusBarItem.tsx` |
+| Markdown / docs | `UPPERCASE.md` for top-level conventions (`README.md`, `CHANGELOG.md`, `LICENSE.txt`); `kebab-case.md` inside `.claude/` and `docs/` |
+
+### Identifiers inside files
+
+| Kind | Style | Example |
+|---|---|---|
+| Class / Interface / Type alias / Enum | `PascalCase` | `IntelliJNavigator`, `EditorSnapshot`, `IntelliJAction` |
+| Variable / function / method / parameter | `camelCase` | `runRefactor`, `latestRequestId`, `getShowErrorToasts` |
+| Module-level constant (treated as compile-time literal) | `SCREAMING_SNAKE_CASE` | `LANGUAGE_ACTION_TABLE`, `OUTPUT_CHANNEL_NAME`, `COMMAND_ID` |
+| Boolean | prefix `is` / `has` / `should` / `can` | `isStale`, `hasReferences` |
+| Private fields | `camelCase` (TypeScript `private` modifier — no underscore prefix) | `this.logger`, `this.latestRequestId` |
+
+### When you rename a file
+
+1. `git mv old-name.ts new-name.ts` — never plain `mv` (case-insensitive FS will silently miss the change).
+2. Update **every relative import** that references the file. Hunt them with `grep -rn "old-name" src/`.
+3. Run `npm run check` to catch missed imports.
+4. Commit the rename + import updates in one atomic commit so reviewers can `git log --follow` cleanly.
+
+### Don't
+
+- Don't use `camelCase` for file names (`runRefactor.ts` ❌ → `run-refactor.ts` ✅). The 2026 community has converged on kebab; mixed conventions inside one repo are the worst outcome.
+- Don't use `snake_case` for file names — it's Google's recommendation but breaks the kebab consistency the rest of the JS/TS ecosystem uses.
+- Don't capitalize file names except for PascalCase React components (and we have none).
+- Don't add Hungarian prefixes (`I` for interfaces, `T` for type aliases) — TypeScript's structural typing makes them noise.

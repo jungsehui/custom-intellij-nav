@@ -19,17 +19,18 @@ src/extension.ts (33 LOC) — activate() registers 5 commands
    ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
    ├─ src/core/snapshot.ts (48 LOC) — captureSnapshot() + isStale()
    ├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
-   ├─ src/navigation/goToDeclaration.ts (220 LOC) — cmd+B handler
-   │  └─ src/navigation/locationUtils.ts (68 LOC) — dedupe, normalize
-   └─ src/refactor/runRefactor.ts (84 LOC) — Extract * handler
-      └─ src/refactor/languageActionTable.ts (89 LOC) — per-lang kind table
+   ├─ src/navigation/go-to-declaration.ts (220 LOC) — cmd+B handler
+   │  └─ src/navigation/location-utils.ts (68 LOC) — dedupe, normalize
+   └─ src/refactor/run-refactor.ts (84 LOC) — Extract * handler
+      └─ src/refactor/language-action-table.ts (89 LOC) — per-lang kind table
 src/types.ts (44 LOC) — shared types (RawLocation, IntelliJAction, …)
 ```
 
-No cycles. Each file has one job. Pure helpers (`locationUtils`,
-`snapshot`, `languageActionTable`) take no `vscode` state — they receive
-inputs and return outputs. The class (`IntelliJNavigator`) owns the only
-mutable state (`latestRequestId`) and the only resource handle (`Logger`).
+No cycles. Each file has one job. Pure helpers (`location-utils`,
+`snapshot`, `language-action-table`) take no `vscode` state — they
+receive inputs and return outputs. The class (`IntelliJNavigator`) owns
+the only mutable state (`latestRequestId`) and the only resource handle
+(`Logger`).
 
 ## Domain layers
 

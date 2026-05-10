@@ -14,7 +14,7 @@ import {
   isCurrentLocation,
   normalizeLocations,
   pickGotoBehavior,
-} from "./locationUtils";
+} from "./location-utils";
 
 interface RequestState {
   /** Caller's monotonic counter; incremented for each new request. */

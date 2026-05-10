@@ -35,7 +35,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
    `preferred: true` (matches too narrowly, breaks Extract Method).
 3. **Per-language LSP kind**: TS/JS use `refactor.extract.constant` for Extract
    Variable, not `refactor.extract.variable`. Source of truth is
-   `src/refactor/languageActionTable.ts`.
+   `src/refactor/language-action-table.ts`.
 4. **Build needs Node 22+** (vsce uses undici with global `File`). Use the
    nvm-installed Node 22, not the default Node 18.
 5. **Two GitHub accounts on this machine** — `jungsehui202` is the gh CLI

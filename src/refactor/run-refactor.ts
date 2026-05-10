@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import type { Logger } from "../core/logger";
 import { getShowRefactorNotifications } from "../core/config";
 import type { IntelliJAction } from "../types";
-import { LANGUAGE_ACTION_TABLE } from "./languageActionTable";
+import { LANGUAGE_ACTION_TABLE } from "./language-action-table";
 
 /**
  * Apply an IntelliJ-style refactoring (Extract Variable / Method / Constant /
