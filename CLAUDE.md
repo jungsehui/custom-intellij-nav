@@ -25,6 +25,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 | What slash commands does this repo provide? | `.claude/commands/` |
 | What skills auto-trigger? | `.claude/skills/` |
 | When should I reach for ccg / ultrawork / sub-agents? | `.claude/multi-ai-playbook.md` |
+| What keys are still missing vs IntelliJ? What ships next? | `.claude/roadmap.md` |
 
 ## Hard rules
 
