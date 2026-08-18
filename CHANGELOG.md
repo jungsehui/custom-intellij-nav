@@ -6,6 +6,39 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-05-11
+
+### Fixed
+- **Explorer tree Left arrow jumped to the sibling above instead of the
+  parent folder.** `enableExplorerTreeKeymap` shipped six bindings that
+  removed the built-in `list.collapse` / `list.expand` (via `-command`)
+  and re-implemented them, mapping Left-on-a-file to `list.focusUp`.
+  `list.focusUp` moves to the previous *visible row*, not the parent.
+
+  VS Code's built-in `list.collapse` already implements IntelliJ
+  semantics exactly (`if (!tree.collapse(focus)) focus(parent)`), so the
+  override was strictly worse. All six bindings are replaced by one that
+  fills the only real gap: Right on a leaf file now moves down a row,
+  which the built-in `list.expand` treats as a no-op.
+
+  Net effect on the Explorer tree with `enableExplorerTreeKeymap: true`:
+
+  | Key | Context | Behavior |
+  |---|---|---|
+  | `↑` / `↓` | any | previous / next row |
+  | `←` | expanded folder | collapse in place |
+  | `←` | file or collapsed folder | jump to parent folder |
+  | `→` | collapsed folder | expand |
+  | `→` | expanded folder | move to first child |
+  | `→` | file | move down one row |
+
+### Changed
+- Keybinding count 80 → 75 (six Explorer tree entries collapsed into one).
+- `.vscodeignore` now excludes `CLAUDE.md`, `*.pem`, `*.key`, `*.p12`,
+  `.env*`. A stray `global-bundle.pem` (161 KB AWS RDS CA bundle) sitting
+  in the repo root had been packaged into the v1.0.0 VSIX.
+- `.gitignore` gained the same credential patterns.
+
 ## [1.0.0] — 2026-04-28
 
 First production-ready release. The extension is now a self-contained

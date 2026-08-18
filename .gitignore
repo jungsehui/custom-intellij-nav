@@ -20,3 +20,10 @@ vsc-extension-quickstart.md
 # .claude/ is tracked — it's the AI session context for this repo.
 # Only ignore user-local overrides under .claude/local/.
 .claude/local/
+
+# Secrets and stray credential files
+*.pem
+*.key
+*.p12
+.env
+.env.*

@@ -55,6 +55,59 @@
   built-in. If we add Toggle Fold, do it under `enableEditingKeymap`
   with an explicit user choice.
 
+## Built-in commands often already do the IntelliJ thing
+
+Before mapping a key, **read the VS Code source for the command it would
+replace.** Several built-ins already implement IntelliJ semantics exactly,
+and overriding them makes things worse.
+
+Verified in `src/vs/workbench/browser/actions/listCommands.ts`:
+
+| Built-in | `when` (default) | Actual behavior |
+|---|---|---|
+| `list.collapse` (Left) | `listFocus && (treeElementCanCollapse \|\| treeElementHasParent)` | `if (!tree.collapse(focus)) focus(parent)` — expanded folder collapses in place; file or collapsed folder jumps to **parent** |
+| `list.expand` (Right) | `listFocus && (treeElementCanExpand \|\| treeElementHasChild)` | `if (!widget.expand(focus)) focus(firstChild)` — collapsed folder expands; expanded folder moves to **first child**; leaf does nothing |
+| `list.focusParent` | `listFocus` | Focus parent, never collapses. No default key. |
+
+Tree context keys (`src/vs/platform/list/browser/listService.ts`):
+
+| Key | True when |
+|---|---|
+| `treeElementCanCollapse` | `node.collapsible && !node.collapsed` (expanded folder) |
+| `treeElementCanExpand` | `node.collapsible && node.collapsed` (collapsed folder) |
+| `treeElementHasParent` | `tree.getParentElement(focus)` is truthy |
+| `treeElementHasChild` | `tree.getFirstElementChild(focus)` is truthy |
+
+### The Explorer arrow regression (fixed in v1.0.1)
+
+v1.0.0 shipped six `enableExplorerTreeKeymap` bindings that **removed**
+the built-ins via `-list.collapse` / `-list.expand` and re-implemented
+them. The re-implementation mapped Left-on-a-file to `list.focusUp`,
+which moves to the previous *visible row* (the sibling file above)
+instead of the parent folder. That silently broke the exact IntelliJ
+behavior the category was supposed to provide.
+
+The correct config is **one** binding, because the built-ins cover
+everything else:
+
+```json
+{
+  "command": "list.focusDown",
+  "key": "right",
+  "when": "listFocus && !inputFocus && !treeElementCanExpand && !treeElementHasChild && config.customIntellijNav.enableExplorerTreeKeymap"
+}
+```
+
+`!treeElementCanExpand && !treeElementHasChild` matches leaves only, so
+it fills the one gap (built-in Right does nothing on a file) without
+touching folder behavior. This is a deliberate divergence from IntelliJ,
+where Right on a file is a no-op.
+
+**Rule: never use a `-command` removal for a built-in `list.*` or
+`editor.*` command unless you have read its handler and confirmed the
+replacement is strictly better.** Adding a narrowly-scoped `when` rule
+that fills a gap beats replacing a whole command.
+
 ## Style
 
 - TypeScript strict mode (`tsconfig.json` is permissive — strict is

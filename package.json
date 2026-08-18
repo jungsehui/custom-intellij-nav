@@ -2,7 +2,7 @@
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -512,34 +512,9 @@
         "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
       },
       {
-        "command": "-list.collapse",
-        "key": "left",
-        "when": "listFocus && !inputFocus && config.customIntellijNav.enableExplorerTreeKeymap"
-      },
-      {
-        "command": "-list.expand",
-        "key": "right",
-        "when": "listFocus && !inputFocus && config.customIntellijNav.enableExplorerTreeKeymap"
-      },
-      {
-        "command": "list.collapse",
-        "key": "left",
-        "when": "listFocus && !inputFocus && treeElementCanCollapse && config.customIntellijNav.enableExplorerTreeKeymap"
-      },
-      {
-        "command": "list.focusUp",
-        "key": "left",
-        "when": "listFocus && !inputFocus && !treeElementCanCollapse && config.customIntellijNav.enableExplorerTreeKeymap"
-      },
-      {
-        "command": "list.expand",
-        "key": "right",
-        "when": "listFocus && !inputFocus && treeElementCanExpand && config.customIntellijNav.enableExplorerTreeKeymap"
-      },
-      {
         "command": "list.focusDown",
         "key": "right",
-        "when": "listFocus && !inputFocus && !treeElementCanExpand && config.customIntellijNav.enableExplorerTreeKeymap"
+        "when": "listFocus && !inputFocus && !treeElementCanExpand && !treeElementHasChild && config.customIntellijNav.enableExplorerTreeKeymap"
       },
       {
         "command": "git-graph.view",

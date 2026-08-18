@@ -18,10 +18,18 @@ out/test/**
 .omc/**
 .planning/**
 .claude/**
+CLAUDE.md
 .cursor/**
 .idea/**
 .github/**
 node_modules/**
 *.vsix
 .DS_Store
+
+# Stray local files that must never ship to the Marketplace
+*.pem
+*.key
+*.p12
+.env
+.env.*
 

@@ -117,6 +117,34 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌘3` / `⌘5` / `⌘9` / `⌘0` | Search / Debug / SCM / Problems |
 | `⌥F12` | Toggle Terminal |
 
+#### Debugging (`enableDebuggingKeymap`)
+| Mac key | IntelliJ action |
+|---|---|
+| `F8` / `F7` / `⇧F8` | Step Over / Step Into / Step Out |
+| `⌘F8` | Toggle Breakpoint |
+| `⌥F9` | Run to Cursor |
+| `⌘⌥R` | Resume Program |
+| `⌘F2` | Stop |
+
+#### Explorer tree (`enableExplorerTreeKeymap`)
+
+IntelliJ Project view arrow navigation. Most of this is VS Code's
+built-in behavior, which already matches IntelliJ; the toggle adds the
+one binding that fills the gap.
+
+| Key | Context | Behavior |
+|---|---|---|
+| `↑` / `↓` | any | previous / next row |
+| `←` | expanded folder | collapse in place |
+| `←` | file or collapsed folder | jump to **parent folder** |
+| `→` | collapsed folder | expand |
+| `→` | expanded folder | move to first child |
+| `→` | file | move down one row **(added by this toggle)** |
+
+The last row is a deliberate divergence from IntelliJ, where `→` on a
+file is a no-op. It lets you walk the whole tree downward with `→`
+alone, expanding folders as you meet them.
+
 ## Settings
 
 ```json
@@ -129,7 +157,10 @@ Optional keymap categories (each independently toggleable via settings, default 
   "customIntellijNav.enableRefactoringKeymap": true,
   "customIntellijNav.enableVcsKeymap": true,
   "customIntellijNav.enableToolWindowKeymap": true,
-  "customIntellijNav.showErrorToasts": false
+  "customIntellijNav.enableExplorerTreeKeymap": true,
+  "customIntellijNav.enableDebuggingKeymap": true,
+  "customIntellijNav.showErrorToasts": false,
+  "customIntellijNav.showRefactorNotifications": true
 }
 ```
 
