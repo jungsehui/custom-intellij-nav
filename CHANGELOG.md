@@ -6,6 +6,86 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-05-11
+
+Navigation and Search. Coverage 53.8% → 65.8% of the IntelliJ Mac keymap.
+Keybindings 109 → 132. Navigation 16 → 36, Search 7 → 10.
+
+### Measured first, again
+
+Same procedure as v1.1.0. Three of the planned keys turned out to be
+macOS defaults already, and four collided with defaults nobody had
+checked:
+
+| Key | VS Code default | Source | Outcome |
+|---|---|---|---|
+| `⌘⇧]` / `⌘⇧[` | `nextEditor` / `previousEditor` (secondary; primary is `⌘⌥→` / `⌘⌥←`) | `editorActions.ts` L1279, L1327 | registered explicitly |
+| `⌘,` | Open Settings | `preferences.contribution.ts` L238 | skipped, no-op |
+| `⌘↑` / `⌘↓` | **`cursorTop` / `cursorBottom`** (macOS-only override) | `coreCommands.ts` L1248, L1292 | **kept as-is** |
+| `⌘[` | `editor.action.outdentLines` | `linesOperations.ts` L645 | displaced |
+
+`⌘↑` / `⌘↓` were left alone deliberately. IntelliJ wants them for Jump to
+Navigation Bar and View source, but they are the system-wide macOS
+document-start / document-end gesture, and MacBook keyboards have no
+physical Home / End keys to fall back on. Those two IntelliJ actions are
+dropped rather than break the platform convention.
+
+### Added — Navigation
+- `⌥Space` / `⌘Y` quick definition popup (`editor.action.peekDefinition`)
+- `⌘⌥O` go to symbol in file
+- `⌘[` navigate back
+- `⌘⇧E` recent files, previous entry
+- `⌃H` **type hierarchy** and `⌃⌥H` call hierarchy
+- `⌃M` move caret to matching brace
+- `⌃⇧B` go to type declaration
+- `F4` edit source (editor) / open and focus (Explorer)
+- `⌃←` / `⌃→` and `⌘⇧[` / `⌘⇧]` previous / next editor tab, with terminal
+  variants that move between terminal tabs when the terminal has focus
+- `⌘U` go to super implementation (Java, Dart)
+- `⌘⇧T` go to test (Java)
+
+### Added — Search
+- `⌥⌘F7` show usages
+- `⌃⌥↓` / `⌃⌥↑` next / previous highlighted usage
+
+`⌃⌥↓` / `⌃⌥↑` restore something this extension had quietly taken away:
+`F7` / `⇧F7` are `editor.action.wordHighlight.next` / `.prev` by default
+(`wordHighlighter.ts` L936, L951), and `enableDebuggingKeymap` has bound
+`F7` to Step Into since v1.0.0. The IntelliJ keys for highlighted-usage
+navigation are `⌃⌥↓` / `⌃⌥↑`, so the capability is now reachable again.
+
+### Type hierarchy is language-neutral here
+k--kato binds `⌃H` to `java.action.showTypeHierarchy`, which does nothing
+outside Java. VS Code core registers `editor.showTypeHierarchy` with an
+`editorHasTypeHierarchyProvider` context key
+(`typeHierarchy.contribution.ts` L179, L29), so this extension binds the
+core command instead and it works in any language whose server provides
+type hierarchy. Same approach as wrapping `⌘B` in
+`intellij.goToDeclarationOrUsages`.
+
+### BREAKING — one more VS Code default displaced
+
+| Key | What you lose | Where it went | Category |
+|---|---|---|---|
+| `⌘[` | `editor.action.outdentLines` | Navigate Back | `enableNavigationKeymap` |
+
+Outdent is still on `⇧Tab`. The binding is gated on `canNavigateBack`, so
+in a fresh window with no navigation history VS Code's outdent still
+fires — the displacement only takes effect once there is somewhere to go
+back to.
+
+### Previously undocumented displacements, now recorded
+Found while measuring. Both shipped in v1.0.0 without a note:
+
+| Key | Our mapping | Silently displaced |
+|---|---|---|
+| `⌘]` | `jumpToBracket` (`enableNavigationKeymap`) | `editor.action.indentLines` |
+| `F7` | `debug.stepInto` (`enableDebuggingKeymap`) | `editor.action.wordHighlight.next` |
+
+### Dropped
+- **Jump to Navigation Bar** (`⌘↑`) and **View source** (`⌘↓`) — see above.
+- **`⌘,`** — already the VS Code default, so there is nothing to add.
+
 ## [1.1.0] — 2026-05-11
 
 Editing coverage goes from 34% to ~85% of the IntelliJ Mac keymap.

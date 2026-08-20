@@ -135,6 +135,36 @@ keymap extension), but never "fix" them to a different command.
 `editor.action.fontZoomIn` / `fontZoomOut` / `fontZoomReset` have **no**
 default keybinding, so `⇧⌃.` / `⇧⌃,` displace nothing.
 
+Added during the v1.2.0 pass:
+
+| Key | Default command | Source |
+|---|---|---|
+| `⌘⇧[` / `⌘⇧]` | `previousEditor` / `nextEditor` (secondary; primary is `⌘⌥←` / `⌘⌥→`) | `editorActions.ts` L1327, L1279 |
+| `⌘,` | `workbench.action.openGlobalSettings` | `preferences.contribution.ts` L238 |
+| `⌘↑` / `⌘↓` | `cursorTop` / `cursorBottom` — **macOS-only override** of the `⌘Home` / `⌘End` primary | `coreCommands.ts` L1248, L1292 |
+| `⌘[` / `⌘]` | `outdentLines` / `indentLines` | `linesOperations.ts` L645, L619 |
+| `F7` / `⇧F7` | `wordHighlight.next` / `.prev` | `wordHighlighter.ts` L936, L951 |
+| `⌘⌃←` / `⌘⌃→` | `moveEditorToPreviousGroup` / `…NextGroup` (mac override) | `editorActions.ts` L2133, L2153 |
+
+`⌘↑` / `⌘↓` are deliberately **not** taken. IntelliJ wants them for Jump
+to Navigation Bar and View source, but they are the system-wide macOS
+document-start / document-end gesture and MacBook keyboards have no
+physical Home / End key. Fidelity loses to platform convention here.
+
+### Prefer the core command over a language-specific one
+
+When k--kato binds a language extension's command, check whether VS Code
+core has a language-neutral equivalent first. Two wins so far:
+
+| Key | k--kato | Ours | Why |
+|---|---|---|---|
+| `⌘B` | `editor.action.goToDeclaration` | `intellij.goToDeclarationOrUsages` | falls through to usages like IntelliJ |
+| `⌃H` | `java.action.showTypeHierarchy` | `editor.showTypeHierarchy` | core command + `editorHasTypeHierarchyProvider`, works in every language with a provider |
+
+Also prefer canonical command ids over aliases:
+`editor.action.previewDeclaration` is registered as an alias for
+`editor.action.peekDefinition` (`goToCommands.ts` L372) — bind the latter.
+
 The `⌥→` row is the cautionary one. The v1.1.0 plan called for
 `cursorWordRight`; IntelliJ's "Move Caret to Next Word" stops at the word
 *end*, which is what the default already does. Shipping the plan as

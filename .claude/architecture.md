@@ -8,7 +8,7 @@ A single VS Code extension. ~700 LOC. Two user-facing capabilities:
    per-language LSP kind dispatch and a prefetch-based dispatcher that
    avoids the "No preferred code actions" toast.
 
-On top of those, a curated **109-keybinding IntelliJ Mac keymap** spread
+On top of those, a curated **132-keybinding IntelliJ Mac keymap** spread
 across 10 toggleable categories (`enableXxxKeymap`).
 
 ## Module graph
@@ -49,7 +49,7 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | Surface | Count | Notes |
 |---|---|---|
 | Commands | 5 | All in the `intellij.*` namespace |
-| Keybindings | 109 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
+| Keybindings | 132 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
 | Settings | 13 | 10 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)
@@ -59,8 +59,8 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | bundled | `enableBundledMacKeymap` | 1 (cmd+b) | **on** |
 | extended | `enableExtendedMacKeymap` | 15 | off |
 | editing | `enableEditingKeymap` | 49 | off |
-| navigation | `enableNavigationKeymap` | 16 | off |
-| search | `enableSearchKeymap` | 7 | off |
+| navigation | `enableNavigationKeymap` | 36 | off |
+| search | `enableSearchKeymap` | 10 | off |
 | refactoring | `enableRefactoringKeymap` | 2 | off |
 | vcs | `enableVcsKeymap` | 5 | off |
 | toolwindow | `enableToolWindowKeymap` | 5 | off |

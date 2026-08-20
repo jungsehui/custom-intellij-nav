@@ -8,13 +8,13 @@
 
 ## 1. 현황
 
-| 항목 | v1.0.1 | **v1.1.0 (현재)** |
-|---|---|---|
-| 우리 고유 Mac chord | 73 | **102** |
-| k--kato 고유 Mac chord | 157 | 158 |
-| 겹침 (양쪽 보유) | 59 | **85** |
-| 순수 미구현 | 98 | **73** |
-| **커버율** | 37.6% | **53.8%** |
+| 항목 | v1.0.1 | v1.1.0 | **v1.2.0 (현재)** |
+|---|---|---|---|
+| 우리 고유 Mac chord | 73 | 102 | **121** |
+| k--kato 고유 Mac chord | 157 | 158 | 158 |
+| 겹침 (양쪽 보유) | 59 | 85 | **104** |
+| 순수 미구현 | 98 | 73 | **54** |
+| **커버율** | 37.6% | 53.8% | **65.8%** |
 
 > chord 총계가 157에서 158로 바뀐 것은 재집계 시 필터 차이다. v1.1.0 수치가 최신이다.
 
@@ -118,11 +118,30 @@ IntelliJ의 "Start new line before current"는 `alt+cmd+enter`라 그쪽을 매�
 Complete Current Statement는 JS/TS 전용 근사 구현이라 기본을 뺏을 가치가 없다.
 4절 "언어별 부분 지원"으로 이동.
 
+### v1.2.0 실측 결과 (완료)
+
+| 키 | VS Code 기본 | 소스 | 처리 |
+|---|---|---|---|
+| `shift+cmd+]` / `shift+cmd+[` | `nextEditor` / `previousEditor` (secondary) | `editorActions.ts` L1279, L1327 | 명시적 재등록 |
+| `cmd+,` | Open Settings | `preferences.contribution.ts` L238 | 스킵 (no-op) |
+| `cmd+up` / `cmd+down` | **`cursorTop` / `cursorBottom`** (mac override) | `coreCommands.ts` L1248, L1292 | **유지, IntelliJ 액션 포기** |
+| `cmd+[` | `editor.action.outdentLines` | `linesOperations.ts` L645 | 뺏음 (`canNavigateBack` 게이트) |
+| `f7` / `shift+f7` | `wordHighlight.next` / `.prev` | `wordHighlighter.ts` L936, L951 | 우리 debugging keymap이 이미 점유 중이었음 (미문서화 → 문서화) |
+| `alt+space`, `cmd+y`, `ctrl+h`, `ctrl+alt+h`, `ctrl+m`, `cmd+u`, `f4`, `ctrl+alt+up/down`, `ctrl+left/right` | 미검출 | — | 안전하게 추가 |
+
+**언어 중립화 성공**: `ctrl+h`를 k--kato의 Java 전용 `java.action.showTypeHierarchy` 대신
+코어의 `editor.showTypeHierarchy` + `editorHasTypeHierarchyProvider`로 바인딩
+(`typeHierarchy.contribution.ts` L179, L29). 3절의 미확인 항목이 해소됐다.
+
+`editor.action.previewDeclaration`은 `editor.action.peekDefinition`의 별칭
+(`goToCommands.ts` L372). 정식 ID를 쓴다.
+
 ### 다음 마일스톤에도 같은 절차를 적용할 것
 
-v1.2.0 착수 전 확인 대상: `cmd+,` (Open Settings 기본과 동일한지),
-`shift+cmd+[` / `shift+cmd+]` (이전/다음 편집기 탭), `ctrl+left` / `ctrl+right`
-(Mission Control 선점 여부), `f4`, `cmd+y`, `alt+space`.
+v1.3.0(Refactoring) 착수 전 확인 대상: `ctrl+o`, `ctrl+i`, `ctrl+t`, `cmd+f6`,
+`cmd+alt+f`, `cmd+alt+p`의 VS Code 기본 점유 여부. 다만 v1.3.0의 본체는 키 충돌이
+아니라 **LSP kind 매핑**이므로, 언어별 지원 매트릭스 실측(TS / Java / Kotlin / Python
+× 6액션 = 24칸)이 더 중요하다.
 
 ## 3. 마일스톤
 
@@ -133,7 +152,7 @@ v1.2.0 착수 전 확인 대상: `cmd+,` (Open Settings 기본과 동일한지),
 | 버전 | 내용 | 건수 | 시간 | 누적 커버율 |
 |---|---|---|---|---|
 | ~~v1.1.0~~ | ✅ **완료 (2026-05-11)**. Editing 필수. 34 엔트리 추가 | 27 | 실제 ~3h | **53.8%** |
-| v1.2.0 | Navigation + Search 보강 | 23 | 4~5h | 69% |
+| ~~v1.2.0~~ | ✅ **완료 (2026-05-11)**. Navigation + Search. 23 엔트리 추가 | 23 | 실제 ~2h | **65.8%** |
 | v1.3.0 | Refactoring + Generate | 6 (축소 시 3) | 5~7h | 73% |
 | v1.4.0 | Run 신설 + Debugging 마감 | 6 | 2~3h | 77% |
 | v1.5.0 | ToolWindow + Workbench + Diff | 17 (2건 제외 시 15) | 2.5~3h | 87% |

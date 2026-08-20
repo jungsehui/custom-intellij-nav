@@ -105,19 +105,42 @@ to stop at camelCase sub-word boundaries instead, mirroring IntelliJ's
 *Use "CamelHumps" words* option.
 
 #### Navigation (`enableNavigationKeymap`)
+
+> ⚠️ Displaces `⌘[` (Outdent Lines) and `⌘]` (Indent Lines). Outdent and
+> indent are still on `⇧Tab` / `Tab`. See [Displaced defaults](#displaced-defaults).
+
 | Mac key | IntelliJ action |
 |---|---|
 | `⌘E` | Recent files |
+| `⌘⇧E` | Recent files, previous entry |
 | `⌘L` | Go to Line |
 | `⌘F12` | File Structure |
 | `⌘O` / `⌘⇧O` | Go to Class / File |
+| `⌘⌥O` | Go to Symbol in file |
+| `⌥Space` / `⌘Y` | Quick definition popup |
 | `⌥F7` / `⌘F7` | Find Usages / in File |
 | `⌘⌥←` / `⌘⌥→` | Navigate Back / Forward |
+| `⌘[` | Navigate Back |
 | `⌘⇧⌫` | Last edit location |
 | `⌘⌥B` | Go to Implementation |
+| `⌃⇧B` | Go to Type Declaration |
+| `⌃H` / `⌃⌥H` | Type hierarchy / Call hierarchy |
 | `F2` / `⇧F2` | Next / Previous error |
+| `F4` | Edit source (editor) / Open and focus (Explorer) |
 | `⌃↑` / `⌃↓` | Previous / Next method |
-| `⌘]` | Move to bracket |
+| `⌃←` / `⌃→` | Previous / Next editor tab |
+| `⌘⇧[` / `⌘⇧]` | Previous / Next editor tab (terminal tabs when the terminal has focus) |
+| `⌘]` / `⌃M` | Move to bracket |
+| `⌘U` | Go to super implementation (Java, Dart) |
+| `⌘⇧T` | Go to Test (Java) |
+
+`⌃H` binds VS Code's core `editor.showTypeHierarchy`, so it works in any
+language whose server provides type hierarchy, not just Java.
+
+**Not mapped on purpose**: IntelliJ's `⌘↑` (Jump to Navigation Bar) and
+`⌘↓` (View source). On macOS those are the system document-start /
+document-end gesture, and MacBook keyboards have no physical Home / End
+keys to fall back to.
 
 #### Search (`enableSearchKeymap`)
 | Mac key | IntelliJ action |
@@ -126,6 +149,9 @@ to stop at camelCase sub-word boundaries instead, mirroring IntelliJ's
 | `⌘⇧Space` | Search Everywhere (chord, see [Limitations](#limitations)) |
 | `⌘R` | Replace |
 | `⌘⇧F` / `⌘⇧R` | Find / Replace in Files |
+| `⌘G` / `⌘⇧G` | Find Next / Previous |
+| `⌥⌘F7` | Show Usages |
+| `⌃⌥↓` / `⌃⌥↑` | Next / Previous Highlighted Usage |
 
 #### Refactoring (`enableRefactoringKeymap`)
 | Mac key | IntelliJ action |
@@ -201,6 +227,8 @@ Turning on `enableEditingKeymap` takes five keys away from VS Code. This
 is deliberate, because IntelliJ uses those keys for something else, but
 you should know before you flip the switch.
 
+Under `enableEditingKeymap`:
+
 | Key | VS Code default you lose | What it becomes |
 |---|---|---|
 | `⌘-` | Window Zoom Out | Collapse code block |
@@ -208,6 +236,22 @@ you should know before you flip the switch.
 | `⌘⇧-` / `⌘⇧=` | Zoom Out / In (secondary) | Collapse all / Expand all |
 | `⌘.` | **Quick Fix** | Fold selection |
 | `F1` | Command Palette (secondary) | Quick documentation |
+
+Under `enableNavigationKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⌘[` | Outdent Lines (still on `⇧Tab`) | Navigate Back |
+| `⌘]` | Indent Lines (still on `Tab`) | Move to bracket |
+
+Under `enableDebuggingKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `F7` / `⇧F7` | Next / Previous highlighted usage | Step Into / Smart step into |
+
+Highlighted-usage navigation moves to `⌃⌥↓` / `⌃⌥↑` under
+`enableSearchKeymap`, which is where IntelliJ puts it.
 
 `⌘.` deserves a note. IntelliJ users press `⌥↩` for intentions and quick
 fixes, and this extension maps `⌥↩` → `editor.action.quickFix`, so the
