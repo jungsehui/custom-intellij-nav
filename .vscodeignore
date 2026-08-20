@@ -26,6 +26,10 @@ node_modules/**
 *.vsix
 .DS_Store
 
+# Icon sources — only media/icon.png ships
+media/icon.svg
+media/build-icon.js
+
 # Stray local files that must never ship to the Marketplace
 *.pem
 *.key

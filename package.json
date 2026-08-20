@@ -27,6 +27,11 @@
     "url": "https://github.com/jungsehui/custom-intellij-nav/issues"
   },
   "homepage": "https://github.com/jungsehui/custom-intellij-nav#readme",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1B1E26",
+    "theme": "dark"
+  },
   "main": "./out/extension.js",
   "capabilities": {
     "untrustedWorkspaces": {
