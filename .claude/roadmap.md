@@ -8,16 +8,15 @@
 
 ## 1. 현황
 
-| 항목 | 값 |
-|---|---|
-| 우리 고유 Mac chord | 73 |
-| k--kato 고유 Mac chord | 157 |
-| 겹침 (양쪽 보유) | 59 |
-| 그중 키+커맨드 완전 동일 | 44 |
-| 같은 키, 다른 커맨드 | 15 |
-| 순수 미구현 | 98 |
-| 우리에만 있음 | 14 |
-| **커버율** | **59 / 157 = 37.6%** |
+| 항목 | v1.0.1 | **v1.1.0 (현재)** |
+|---|---|---|
+| 우리 고유 Mac chord | 73 | **102** |
+| k--kato 고유 Mac chord | 157 | 158 |
+| 겹침 (양쪽 보유) | 59 | **85** |
+| 순수 미구현 | 98 | **73** |
+| **커버율** | 37.6% | **53.8%** |
+
+> chord 총계가 157에서 158로 바뀐 것은 재집계 시 필터 차이다. v1.1.0 수치가 최신이다.
 
 98건에서 즉시 제외 대상을 빼면 실제 작업량은 79건이다.
 
@@ -69,23 +68,61 @@ README의 "self-contained alternative" 주장을 뒷받침하는 실증 근거�
 | `f6` | `files.move` | `editor.action.codeAction` | 둘 다 근사치 |
 | `ctrl+d` | `debug.start` | `debug.run` | k--kato가 정확 |
 
-## 2. 착수 전 필수 작업: 1시간 실측
+## 2. 실측 (v1.1.0 착수 전 수행, 완료)
 
-**이 로드맵에서 ROI가 가장 높은 지점이다.** 아래 12건은 VS Code macOS 기본 키맵에
-이미 같은 동작으로 바인딩돼 있을 가능성이 높다. 실측 없이 전부 구현하면 불필요한
-override만 늘어난다.
+**이 로드맵에서 ROI가 가장 높았던 지점.** VS Code 소스(`microsoft/vscode@main`)에서
+직접 확인한 결과, v1.1.0 계획 27건 중 11건이 이미 macOS 기본이었다.
 
-| 키 그룹 | 확인할 것 |
-|---|---|
-| `alt+left/right`, `alt+shift+left/right`, `alt+backspace`, `alt+delete` | 기본이 `cursorWordLeft`인지 `cursorWordStartLeft`인지. 둘은 단어 경계 처리가 다르다 |
-| `cmd+g`, `cmd+shift+g` | Find Next/Previous가 이미 기본인지 |
-| `cmd+,` | Open Settings 기본과 동일한지 (동일하면 no-op) |
-| `shift+cmd+[`, `shift+cmd+]` | 이전/다음 편집기 탭이 이미 기본인지 |
+### 이미 기본에 있던 것 (11건)
 
-측정 방법: 해당 카테고리 토글을 `false`로 두고 동작을 기록한 뒤, `true`로 바꿔 diff.
-**동작이 같으면 그 바인딩은 추가하지 않는다.**
+| 키 | VS Code 기본 command | 소스 |
+|---|---|---|
+| `alt+left` | `cursorWordLeft` | `wordOperations.ts` L128-133 |
+| `alt+right` | `cursorWordEndRight` | `wordOperations.ts` L226-231 |
+| `alt+shift+left` | `cursorWordLeftSelect` | `wordOperations.ts` L167-172 |
+| `alt+shift+right` | `cursorWordEndRightSelect` | `wordOperations.ts` L265-270 |
+| `alt+backspace` | `deleteWordLeft` | `wordOperations.ts` L419-424 |
+| `alt+delete` | `deleteWordRight` | `wordOperations.ts` L458-463 |
+| `cmd+g` / `cmd+shift+g` | `nextMatchFindAction` / `previousMatchFindAction` | `findController.ts` L784, L805 |
+| `cmd+x` | `clipboardCutAction` | `clipboard.ts` L48 |
+| `cmd+home` / `cmd+end` | `cursorTop` / `cursorBottom` | `coreCommands.ts` L1247, L1291 |
 
-전부 no-op으로 판명되면 v1.1.0이 27건에서 21건, v1.2.0이 23건에서 19건으로 준다.
+**로드맵이 틀렸던 지점**: `alt+right`에 `cursorWordRight`를 계획했으나 IntelliJ의
+"Move Caret to Next Word"는 단어 **끝**에 멈추고, 그게 VS Code 기본 `cursorWordEndRight`다.
+계획대로 짰으면 개악이었다. `alt+shift+right`도 동일.
+
+이 11건은 사용자 결정에 따라 **명시적으로 재등록**했다. 다른 키맵 익스텐션이 함께 깔려도
+IntelliJ 동작이 보장된다.
+
+### 충돌이 발견된 것 (5건, 사용자가 IntelliJ 우선으로 결정)
+
+| 키 | VS Code 기본 | 처리 |
+|---|---|---|
+| `cmd+-` / `cmd+=` | `zoomOut` / `zoomIn` primary (`windowActions.ts` L156, L185) | 폴딩이 가져감 |
+| `cmd+shift+-` / `cmd+shift+=` | zoom secondary | Fold All / Unfold All이 가져감 |
+| `cmd+.` | Quick Fix | Toggle Fold가 가져감 (`alt+enter`가 Quick Fix 대체) |
+
+### 비어 있던 것 (안전하게 추가)
+
+`cmd+alt+-`, `cmd+alt+=`, `shift+enter`, `alt+cmd+enter`, `ctrl+g`, `ctrl+shift+g`,
+`shift+cmd+8`, `shift+ctrl+.`, `shift+ctrl+,`, `cmd+f1`.
+
+폴딩 기본은 전혀 다른 키다: `editor.fold`=`cmd+alt+[`, `unfold`=`cmd+alt+]`,
+나머지는 `cmd+K` 코드 (`folding.ts` L644, L727, L707, L820, L1003, L1023, L798).
+`fontZoomIn/Out`은 기본 키가 아예 없다.
+
+### 포기한 것
+
+`cmd+shift+enter` (Complete Current Statement). VS Code 기본이 `insertLineBefore`이고,
+IntelliJ의 "Start new line before current"는 `alt+cmd+enter`라 그쪽을 매핑했다.
+Complete Current Statement는 JS/TS 전용 근사 구현이라 기본을 뺏을 가치가 없다.
+4절 "언어별 부분 지원"으로 이동.
+
+### 다음 마일스톤에도 같은 절차를 적용할 것
+
+v1.2.0 착수 전 확인 대상: `cmd+,` (Open Settings 기본과 동일한지),
+`shift+cmd+[` / `shift+cmd+]` (이전/다음 편집기 탭), `ctrl+left` / `ctrl+right`
+(Mission Control 선점 여부), `f4`, `cmd+y`, `alt+space`.
 
 ## 3. 마일스톤
 
@@ -95,7 +132,7 @@ override만 늘어난다.
 
 | 버전 | 내용 | 건수 | 시간 | 누적 커버율 |
 |---|---|---|---|---|
-| v1.1.0 | Editing 필수 (폴딩, 단어 이동/삭제, 줄 조작) | 27 | 3~4h | 55% |
+| ~~v1.1.0~~ | ✅ **완료 (2026-05-11)**. Editing 필수. 34 엔트리 추가 | 27 | 실제 ~3h | **53.8%** |
 | v1.2.0 | Navigation + Search 보강 | 23 | 4~5h | 69% |
 | v1.3.0 | Refactoring + Generate | 6 (축소 시 3) | 5~7h | 73% |
 | v1.4.0 | Run 신설 + Debugging 마감 | 6 | 2~3h | 77% |

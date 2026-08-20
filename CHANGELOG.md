@@ -6,6 +6,96 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-05-11
+
+Editing coverage goes from 34% to ~85% of the IntelliJ Mac keymap.
+Keybindings 75 → 109, settings 12 → 13.
+
+### Method: every key was measured against the VS Code source first
+
+`.claude/roadmap.md` §2 called for an hour of measurement before writing
+any binding, on the theory that many "missing" IntelliJ keys are already
+VS Code macOS defaults. That turned out to be true for 11 of the 27
+planned keys, and it also caught two keys where the roadmap's planned
+command was *worse* than the default.
+
+Measured against `microsoft/vscode@main`:
+
+| Key | VS Code default | Source |
+|---|---|---|
+| `⌥←` | `cursorWordLeft` | `wordOperations.ts` L128-133 |
+| `⌥→` | `cursorWordEndRight` | `wordOperations.ts` L226-231 |
+| `⌥⇧←` | `cursorWordLeftSelect` | `wordOperations.ts` L167-172 |
+| `⌥⇧→` | `cursorWordEndRightSelect` | `wordOperations.ts` L265-270 |
+| `⌥⌫` | `deleteWordLeft` | `wordOperations.ts` L419-424 |
+| `⌥⌦` | `deleteWordRight` | `wordOperations.ts` L458-463 |
+| `⌘G` / `⌘⇧G` | `nextMatchFindAction` / `previousMatchFindAction` | `findController.ts` L784, L805 |
+| `⌘X` | `clipboardCutAction` | `clipboard.ts` L48 |
+| `⌘Home` / `⌘End` | `cursorTop` / `cursorBottom` | `coreCommands.ts` L1247, L1291 |
+
+The roadmap planned `⌥→` → `cursorWordRight`, but IntelliJ's "Move Caret
+to Next Word" stops at the word *end*, which is what VS Code's default
+`cursorWordEndRight` already does. Shipping the plan as written would
+have been a regression. Same for `⌥⇧→`.
+
+Per an explicit decision these 11 are now **registered explicitly anyway**,
+so the IntelliJ behavior holds even if another keymap extension is
+installed alongside.
+
+### Added
+- **Folding (7)**: `⌘-` fold, `⌘=` unfold, `⌘⌥-` / `⌘⌥=` recursive,
+  `⌘⇧-` / `⌘⇧=` all, `⌘.` toggle.
+- **Word navigation and deletion (12 entries, 6 keys × 2 modes)**:
+  `⌥←` `⌥→` `⌥⇧←` `⌥⇧→` `⌥⌫` `⌥⌦`.
+- **`customIntellijNav.useCamelHumpsWords`** (default `false`), mirroring
+  IntelliJ's *Use "CamelHumps" words*. When on, the six word keys switch
+  to the `cursorWordPart*` / `deleteWordPart*` family and stop at
+  camelCase sub-word boundaries.
+- **Lines (2)**: `⇧↩` Start new line, `⌥⌘↩` Start new line before current.
+- **Cut and caret (4)**: `⌘X` and `⌘⌦` cut line, `⌘Home` / `⌘End` to text
+  start / end.
+- **Selection (3)**: `⌃G` add selection to next occurrence, `⌃⇧G` unselect
+  occurrence, `⇧⌘8` column selection mode.
+- **Font (2)**: `⇧⌃.` / `⇧⌃,` increase / decrease editor font. These have
+  no VS Code default keybinding, so nothing is displaced.
+- **Docs (2)**: `F1` quick documentation, `⌘F1` show error/warning at caret.
+- **Search (2)**: `⌘G` / `⌘⇧G` find next / previous.
+
+### BREAKING — VS Code defaults displaced by `enableEditingKeymap`
+
+These only apply when `customIntellijNav.enableEditingKeymap` is `true`.
+Set it to `false` to get every one of them back.
+
+| Key | What you lose | Where it went |
+|---|---|---|
+| `⌘-` | **Window Zoom Out** (`workbench.action.zoomOut`) | Fold |
+| `⌘=` | **Window Zoom In** (`workbench.action.zoomIn`) | Unfold |
+| `⌘⇧-` / `⌘⇧=` | Zoom Out / In (secondary bindings) | Fold All / Unfold All |
+| `⌘.` | **Quick Fix** (`editor.action.quickFix`) | Toggle Fold |
+| `F1` | Command Palette (secondary; `⌘⇧P` still works) | Quick documentation |
+
+`⌘.` is the one to know about. IntelliJ users reach for `⌥↩` to get
+intentions and quick fixes, and this extension has mapped `⌥↩` →
+`editor.action.quickFix` since v1.0.0, so the capability is not lost,
+only moved. If you want VS Code's `⌘.` back, the narrowest fix is a
+single user keybinding rather than disabling the whole category:
+
+```jsonc
+{ "key": "cmd+.", "command": "-editor.toggleFold" }
+```
+
+Window zoom has no equivalent escape hatch inside the editor. If you use
+`⌘-` / `⌘=` for zoom, keep `enableEditingKeymap` off or unbind the two
+folding entries the same way.
+
+### Deferred
+- **Complete Current Statement** (`⌘⇧↩`). VS Code binds that chord to
+  `editor.action.insertLineBefore`, and IntelliJ's own "Start new line
+  before current" is `⌥⌘↩`, which this release maps. Implementing
+  Complete Current Statement would mean displacing a default in order to
+  ship a JS/TS-only approximation, so it moves to the language-specific
+  backlog in `.claude/roadmap.md`.
+
 ## [1.0.1] — 2026-05-11
 
 ### Fixed

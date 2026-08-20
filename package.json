@@ -2,7 +2,7 @@
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -78,6 +78,11 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Show error toasts when provider calls fail. Disabled by default to avoid noise from TypeScript server hiccups (vue.volar inlay hint internal failures, etc). Errors are always written to the `Custom IntelliJ Navigation` output channel."
+        },
+        "customIntellijNav.useCamelHumpsWords": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Mirror IntelliJ's **Use \"CamelHumps\" words** option. When enabled, `⌥←` / `⌥→` and `⌥⌫` / `⌥⌦` stop at camelCase sub-word boundaries (`cursorWordPart*` / `deleteWordPart*`) instead of whole-word boundaries. Requires `enableEditingKeymap`."
         },
         "customIntellijNav.showRefactorNotifications": {
           "type": "boolean",
@@ -575,6 +580,210 @@
         "key": "ctrl+d",
         "mac": "ctrl+d",
         "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "cursorWordLeft",
+        "key": "ctrl+left",
+        "mac": "alt+left",
+        "when": "isMac && textInputFocus && !config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordPartStartLeft",
+        "key": "ctrl+left",
+        "mac": "alt+left",
+        "when": "isMac && textInputFocus && config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordEndRight",
+        "key": "ctrl+right",
+        "mac": "alt+right",
+        "when": "isMac && textInputFocus && !config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordPartRight",
+        "key": "ctrl+right",
+        "mac": "alt+right",
+        "when": "isMac && textInputFocus && config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordLeftSelect",
+        "key": "ctrl+shift+left",
+        "mac": "alt+shift+left",
+        "when": "isMac && textInputFocus && !config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordPartStartLeftSelect",
+        "key": "ctrl+shift+left",
+        "mac": "alt+shift+left",
+        "when": "isMac && textInputFocus && config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordEndRightSelect",
+        "key": "ctrl+shift+right",
+        "mac": "alt+shift+right",
+        "when": "isMac && textInputFocus && !config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorWordPartRightSelect",
+        "key": "ctrl+shift+right",
+        "mac": "alt+shift+right",
+        "when": "isMac && textInputFocus && config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "deleteWordLeft",
+        "key": "ctrl+backspace",
+        "mac": "alt+backspace",
+        "when": "isMac && textInputFocus && !editorReadonly && !config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "deleteWordPartLeft",
+        "key": "ctrl+backspace",
+        "mac": "alt+backspace",
+        "when": "isMac && textInputFocus && !editorReadonly && config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "deleteWordRight",
+        "key": "ctrl+delete",
+        "mac": "alt+delete",
+        "when": "isMac && textInputFocus && !editorReadonly && !config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "deleteWordPartRight",
+        "key": "ctrl+delete",
+        "mac": "alt+delete",
+        "when": "isMac && textInputFocus && !editorReadonly && config.customIntellijNav.useCamelHumpsWords && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.fold",
+        "key": "ctrl+-",
+        "mac": "cmd+-",
+        "when": "isMac && editorTextFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.unfold",
+        "key": "ctrl+=",
+        "mac": "cmd+=",
+        "when": "isMac && editorTextFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.foldRecursively",
+        "key": "ctrl+alt+-",
+        "mac": "cmd+alt+-",
+        "when": "isMac && editorTextFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.unfoldRecursively",
+        "key": "ctrl+alt+=",
+        "mac": "cmd+alt+=",
+        "when": "isMac && editorTextFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.foldAll",
+        "key": "ctrl+shift+-",
+        "mac": "cmd+shift+-",
+        "when": "isMac && editorTextFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.unfoldAll",
+        "key": "ctrl+shift+=",
+        "mac": "cmd+shift+=",
+        "when": "isMac && editorTextFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.toggleFold",
+        "key": "ctrl+.",
+        "mac": "cmd+.",
+        "when": "isMac && editorFocus && foldingEnabled && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.insertLineAfter",
+        "key": "shift+enter",
+        "mac": "shift+enter",
+        "when": "isMac && editorTextFocus && !editorReadonly && !notebookEditorFocused && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.insertLineBefore",
+        "key": "ctrl+alt+enter",
+        "mac": "alt+cmd+enter",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.clipboardCutAction",
+        "key": "ctrl+x",
+        "mac": "cmd+x",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.clipboardCutAction",
+        "key": "shift+delete",
+        "mac": "cmd+delete",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorTop",
+        "key": "ctrl+home",
+        "mac": "cmd+home",
+        "when": "isMac && textInputFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorBottom",
+        "key": "ctrl+end",
+        "mac": "cmd+end",
+        "when": "isMac && textInputFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.addSelectionToNextFindMatch",
+        "key": "alt+j",
+        "mac": "ctrl+g",
+        "when": "isMac && editorFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "cursorUndo",
+        "key": "alt+shift+j",
+        "mac": "ctrl+shift+g",
+        "when": "isMac && textInputFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.toggleColumnSelection",
+        "key": "shift+alt+insert",
+        "mac": "shift+cmd+8",
+        "when": "isMac && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.fontZoomIn",
+        "key": "shift+alt+.",
+        "mac": "shift+ctrl+.",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.fontZoomOut",
+        "key": "shift+alt+,",
+        "mac": "shift+ctrl+,",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.showHover",
+        "key": "f1",
+        "mac": "f1",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "workbench.action.showErrorsWarnings",
+        "key": "ctrl+f1",
+        "mac": "cmd+f1",
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "editor.action.nextMatchFindAction",
+        "key": "f3",
+        "mac": "cmd+g",
+        "when": "isMac && editorFocus && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "editor.action.previousMatchFindAction",
+        "key": "shift+f3",
+        "mac": "cmd+shift+g",
+        "when": "isMac && editorFocus && config.customIntellijNav.enableSearchKeymap"
       }
     ]
   },

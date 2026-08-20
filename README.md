@@ -58,6 +58,11 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌘⌥V` / `⌘⌥M` / `⌘⌥C` / `⌘⌥N` | Extract Variable / Method / Constant / Inline |
 
 #### Editing (`enableEditingKeymap`)
+
+> ⚠️ This category displaces five VS Code defaults: `⌘-` / `⌘=` /
+> `⌘⇧-` / `⌘⇧=` (window zoom) and `⌘.` (Quick Fix). See
+> [Displaced defaults](#displaced-defaults) below.
+
 | Mac key | IntelliJ action |
 |---|---|
 | `⌘/` / `⌘⌥/` | Comment / Block Comment |
@@ -65,14 +70,39 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌃⌥O` | Optimize imports |
 | `⌘D` | Duplicate Line |
 | `⌘⌫` | Delete Line |
+| `⌘X` / `⌘⌦` | Cut line (or selection) |
 | `⇧⌥↑` / `⇧⌥↓` | Move Line Up / Down |
 | `⌥↑` / `⌥↓` | Expand / Shrink Selection |
 | `⌥↩` | Show intention actions |
 | `⌘↩` | Smart line split |
+| `⇧↩` | Start new line |
+| `⌥⌘↩` | Start new line before current |
 | `⌘⇧U` | Toggle case |
 | `⌘P` | Parameter info |
 | `⌃J` | Quick documentation |
+| `F1` | Quick documentation lookup |
+| `⌘F1` | Show error/warning at caret |
 | `⌘W` | Close active editor |
+| `⌘Home` / `⌘End` | Move caret to text start / end |
+| `⌃G` / `⌃⇧G` | Add selection to next occurrence / unselect |
+| `⇧⌘8` | Column selection mode |
+| `⇧⌃.` / `⇧⌃,` | Increase / decrease editor font size |
+
+**Folding**
+
+| Mac key | IntelliJ action |
+|---|---|
+| `⌘-` / `⌘=` | Collapse / Expand code block |
+| `⌘⌥-` / `⌘⌥=` | Collapse / Expand recursively |
+| `⌘⇧-` / `⌘⇧=` | Collapse all / Expand all |
+| `⌘.` | Fold selection (toggle) |
+
+**Word navigation** (`⌥←` `⌥→` `⌥⇧←` `⌥⇧→` `⌥⌫` `⌥⌦`) matches VS Code's
+macOS defaults, which already implement IntelliJ's semantics. They are
+registered explicitly so the behavior holds even alongside another
+keymap extension. Set `customIntellijNav.useCamelHumpsWords` to `true`
+to stop at camelCase sub-word boundaries instead, mirroring IntelliJ's
+*Use "CamelHumps" words* option.
 
 #### Navigation (`enableNavigationKeymap`)
 | Mac key | IntelliJ action |
@@ -159,9 +189,40 @@ alone, expanding folders as you meet them.
   "customIntellijNav.enableToolWindowKeymap": true,
   "customIntellijNav.enableExplorerTreeKeymap": true,
   "customIntellijNav.enableDebuggingKeymap": true,
+  "customIntellijNav.useCamelHumpsWords": false,
   "customIntellijNav.showErrorToasts": false,
   "customIntellijNav.showRefactorNotifications": true
 }
+```
+
+## Displaced defaults
+
+Turning on `enableEditingKeymap` takes five keys away from VS Code. This
+is deliberate, because IntelliJ uses those keys for something else, but
+you should know before you flip the switch.
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⌘-` | Window Zoom Out | Collapse code block |
+| `⌘=` | Window Zoom In | Expand code block |
+| `⌘⇧-` / `⌘⇧=` | Zoom Out / In (secondary) | Collapse all / Expand all |
+| `⌘.` | **Quick Fix** | Fold selection |
+| `F1` | Command Palette (secondary) | Quick documentation |
+
+`⌘.` deserves a note. IntelliJ users press `⌥↩` for intentions and quick
+fixes, and this extension maps `⌥↩` → `editor.action.quickFix`, so the
+capability moves rather than disappears. `⌘⇧P` still opens the Command
+Palette.
+
+To keep a specific default instead of disabling the whole category, add
+a targeted unbind to your user `keybindings.json`:
+
+```jsonc
+[
+  { "key": "cmd+.", "command": "-editor.toggleFold" },
+  { "key": "cmd+-", "command": "-editor.fold" },
+  { "key": "cmd+=", "command": "-editor.unfold" }
+]
 ```
 
 Each toggle is `false` by default except `enableBundledMacKeymap` (cmd+b is the headline feature). Enable categories incrementally to avoid surprises.

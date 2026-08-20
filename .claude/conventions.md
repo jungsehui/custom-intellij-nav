@@ -108,6 +108,39 @@ where Right on a file is a no-op.
 replacement is strictly better.** Adding a narrowly-scoped `when` rule
 that fills a gap beats replacing a whole command.
 
+### Measured macOS defaults (do not re-derive these)
+
+Verified against `microsoft/vscode@main` during the v1.1.0 measurement
+pass. **These keys already do the IntelliJ thing by default.** They are
+registered explicitly anyway (so the behavior survives alongside another
+keymap extension), but never "fix" them to a different command.
+
+| Key | Default command | Source |
+|---|---|---|
+| `⌥←` | `cursorWordLeft` | `wordOperations.ts` L128 |
+| `⌥→` | `cursorWordEndRight` — **not** `cursorWordRight` | `wordOperations.ts` L226 |
+| `⌥⇧←` | `cursorWordLeftSelect` | `wordOperations.ts` L167 |
+| `⌥⇧→` | `cursorWordEndRightSelect` | `wordOperations.ts` L265 |
+| `⌥⌫` | `deleteWordLeft` | `wordOperations.ts` L419 |
+| `⌥⌦` | `deleteWordRight` | `wordOperations.ts` L458 |
+| `⌘G` / `⌘⇧G` | `nextMatchFindAction` / `previousMatchFindAction` | `findController.ts` L784, L805 |
+| `⌘X` | `clipboardCutAction` (cuts the line when the selection is empty, via `editor.emptySelectionClipboard`) | `clipboard.ts` L48 |
+| `⌘Home` / `⌘End` | `cursorTop` / `cursorBottom` | `coreCommands.ts` L1247, L1291 |
+| `⌘⌥[` / `⌘⌥]` | `editor.fold` / `editor.unfold` | `folding.ts` L727, L644 |
+| `⌘K ⌘0` / `⌘K ⌘J` | `editor.foldAll` / `editor.unfoldAll` | `folding.ts` L1003, L1023 |
+| `⌘-` / `⌘=` | `workbench.action.zoomOut` / `zoomIn`, plus `⌘⇧-` / `⌘⇧=` and numpad as secondaries | `windowActions.ts` L156, L185 |
+| `⌘⇧↩` | `editor.action.insertLineBefore` | `linesOperations.ts` L666 |
+| `⌘↩` | `editor.action.insertLineAfter` | `linesOperations.ts` L692 |
+
+`editor.action.fontZoomIn` / `fontZoomOut` / `fontZoomReset` have **no**
+default keybinding, so `⇧⌃.` / `⇧⌃,` displace nothing.
+
+The `⌥→` row is the cautionary one. The v1.1.0 plan called for
+`cursorWordRight`; IntelliJ's "Move Caret to Next Word" stops at the word
+*end*, which is what the default already does. Shipping the plan as
+written would have been a regression, caught only because the source was
+read first.
+
 ## Style
 
 - TypeScript strict mode (`tsconfig.json` is permissive — strict is
