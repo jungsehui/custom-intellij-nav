@@ -8,13 +8,13 @@
 
 ## 1. 현황
 
-| 항목 | v1.0.1 | v1.1.0 | **v1.2.0 (현재)** |
-|---|---|---|---|
-| 우리 고유 Mac chord | 73 | 102 | **121** |
-| k--kato 고유 Mac chord | 157 | 158 | 158 |
-| 겹침 (양쪽 보유) | 59 | 85 | **104** |
-| 순수 미구현 | 98 | 73 | **54** |
-| **커버율** | 37.6% | 53.8% | **65.8%** |
+| 항목 | v1.0.1 | v1.1.0 | v1.2.0 | **v1.3.0 (현재)** |
+|---|---|---|---|---|
+| 우리 고유 Mac chord | 73 | 102 | 121 | **125** |
+| k--kato 고유 Mac chord | 157 | 158 | 158 | 158 |
+| 겹침 (양쪽 보유) | 59 | 85 | 104 | **107** |
+| 순수 미구현 | 98 | 73 | 54 | **51** |
+| **커버율** | 37.6% | 53.8% | 65.8% | **67.7%** |
 
 > chord 총계가 157에서 158로 바뀐 것은 재집계 시 필터 차이다. v1.1.0 수치가 최신이다.
 
@@ -33,7 +33,7 @@
 |---|---|---|---|
 | Editing | 18 | 53 | 34% |
 | Navigation | 14 | 32 | 44% |
-| Refactoring | 5 | 11 | 45% |
+| Refactoring | 9 | 14 | **64%** |
 | ToolWindow | 6 | 14 | 43% |
 | Search | 4 | 10 | 40% |
 | Debugging | 8 | 11 | 73% |
@@ -138,10 +138,18 @@ Complete Current Statement는 JS/TS 전용 근사 구현이라 기본을 뺏을 
 
 ### 다음 마일스톤에도 같은 절차를 적용할 것
 
-v1.3.0(Refactoring) 착수 전 확인 대상: `ctrl+o`, `ctrl+i`, `ctrl+t`, `cmd+f6`,
-`cmd+alt+f`, `cmd+alt+p`의 VS Code 기본 점유 여부. 다만 v1.3.0의 본체는 키 충돌이
-아니라 **LSP kind 매핑**이므로, 언어별 지원 매트릭스 실측(TS / Java / Kotlin / Python
-× 6액션 = 24칸)이 더 중요하다.
+~~v1.3.0(Refactoring) 착수 전 확인 대상~~ → **2026-08-20 실측 완료.** 결과는 아래
+v1.3.0 절에 있다. 예상대로 본체는 키 충돌이 아니라 kind 매핑이었고, 24칸 매트릭스를
+채우는 대신 **TypeScript가 낼 수 있는 kind를 전수 열거**하는 쪽이 결정적이었다
+(`microsoft/TypeScript@v5.9.2 src/services/refactors/`, 16개 파일). 계획 6건 중
+3건이 "키가 겹쳐서"가 아니라 "그 리팩터링이 존재하지 않아서" 탈락했다.
+
+다음 마일스톤(v1.4.0) 착수 전 확인 대상: `ctrl+r`(IntelliJ Run) — VS Code mac
+기본 점유 여부 미확인. `cmd+n`(Generate)은 아래 §3 v1.4.0 항목 참조.
+
+Refactoring 카테고리 분모가 11에서 14로 늘어난 것은 재집계 차이다. k--kato의
+`ctrl+o` / `ctrl+i`는 `editor.action.codeAction` + `args.kind` 형태라 커맨드 이름
+기준 분류에서 빠져 있었다.
 
 ## 3. 마일스톤
 
@@ -153,7 +161,7 @@ v1.3.0(Refactoring) 착수 전 확인 대상: `ctrl+o`, `ctrl+i`, `ctrl+t`, `cmd
 |---|---|---|---|---|
 | ~~v1.1.0~~ | ✅ **완료 (2026-05-11)**. Editing 필수. 34 엔트리 추가 | 27 | 실제 ~3h | **53.8%** |
 | ~~v1.2.0~~ | ✅ **완료 (2026-05-11)**. Navigation + Search. 23 엔트리 추가 | 23 | 실제 ~2h | **65.8%** |
-| v1.3.0 | Refactoring + Generate | 6 (축소 시 3) | 5~7h | 73% |
+| ~~v1.3.0~~ | ✅ **완료 (2026-08-20)**. Refactoring. 4 엔트리 추가 + 죽은 키 2건 수정 | 6 중 4 | 실제 ~2h | **67.7%** |
 | v1.4.0 | Run 신설 + Debugging 마감 | 6 | 2~3h | 77% |
 | v1.5.0 | ToolWindow + Workbench + Diff | 17 (2건 제외 시 15) | 2.5~3h | 87% |
 | v2.0.0 | numpad 미러 + 토글 구조 정리 + 이관 가이드 | 17 + 정리 | 4~5h | 100% (실기능) |
@@ -187,17 +195,33 @@ k--kato는 `ctrl+h`에 Java 확장 전용 `java.action.showTypeHierarchy`를 쓴
 built-in `references-view.showTypeHierarchy`로 언어 중립화할 수 있다. `cmd+b`를
 `intellij.goToDeclarationOrUsages`로 감싼 것과 같은 패턴이다.
 
-### v1.3.0 — Refactoring (6건 → 3건 축소 권장, 5~7h)
+### ~~v1.3.0 — Refactoring~~ ✅ 완료 (2026-08-20, 실제 ~2h)
 
-`ctrl+o`(Override) `ctrl+i`(Implement) `ctrl+t`(Refactor This)
-`cmd+f6`(Change Signature) `cmd+alt+f`(Extract Field) `cmd+alt+p`(Introduce Parameter)
+**출하**: `ctrl+t`(Refactor This) `ctrl+o`(Override) `ctrl+i`(Implement)
+`f6`(Move, 죽은 키 수정) + `ctrl+alt+i`(Auto-Indent Lines, Editing).
 
-이 마일스톤은 키 추가가 아니라 **LSP kind 매핑 연구**가 본체다.
-`src/refactor/language-action-table.ts`의 확장 지점이다.
+**제외 3건 — 근거**: TypeScript가 내는 refactor kind를 전수 열거한 결과
+`refactor.extract.field`, `refactor.change.signature`,
+`refactor.introduce.parameter`가 **존재하지 않는다**. 셋 다 어느 언어에서도
+실측되기 전까지 등록하지 않는다. `cmd+alt+f`는 추가로 macOS의 Replace 키
+(`editor.action.startFindReplaceAction`, `findController.ts` L1011)라 점유 비용까지
+발생한다. k--kato는 셋 다 바인딩하고 있고, TypeScript에서 전부 죽은 키다.
 
-`cmd+alt+f`는 TS LS가 `refactor.extract.field`를 노출하지 않아 이미 불가 판정.
-`cmd+f6`도 LSP 표준 kind가 없다. **뒤 3건은 언어별 지원 매트릭스를 먼저 실측한 뒤
-지원 언어에만 등록**하는 방식으로 축소할 것.
+**부수 수확 — 자체 버그 2건**:
+1. `f6` → `workbench.action.files.move`는 **존재하지 않는 커맨드**였다. v1.0.0부터
+   아무 동작도 안 하면서 기본값 `workbench.action.focusNextPart`만 뺏고 있었다.
+2. `inline`의 TS 체인 끝에 있던 `refactor.rewrite` 폴백이 `apply: "ifSingle"`과
+   맞물려 무관한 리팩터링을 자동 적용했다. Inline을 눌렀는데 화살표 함수 중괄호가
+   바뀌는 식이다.
+
+교훈 두 가지는 `.claude/conventions.md`에 규칙으로 올렸다: "커맨드가 실존하는지
+확인하고 키를 걸어라", "kind 체인은 좁게 유지하라".
+
+**미해결로 남긴 것**: `cmd+n`(Generate). IntelliJ ⌘N은 에디터에서 Generate 팝업을
+연다. TS에서 Generate에 해당하는 유일한 kind는
+`refactor.rewrite.property.generateAccessors` 하나뿐이고 커서 위치 의존적이라,
+`cmd+n`을 걸면 대부분의 위치에서 아무것도 안 하면서 New File만 막는다.
+v1.4.0에서 `editor.action.sourceAction` 폴백과 함께 재검토한다.
 
 ### v1.4.0 — Run 신설 + Debugging 마감 (6건, 2~3h)
 

@@ -29,5 +29,14 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("intellij.inline", () =>
       navigator.runRefactor("inline"),
     ),
+    vscode.commands.registerCommand("intellij.move", () =>
+      navigator.runRefactor("move"),
+    ),
+    vscode.commands.registerCommand("intellij.overrideMethods", () =>
+      navigator.runRefactor("overrideMethods"),
+    ),
+    vscode.commands.registerCommand("intellij.implementMethods", () =>
+      navigator.runRefactor("implementMethods"),
+    ),
   );
 }

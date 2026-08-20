@@ -151,6 +151,60 @@ to Navigation Bar and View source, but they are the system-wide macOS
 document-start / document-end gesture and MacBook keyboards have no
 physical Home / End key. Fidelity loses to platform convention here.
 
+Added during the v1.3.0 pass:
+
+| Key | Default command | Source |
+|---|---|---|
+| `⌃O` | `lineBreakInsert` (Emacs open-line) | `coreCommands.ts` L1990 |
+| `⌘⌥F` | `startFindReplaceAction` — **the macOS Replace key** | `findController.ts` L1011 |
+| `⌘I` | `triggerSuggest` (mac secondary). `⌃I` is **free** — do not confuse the two | `suggestController.ts` L809 |
+| `F6` / `⇧F6` | `workbench.action.focusNextPart` / `focusPreviousPart` | `navigationActions.ts` L326, L342 |
+| `⌘⌥P` | Keybindings-editor sort-by-precedence, active only inside that editor | `preferences.contribution.ts` L1179 |
+| `⌃T`, `⌘F6`, `⌘⌥L`, `⌃⌥O`, `⌃⌥I` | none — free | (absent from source) |
+
+`editor.action.transpose` (`linesOperations.ts` L1060) has no keybinding
+at all, so `⌃T` displaces nothing.
+
+### Check that the command exists before binding a key to it
+
+`F6` shipped in v1.0.0 bound to `workbench.action.files.move`. There is no
+such command — the workbench's only file-move command is `moveFileToTrash`
+(i.e. Delete). The key was inert *and* it displaced
+`workbench.action.focusNextPart`, so the net effect was purely negative,
+and nothing surfaced it: VS Code does not warn about a keybinding pointing
+at a non-existent command. Grep the VS Code source for the id, or run
+`Developer: Show All Commands`, before shipping.
+
+### Keep kind chains narrow — a broad fallback is worse than none
+
+Code-action kind matching is prefix-based on dot boundaries, so
+`refactor.rewrite` matches `refactor.rewrite.arrow.braces`. Combined with
+`apply: "ifSingle"` (hard rule #2), a lone match is applied without
+asking. Until v1.3.0 the `inline` chain for TypeScript ended in
+`refactor.rewrite`; with the caret somewhere non-inlinable, pressing
+`⌘⌥N` silently rewrote an arrow function instead of reporting that there
+was nothing to inline.
+
+Rule: a fallback kind must be a *narrower or equal* description of the
+same IntelliJ action. If a language has no matching kind, let the chain
+end and let `runRefactor` report it. `source.overrideMethods` for TS and
+bare `quickfix` for Implement Methods were both rejected on these grounds.
+
+### Enumerate what the language server can actually do
+
+For v1.3.0 the blocking question was not key conflicts but whether the
+refactorings exist. They are enumerable at the source:
+
+- **TypeScript** — `microsoft/TypeScript@v5.9.2 src/services/refactors/`
+  (16 files). Each registers a literal `kind:` string. VS Code passes it
+  through verbatim (`typescript-language-features/src/languageFeatures/refactor.ts`
+  `getKind()`), so this directory *is* the list.
+- Result: no `refactor.extract.field`, no `refactor.change.signature`, no
+  `refactor.introduce.parameter`. Three planned keys were dropped.
+
+k--kato binds all three anyway. Copying a competitor's keymap without
+checking the other side of the binding reproduces their dead keys.
+
 ### Prefer the core command over a language-specific one
 
 When k--kato binds a language extension's command, check whether VS Code

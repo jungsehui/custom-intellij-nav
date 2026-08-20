@@ -2,7 +2,7 @@
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -63,6 +63,21 @@
       {
         "command": "intellij.inline",
         "title": "Inline",
+        "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.move",
+        "title": "Move",
+        "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.overrideMethods",
+        "title": "Override Methods",
+        "category": "IntelliJ Navigation"
+      },
+      {
+        "command": "intellij.implementMethods",
+        "title": "Implement Methods",
         "category": "IntelliJ Navigation"
       }
     ],
@@ -462,10 +477,9 @@
         "when": "isMac && editorHasRenameProvider && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
-        "command": "workbench.action.files.move",
-        "key": "f6",
+        "command": "intellij.move",
         "mac": "f6",
-        "when": "isMac && config.customIntellijNav.enableRefactoringKeymap"
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "git.commit",
@@ -927,6 +941,26 @@
         "key": "ctrl+alt+up",
         "mac": "ctrl+alt+up",
         "when": "isMac && editorTextFocus && hasWordHighlights && config.customIntellijNav.enableSearchKeymap"
+      },
+      {
+        "command": "editor.action.refactor",
+        "mac": "ctrl+t",
+        "when": "isMac && editorHasCodeActionsProvider && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+      },
+      {
+        "command": "intellij.overrideMethods",
+        "mac": "ctrl+o",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+      },
+      {
+        "command": "intellij.implementMethods",
+        "mac": "ctrl+i",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+      },
+      {
+        "command": "editor.action.reindentselectedlines",
+        "mac": "ctrl+alt+i",
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
       }
     ]
   },

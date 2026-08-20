@@ -1,29 +1,33 @@
 # Architecture
 
-A single VS Code extension. ~700 LOC. Two user-facing capabilities:
+A single VS Code extension. ~795 LOC. Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
-2. **Extract refactoring** (Variable / Method / Constant / Inline) with
-   per-language LSP kind dispatch and a prefetch-based dispatcher that
-   avoids the "No preferred code actions" toast.
+2. **Refactoring** (Extract Variable / Method / Constant, Inline, Move,
+   Override / Implement Methods) with per-language LSP kind dispatch and a
+   prefetch-based dispatcher that avoids the "No preferred code actions"
+   toast.
 
-On top of those, a curated **132-keybinding IntelliJ Mac keymap** spread
+On top of those, a curated **136-keybinding IntelliJ Mac keymap** spread
 across 10 toggleable categories (`enableXxxKeymap`).
 
 ## Module graph
 
 ```
-src/extension.ts (33 LOC) — activate() registers 5 commands
+src/extension.ts (42 LOC) — activate() registers 8 commands
 └─ src/core/navigator.ts (35 LOC) — IntelliJNavigator orchestrator class
    ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
    ├─ src/core/snapshot.ts (48 LOC) — captureSnapshot() + isStale()
    ├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
    ├─ src/navigation/go-to-declaration.ts (220 LOC) — cmd+B handler
    │  └─ src/navigation/location-utils.ts (68 LOC) — dedupe, normalize
-   └─ src/refactor/run-refactor.ts (84 LOC) — Extract * handler
-      └─ src/refactor/language-action-table.ts (89 LOC) — per-lang kind table
-src/types.ts (44 LOC) — shared types (RawLocation, IntelliJAction, …)
+   └─ src/refactor/run-refactor.ts (87 LOC) — refactoring handler
+      └─ src/refactor/language-action-table.ts (173 LOC) — per-lang kind
+         table + ACTION_LABELS. Carries the measured census of every
+         refactor kind TypeScript emits; that census is the reason
+         cmd+alt+f / cmd+f6 / cmd+alt+p are not shipped.
+src/types.ts (55 LOC) — shared types (RawLocation, IntelliJAction, …)
 ```
 
 No cycles. Each file has one job. Pure helpers (`location-utils`,
@@ -48,8 +52,8 @@ the only mutable state (`latestRequestId`) and the only resource handle
 
 | Surface | Count | Notes |
 |---|---|---|
-| Commands | 5 | All in the `intellij.*` namespace |
-| Keybindings | 132 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
+| Commands | 8 | All in the `intellij.*` namespace |
+| Keybindings | 136 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
 | Settings | 13 | 10 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)
@@ -58,10 +62,10 @@ the only mutable state (`latestRequestId`) and the only resource handle
 |---|---|---|---|
 | bundled | `enableBundledMacKeymap` | 1 (cmd+b) | **on** |
 | extended | `enableExtendedMacKeymap` | 15 | off |
-| editing | `enableEditingKeymap` | 49 | off |
+| editing | `enableEditingKeymap` | 50 | off |
 | navigation | `enableNavigationKeymap` | 36 | off |
 | search | `enableSearchKeymap` | 10 | off |
-| refactoring | `enableRefactoringKeymap` | 2 | off |
+| refactoring | `enableRefactoringKeymap` | 5 | off |
 | vcs | `enableVcsKeymap` | 5 | off |
 | toolwindow | `enableToolWindowKeymap` | 5 | off |
 | explorertree | `enableExplorerTreeKeymap` | 1 | off |
@@ -91,7 +95,7 @@ keypress
 Stale-request guard: every async hop checks `isStale(requestId, ...)`.
 Rapid keypresses don't interleave navigation.
 
-### cmd+alt+V (Extract Variable, etc.)
+### cmd+alt+V (Extract Variable), F6 (Move), ctrl+O (Override), …
 
 ```
 keypress
@@ -110,3 +114,11 @@ The `apply: "ifSingle"` is load-bearing: it's what surfaces VS Code's
 picker for Extract Method (which exposes "to module scope" / "to inner
 function" / "to method in class") and gives an IntelliJ-like Choose
 Destination Scope UX.
+
+It is also why kind chains must stay narrow. Kind matching is
+prefix-based on dot boundaries, so `refactor.rewrite` matches
+`refactor.rewrite.arrow.braces` — and when that is the only match,
+`ifSingle` applies it without asking. A broad fallback therefore turns
+"nothing to do here" into "silently did something else". This shipped as
+a real bug in Inline and was fixed in v1.3.0; see the `inline` comment in
+`language-action-table.ts`.

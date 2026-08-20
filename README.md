@@ -20,16 +20,26 @@ Command id: `intellij.goToDeclarationOrUsages`
 
 ### 2. Language-aware Extract refactoring
 
-Four commands that auto-select the correct `kind` per language and `prefetch` to avoid the "No preferred code actions for X available" toast:
+Seven commands that auto-select the correct `kind` per language and `prefetch` to avoid the "No preferred code actions for X available" toast:
 
 | Command id | Default key (Mac) | TypeScript | Java | Kotlin |
 |---|---|---|---|---|
 | `intellij.extractVariable` | `cmd+alt+v` | `refactor.extract.constant` | `refactor.extract.variable` | `refactor.extract.variable` |
 | `intellij.extractMethod` | `cmd+alt+m` | `refactor.extract.function` | `refactor.extract.method` | `refactor.extract.function` |
 | `intellij.extractConstant` | `cmd+alt+c` | `refactor.extract.constant` | `refactor.extract.constant` | — |
-| `intellij.inline` | `cmd+alt+n` | `refactor.inline` → `refactor.rewrite` | `refactor.inline` | `refactor.inline` |
+| `intellij.inline` | `cmd+alt+n` | `refactor.inline.variable` | `refactor.inline` | `refactor.inline` |
+| `intellij.move` | `f6` | `refactor.move` | `refactor.move` | `refactor.move` |
+| `intellij.overrideMethods` | `ctrl+o` | — | `source.overrideMethods` | — |
+| `intellij.implementMethods` | `ctrl+i` | — | `source.overrideMethods` | — |
 
-Falls back gracefully (multi-kind chain), and if no action is available it writes to the status bar instead of throwing a toast.
+Falls back through a multi-kind chain, and if no action is available it writes to the status bar instead of throwing a toast.
+
+A dash means the language server exposes no such kind, so the key reports
+"No *X* available for *language*" rather than doing something else. That
+restraint is deliberate: kind matching is prefix-based, so a broad
+fallback like `refactor.rewrite` will happily match an unrelated
+refactoring and `apply: "ifSingle"` will auto-apply it. Until v1.3.0
+`cmd+alt+n` (Inline) did exactly that.
 
 ### 3. Silent error policy
 
@@ -68,6 +78,7 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌘/` / `⌘⌥/` | Comment / Block Comment |
 | `⌘⌥L` | Reformat code |
 | `⌃⌥O` | Optimize imports |
+| `⌃⌥I` | Auto-Indent Lines |
 | `⌘D` | Duplicate Line |
 | `⌘⌫` | Delete Line |
 | `⌘X` / `⌘⌦` | Cut line (or selection) |
@@ -154,10 +165,17 @@ keys to fall back to.
 | `⌃⌥↓` / `⌃⌥↑` | Next / Previous Highlighted Usage |
 
 #### Refactoring (`enableRefactoringKeymap`)
+
+> ⚠️ Displaces `⌃O` (Emacs-style insert-line-break). See
+> [Displaced defaults](#displaced-defaults).
+
 | Mac key | IntelliJ action |
 |---|---|
 | `⇧F6` | Rename |
 | `F6` | Move |
+| `⌃T` | Refactor This |
+| `⌃O` | Override Methods (Java) |
+| `⌃I` | Implement Methods (Java) |
 
 #### VCS (`enableVcsKeymap`)
 | Mac key | IntelliJ action |
@@ -244,6 +262,17 @@ Under `enableNavigationKeymap`:
 | `⌘[` | Outdent Lines (still on `⇧Tab`) | Navigate Back |
 | `⌘]` | Indent Lines (still on `Tab`) | Move to bracket |
 
+Under `enableRefactoringKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⌃O` | `lineBreakInsert` (Emacs open-line) | Override Methods |
+
+`F6` is the opposite case: it used to displace
+`workbench.action.focusNextPart` while being bound to a command that does
+not exist. It is now scoped to `editorTextFocus`, so Focus Next Part
+works again everywhere outside the editor.
+
 Under `enableDebuggingKeymap`:
 
 | Key | VS Code default you lose | What it becomes |
@@ -278,7 +307,7 @@ VS Code's contribution model imposes a few hard constraints:
 - **`shift+shift` (Search Everywhere) and `ctrl+ctrl` (Run Anything)** — VS Code does not natively support double-tap modifier keys. The closest workaround is the `⌘⇧Space` chord routed to `workbench.action.quickOpen`.
 - **Postfix completion (`.var`, `.for`, `.return`)** — IntelliJ Live Templates have no first-class equivalent. Use VS Code snippets.
 - **Successively increasing code blocks** — `editor.action.smartSelect.expand` is close but not syntax-aware in the same way.
-- **`cmd+alt+f` (Extract Field)** — TypeScript Language Service does not expose this kind. Java only.
+- **Extract Field (`⌘⌥F`), Change Signature (`⌘F6`), Introduce Parameter (`⌘⌥P`)** — not shipped. Enumerating microsoft/TypeScript@v5.9.2 `src/services/refactors/` shows TypeScript emits no `refactor.extract.field`, `refactor.change.signature`, or `refactor.introduce.parameter`, so all three would be inert. `⌘⌥F` is additionally the macOS **Replace** shortcut (`editor.action.startFindReplaceAction`, `findController.ts` L1011), so binding it would cost a heavily-used default and return nothing. They will ship if and when a language server is measured to support them.
 
 ## If you also use `IntelliJ IDEA Keybindings` (k--kato)
 

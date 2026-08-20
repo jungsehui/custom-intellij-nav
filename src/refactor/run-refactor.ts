@@ -2,11 +2,11 @@ import * as vscode from "vscode";
 import type { Logger } from "../core/logger";
 import { getShowRefactorNotifications } from "../core/config";
 import type { IntelliJAction } from "../types";
-import { LANGUAGE_ACTION_TABLE } from "./language-action-table";
+import { ACTION_LABELS, LANGUAGE_ACTION_TABLE } from "./language-action-table";
 
 /**
- * Apply an IntelliJ-style refactoring (Extract Variable / Method / Constant /
- * Inline) at the current selection.
+ * Apply an IntelliJ-style refactoring (Extract Variable / Method / Constant,
+ * Inline, Move, Override / Implement Methods) at the current selection.
  *
  * Strategy:
  *  1. Pick a per-language list of code-action `kind`s to attempt
@@ -74,11 +74,14 @@ export async function runRefactor(
     }
   }
 
-  logger.showStatus(`No ${action} available for ${langId}`);
+  const label = ACTION_LABELS[action];
+  logger.showStatus(`No ${label} available for ${langId}`);
 
   if (getShowRefactorNotifications()) {
     void vscode.window.showInformationMessage(
-      `Custom IntelliJ Nav: No ${action} available for ${langId} at this position. Try selecting an expression or block of statements.`,
+      `Custom IntelliJ Nav: ${langId} offers no ${label} at this position. ` +
+        `Either the language server does not implement it, or the caret is ` +
+        `not on something it applies to.`,
     );
   }
 }

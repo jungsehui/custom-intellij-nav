@@ -9,10 +9,11 @@ VS Code extension that gives users an IntelliJ-style keymap with a working
 TypeScript Extract refactoring (the 4-year-old k--kato issue #142 fix). Single
 binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 
-- **Status**: v1.0.0 shipped to GitHub. Marketplace publish pending.
-- **Source**: `src/` — 11 TypeScript files, ~700 LOC total. `extension.ts` is a
+- **Status**: v1.3.0 on GitHub. Marketplace has v1.0.0; v1.3.0 publish
+  pending (manual VSIX upload via the publisher management page).
+- **Source**: `src/` — 11 TypeScript files, ~795 LOC total. `extension.ts` is a
   30-line entry point. Domain split: `core/` + `navigation/` + `refactor/`.
-- **Manifest**: `package.json` — 5 commands, 132 keybindings, 13 settings.
+- **Manifest**: `package.json` — 8 commands, 136 keybindings, 13 settings.
 
 ## Where to look first
 

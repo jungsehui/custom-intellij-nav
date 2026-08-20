@@ -6,6 +6,78 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-08-20
+
+Refactoring. Coverage 65.8% → 67.7% of the IntelliJ Mac keymap.
+Keybindings 132 → 136, commands 5 → 8. Refactoring 2 → 5, Editing 49 → 50.
+
+### Measured first — and this time the measurement killed half the milestone
+
+The plan listed six keys. Three of them turned out to be impossible, not
+because of key conflicts but because the refactorings do not exist.
+
+Every refactor `kind` TypeScript can emit was enumerated from
+microsoft/TypeScript@v5.9.2 `src/services/refactors/` (16 files), which
+reaches VS Code through
+`extensions/typescript-language-features/src/languageFeatures/refactor.ts`:
+
+```
+refactor.extract.function        refactor.move.file
+refactor.extract.constant        refactor.move.newFile
+refactor.extract.type            refactor.inline.variable
+refactor.extract.interface       refactor.rewrite.property.generateAccessors
+refactor.rewrite.import / .export / .arrow.braces / .parameters.toDestructured
+```
+
+`refactor.extract.field`, `refactor.change.signature` and
+`refactor.introduce.parameter` are absent. k--kato binds all three anyway;
+they are dead keys in TypeScript. They are **not shipped here**.
+
+Key occupancy, measured against microsoft/vscode@main:
+
+| Key | VS Code default | Source | Outcome |
+|---|---|---|---|
+| `⌃T` | none | — | shipped |
+| `⌃I` | none (`triggerSuggest` uses `⌘I`, not `⌃I`) | `suggestController.ts` L809 | shipped |
+| `⌃O` | `lineBreakInsert` (Emacs open-line) | `coreCommands.ts` L1990 | displaced |
+| `⌘⌥P` | Keybindings-editor sort only | `preferences.contribution.ts` L1179 | skipped, no kind exists |
+| `⌘F6` | none | — | skipped, no kind exists |
+| `⌘⌥F` | **`startFindReplaceAction`** — the macOS Replace key | `findController.ts` L1011 | skipped, and no kind exists |
+
+### Fixed
+
+- **`F6` did nothing.** It was bound to `workbench.action.files.move`,
+  which is not a VS Code command — the workbench's only file-move command
+  is `moveFileToTrash` (i.e. Delete). So `F6` was inert *and* it displaced
+  the built-in `workbench.action.focusNextPart`. It now runs a real Move
+  refactoring (`refactor.move`, covering "Move to a new file" and "Move to
+  file…"), scoped to `editorTextFocus` so `focusNextPart` works everywhere
+  else again.
+- **`⌘⌥N` (Inline) could silently perform an unrelated refactoring.** The
+  TypeScript chain ended in a `refactor.rewrite` fallback. With the caret
+  somewhere non-inlinable, `refactor.inline` returned nothing, the chain
+  fell through, and a lone unrelated action such as
+  `refactor.rewrite.arrow.braces` was auto-applied by `apply: "ifSingle"` —
+  pressing Inline rewrote an arrow function. The fallback is removed and
+  the TS kind is now named exactly: `refactor.inline.variable`.
+- Status-bar and notification text now reads "No Extract Variable
+  available for typescript" instead of the internal `extractVariable`.
+
+### Added — Refactoring
+- `⌃T` **Refactor This** (`editor.action.refactor`)
+- `⌃O` **Override Methods**, `⌃I` **Implement Methods**
+  (`source.overrideMethods`; Java language server only — see Limitations)
+- `F6` **Move**, now functional
+
+### Added — Editing
+- `⌃⌥I` Auto-Indent Lines (`editor.action.reindentselectedlines`)
+
+### Changed
+- `CodeActionAttempt.preferred` removed. Hard rule #2 forbids passing
+  `preferred: true` to `editor.action.codeAction`, so the dispatcher never
+  read the flag. A field the dispatcher ignores invites someone to wire it
+  up and re-break the rule.
+
 ## [1.2.0] — 2026-05-11
 
 Navigation and Search. Coverage 53.8% → 65.8% of the IntelliJ Mac keymap.
