@@ -155,8 +155,9 @@ v1.3.0 절에 있다. 예상대로 본체는 키 충돌이 아니라 kind 매핑
 (`microsoft/TypeScript@v5.9.2 src/services/refactors/`, 16개 파일). 계획 6건 중
 3건이 "키가 겹쳐서"가 아니라 "그 리팩터링이 존재하지 않아서" 탈락했다.
 
-다음 마일스톤(v1.4.0) 착수 전 확인 대상: `ctrl+r`(IntelliJ Run): VS Code mac
-기본 점유 여부 미확인. `cmd+n`(Generate)은 아래 §3 v1.4.0 항목 참조.
+~~다음 마일스톤(v1.4.0) 착수 전 확인 대상~~ → **전부 해소.** `ctrl+r` 은 v1.4.0 에서
+`workbench.action.openRecent` 점유로 실측됐고(`windowActions.ts` L304), 기능이 이미
+`cmd+e` 에 있어 대체했다. `cmd+n`(Generate)은 v2.1.0 에서 확정 제외했다. 4절 참조.
 
 Refactoring 카테고리 분모가 11에서 14로 늘어난 것은 재집계 차이다. k--kato의
 `ctrl+o` / `ctrl+i`는 `editor.action.codeAction` + `args.kind` 형태라 커맨드 이름
@@ -228,11 +229,12 @@ built-in `references-view.showTypeHierarchy`로 언어 중립화할 수 있다. 
 교훈 두 가지는 `.claude/conventions.md`에 규칙으로 올렸다: "커맨드가 실존하는지
 확인하고 키를 걸어라", "kind 체인은 좁게 유지하라".
 
-**미해결로 남긴 것**: `cmd+n`(Generate). IntelliJ ⌘N은 에디터에서 Generate 팝업을
-연다. TS에서 Generate에 해당하는 유일한 kind는
-`refactor.rewrite.property.generateAccessors` 하나뿐이고 커서 위치 의존적이라,
-`cmd+n`을 걸면 대부분의 위치에서 아무것도 안 하면서 New File만 막는다.
-v1.4.0에서 `editor.action.sourceAction` 폴백과 함께 재검토한다.
+**~~미해결로 남긴 것: `cmd+n`(Generate)~~** → **2026-08-21 확정 제외.** 4절 참조.
+`editor.action.sourceAction` 폴백도 답이 아니었다. TS 의 `source.*` 는
+`source.fixAll.ts` 와 `source.removeUnused.ts` 뿐이라(`fixAll.ts` L130, L152)
+Generate 가 아니라 정리 액션이다. 그리고 유일한 Generate 계열인
+`refactor.rewrite.property.generateAccessors` 는 이미 `ctrl+t`(Refactor This)에서
+나온다. 키를 새로 걸 이유가 없다.
 
 ### ~~v1.4.0 — Run 신설 + Debugging 마감~~ ✅ 완료 (2026-08-21, 실제 ~2h)
 
@@ -321,6 +323,7 @@ k--kato는 `src/package-with-comment.json`에서 **45개 IntelliJ 액션을 `"co
 | Run Anything | `ctrl ctrl` | 위와 동일 |
 | Brief Info | `cmd+mouseover` | `contributes.keybindings`는 키보드 전용, 마우스 제스처 등록 불가 |
 | Goto next/prev splitter | `alt+tab`, `shift+alt+tab` | macOS 앱 스위처가 OS 레벨에서 선점. **v1.5.0에서 확정 제외** |
+| Generate | `cmd+n` | TS 의 Generate 계열 kind 는 `refactor.rewrite.property.generateAccessors` 하나뿐이고 커서가 프로퍼티 위에 있어야 한다. `cmd+n` 을 걸면 대부분의 위치에서 아무것도 안 하면서 New Untitled File 만 막는다. 해당 기능은 이미 `ctrl+t`(Refactor This)에서 나온다. **v2.1.0 에서 확정 제외** |
 | Move Caret to Previous/Next Method | `ctrl+up`, `ctrl+down` | VS Code에 대응 커맨드 부재(전수 확인) + macOS Mission Control 선점. **v2.0.1에서 제거** |
 
 ### IntelliJ 전용 서브시스템 (VS Code에 대응 개념 없음)

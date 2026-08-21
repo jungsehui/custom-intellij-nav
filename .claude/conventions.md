@@ -273,6 +273,29 @@ not what Apple's factory assignment is. No file on the machine declares
 the defaults. The assignment (`⌃↑` = Mission Control, and so on) is
 macOS's documented behavior, not something measured here.
 
+### "Generate" has no VS Code counterpart, and the capability is already bound
+
+IntelliJ's `⌘N` opens a Generate popup. The obvious mapping is
+`editor.action.sourceAction`, but in TypeScript that shows
+`source.fixAll.ts` and `source.removeUnused.ts`
+(`typescript-language-features/src/languageFeatures/fixAll.ts` L130, L152)
+plus organize imports — cleanup actions, not Generate.
+
+The only Generate-class refactor TypeScript emits is
+`refactor.rewrite.property.generateAccessors`
+(`microsoft/TypeScript@v5.9.2 .../generateGetAccessorAndSetAccessor.ts` L24),
+and it needs the caret on a property.
+
+So `⌘N` would block New Untitled File inside the editor while doing nothing
+at most carets. It is not bound. **And it does not need to be**: `⌃T`
+(Refactor This, IntelliJ's own key) already surfaces `generateAccessors`
+alongside every other refactoring.
+
+The general move: before adding a key for a capability, check whether an
+existing binding already reaches it. Twice now the answer was yes — Open
+Recent on `⌘E`, Go to Next Problem on `F2` — and here it makes a whole
+milestone item disappear.
+
 ### A platform ternary can make a key free on the platform you care about
 
 `⌘⌥N` looked occupied: `fileCommands.ts` L694 binds New Untitled File to

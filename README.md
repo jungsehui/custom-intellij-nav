@@ -527,6 +527,7 @@ are not oversights — each has a recorded reason:
 | `⌘↑` / `⌘↓` | Nav Bar / View source | macOS document start and end; MacBooks have no Home / End key |
 | `↩` / `⇥` / `⌃↩` | various | identical to VS Code defaults, or notebook-only |
 | `⌘⇧↩` | Complete Current Statement | deferred |
+| `⌘N` | Generate | TypeScript's only Generate-class action is `refactor.rewrite.property.generateAccessors`, which needs the caret on a property. Binding `⌘N` would block New Untitled File in the editor while usually doing nothing, and `⌃T` (Refactor This) already surfaces it. |
 | `⌃↑` / `⌃↓` | Move Caret to Previous / Next Method | VS Code has no such command, and macOS Mission Control takes the keys |
 
 Beyond the keymap, IntelliJ subsystems with no VS Code equivalent are out
