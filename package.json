@@ -1018,14 +1018,15 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "npm run clean && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
     "check": "tsc --noEmit -p ./",
     "package:vsix": "vsce package",
-    "deploy": "vsce publish"
+    "deploy": "vsce publish",
+    "clean": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\""
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

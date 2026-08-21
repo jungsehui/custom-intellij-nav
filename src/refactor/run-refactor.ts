@@ -3,37 +3,18 @@ import type { Logger } from "../core/logger";
 import { getShowRefactorNotifications } from "../core/config";
 import { captureSnapshot, selectionMatches } from "../core/snapshot";
 import type { IntelliJAction } from "../types";
-import { ACTION_LABELS, LANGUAGE_ACTION_TABLE } from "./language-action-table";
-
-/**
- * Whether we are entitled to tell the user this language does not implement
- * an action.
- *
- * Only for languages with a measured entry in the table. Everything else
- * resolves through the "*" chain, which means nobody checked — and "the
- * language server does not implement it" would be a claim about something we
- * never looked at.
- *
- * The concrete case: `overrideMethods` and `implementMethods` have no
- * per-language entry, and `language-action-table.ts` records that TypeScript
- * has no counterpart at all. Without this gate, ctrl+O and ctrl+I pop an
- * information toast on every single press in TypeScript, forever. The status
- * bar still reports the miss either way.
- */
-export function shouldClaimUnsupported(
-  action: IntelliJAction,
-  langId: string,
-): boolean {
-  return Object.hasOwn(LANGUAGE_ACTION_TABLE[action], langId);
-}
+import { describeOutcome, resolveAttempts } from "./policy";
 
 /**
  * Apply an IntelliJ-style refactoring (Extract Variable / Method / Constant,
  * Inline, Move, Override / Implement Methods) at the current selection.
  *
+ * This module is the adapter: it talks to VS Code. Every decision it makes
+ * that does not need VS Code lives in `./policy`, which cannot import
+ * `vscode` at all.
+ *
  * Strategy:
- *  1. Pick a per-language list of code-action `kind`s to attempt
- *     (LANGUAGE_ACTION_TABLE).
+ *  1. Ask the policy which code-action `kind`s to attempt for this language.
  *  2. Prefetch via `vscode.executeCodeActionProvider` to check whether the
  *     language server actually reports any matching action. This avoids the
  *     "No preferred code actions for X available" toast that VS Code throws
@@ -42,9 +23,7 @@ export function shouldClaimUnsupported(
  *     `apply: "ifSingle"` — single match auto-applies, multiple matches
  *     surface VS Code's picker (e.g. "Extract to method in class" /
  *     "Extract to inner function" / "Extract to module scope" for TS).
- *  4. If no kind in the chain is available, surface a friendly notification
- *     so the user knows the extension was invoked but the language server
- *     has nothing to offer at this position.
+ *  4. If no kind in the chain is available, ask the policy what to say.
  *
  * Staleness: step 2 and step 3 target different things. The prefetch names a
  * URI and a range; `editor.action.codeAction` names neither and acts on
@@ -64,11 +43,7 @@ export async function runRefactor(
 
   const snapshot = captureSnapshot(editor);
   const langId = editor.document.languageId;
-  const table = LANGUAGE_ACTION_TABLE[action];
-  // Own-property check, not `table[langId] ?? table["*"]`: a languageId that
-  // collides with a prototype key ("constructor", "toString") would otherwise
-  // resolve to a function and `??` would not fire.
-  const attempts = Object.hasOwn(table, langId) ? table[langId] : table["*"];
+  const attempts = resolveAttempts(action, langId);
 
   logger.log(
     `refactor ${action} lang=${langId} attempts=${attempts
@@ -118,23 +93,10 @@ export async function runRefactor(
     }
   }
 
-  const label = ACTION_LABELS[action];
+  const outcome = describeOutcome(action, langId, sawError);
+  logger.showStatus(outcome.status);
 
-  // An exception is not the same as "the language server has nothing here".
-  // Reporting the former as the latter tells the user the feature does not
-  // exist for their language, which is the one message they would act on.
-  if (sawError) {
-    logger.showStatus(`${label} failed (see Output)`);
-    return;
-  }
-
-  logger.showStatus(`No ${label} available for ${langId}`);
-
-  if (getShowRefactorNotifications() && shouldClaimUnsupported(action, langId)) {
-    void vscode.window.showInformationMessage(
-      `Custom IntelliJ Nav: ${langId} offers no ${label} at this position. ` +
-        `Either the language server does not implement it, or the caret is ` +
-        `not on something it applies to.`,
-    );
+  if (outcome.notification && getShowRefactorNotifications()) {
+    void vscode.window.showInformationMessage(outcome.notification);
   }
 }

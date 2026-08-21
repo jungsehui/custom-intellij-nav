@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { shouldClaimUnsupported } from "../refactor/run-refactor";
+import { shouldClaimUnsupported } from "../refactor/policy";
 
 suite("unsupported-claim policy", () => {
   test("claims only for languages the table measured", () => {

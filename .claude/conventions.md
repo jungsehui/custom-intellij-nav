@@ -518,6 +518,11 @@ This repo follows that. References:
 1. `git mv old-name.ts new-name.ts` — never plain `mv` (case-insensitive FS will silently miss the change).
 2. Update **every relative import** that references the file. Hunt them with `grep -rn "old-name" src/`.
 3. Run `npm run check` to catch missed imports.
+3b. **`npm run compile` now wipes `out/` first, and it has to.** `tsc` never
+   removes stale output, so a renamed test file leaves its old `.js` behind
+   and `vscode-test` keeps running it — against exports that no longer
+   exist. That failure looks like a broken test, not a stale artifact.
+   Renaming `run-refactor-policy.test.ts` produced exactly this.
 4. Commit the rename + import updates in one atomic commit so reviewers can `git log --follow` cleanly.
 
 ### Don't
