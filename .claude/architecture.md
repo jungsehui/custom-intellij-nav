@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~1,250 LOC across 15 files (4 of them tests, 317 LOC). Two user-facing capabilities:
+A single VS Code extension. ~1,320 LOC across 16 files (5 of them tests, 365 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).

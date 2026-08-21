@@ -11,7 +11,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 
 - **Status**: v2.1.0 on GitHub. Marketplace has v1.0.0; publish pending
   (manual VSIX upload via the publisher management page — no PAT needed).
-- **Source**: `src/` — 15 TypeScript files, ~1,250 LOC (317 of it tests). `extension.ts` is a
+- **Source**: `src/` — 16 TypeScript files, ~1,320 LOC (365 of it tests). `extension.ts` is a
   30-line entry point. Domain split: `core/` + `navigation/` + `refactor/`.
 - **Manifest**: `package.json` — 8 commands, 168 keybindings, 17 settings.
   Every binding carries `isMac`; none carries a `key` chord.

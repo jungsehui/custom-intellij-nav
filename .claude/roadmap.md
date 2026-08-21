@@ -430,11 +430,17 @@ Vim이 점유하면 양보하며, `vim.handleKeys`로 되돌려주면 다시 우
 
 ## 6. 미확인 (추측하지 않고 남김)
 
-1. VS Code macOS 기본 키맵의 정확한 바인딩. 앱 번들이 minify돼 있어 `cursorWordStartLeft`
-   문자열 존재만 확인했고 어느 키에 묶였는지는 미확인. 2절 실측 대상.
+1. ~~VS Code macOS 기본 키맵의 정확한 바인딩~~ → **2026-08-21 해소.** minify 된 앱 번들을
+   읽으려 한 게 문제였다. 전체 소스 체크아웃으로 측정한다
+   (`--filter=blob:none --sparse --depth=1`, `src/vs` + `extensions`, .ts 11,832개).
+   방법과 함정은 `.claude/conventions.md` 의 "Measure against a complete checkout".
 2. ~~GitLens 실제 키바인딩 목록~~ → **2026-08-21 해소.** 키바인딩 59건 전수 확인,
    `ctrl+alt+shift+up/down` 미점유. 충돌 없음.
-3. `references-view.showTypeHierarchy`가 built-in인지 별도 확장인지. v1.2.0 착수 전 확인.
+3. ~~`references-view.showTypeHierarchy` 가 built-in 인지 별도 확장인지~~ → **v1.2.0 에서 해소.**
+   core 의 `editor.showTypeHierarchy` 를 `editorHasTypeHierarchyProvider` 와 함께 쓴다
+   (`typeHierarchy.contribution.ts` L179, L29). 별도 확장 의존 없음.
+
+**세 항목 모두 닫혔다.** 새로 열릴 때만 추가한다.
 
 ## 참고 파일
 
