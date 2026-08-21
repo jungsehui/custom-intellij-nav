@@ -6,6 +6,87 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] — 2026-08-21
+
+Tool windows, diff navigation, and a Workbench category.
+Coverage 73.2% → 79.6%. Keybindings 143 → 156, settings 14 → 16.
+Two new categories: Diff and Workbench.
+
+### The coverage metric was undercounting, and is now fixed
+
+Coverage compares our unique Mac chords against k--kato's. It compared
+them as **strings**, so `cmd+shift+c` and `shift+cmd+c` counted as two
+different chords when VS Code parses them as one. The whole series was
+low by 1.6–1.9 points, and k--kato's denominator was 158 when two of its
+entries are the same chord written two ways.
+
+Recomputed from the tags with modifier order normalized:
+
+| Version | Ours | Overlap | Missing | Coverage | Previously reported |
+|---|---|---|---|---|---|
+| v1.1.0 | 102 | 87 | 70 | 55.4% | 53.8% |
+| v1.2.0 | 121 | 106 | 51 | 67.5% | 65.8% |
+| v1.3.0 | 125 | 109 | 48 | 69.4% | 67.7% |
+| v1.4.0 | 131 | 115 | 42 | 73.2% | 71.5% |
+| **v1.5.0** | **141** | **125** | **32** | **79.6%** | — |
+
+v1.0.1 has no tag, so its 37.6% is left as recorded.
+
+### Measured
+
+| Key | VS Code default | Source | Outcome |
+|---|---|---|---|
+| `⌘7`, `⌘⇧'` | none | — | free |
+| `⇧⎋` | widget-close secondaries only (action widget, comments, breakpoint widget, …) | 6 files | taken; scopes do not overlap |
+| `⌃⌥⇧↑` / `⌃⌥⇧↓` | none, **and none in GitLens** | GitLens `package.json`, 59 bindings | free |
+| `⌃⇧⇥` | `quickOpenLeastRecentlyUsedEditorInGroup` | `editorActions.ts` L1898 | taken only inside a diff editor |
+| `⇧F7` | `wordHighlight.prev`, plus `accessibleDiffViewer.prev` in diff editors | `wordHighlighter.ts` L951, `diffEditor/commands.ts` L238 | taken only inside a diff editor |
+| `⇧F12` | **`editor.action.goToReferences`** | `goToCommands.ts` L681 | displaced |
+| `⌘⇧C` | `workbench.action.terminal.openNativeConsole` | `externalTerminal.contribution.ts` L32 | displaced outside the editor |
+| `⌃⌘F` | `workbench.action.toggleFullScreen` | `windowActions.ts` L350 | already correct; registered explicitly |
+
+`⌘7` deserves a note. It first measured as free, which is exactly what a
+loop-registered keybinding looks like to a naive grep — VS Code does
+register `⌘1`–`⌘9` families as `KeyCode.Digit1 + index`. Checking those
+call sites found only the Sessions window and a `⌘K ⌘0`-style chord, so
+`⌘7` really is free.
+
+### Added — Tool Windows
+- `⌘7` Structure (`outline.focus`)
+- `⌘⇧'` Maximize tool window (`workbench.action.toggleMaximizedPanel`)
+- `⇧⎋` Hide active tool window — sidebar, secondary sidebar, or panel,
+  whichever has focus
+
+### Added — VCS
+- `⌃⌥⇧↓` / `⌃⌥⇧↑` Next / Previous change
+  (`workbench.action.editor.nextChange` / `previousChange`). These had no
+  keybinding except `⌥F5` / `⇧⌥F5` on the quick-diff widget.
+
+### Added — Diff (`enableDiffKeymap`, new)
+- `F7` / `⇧F7` Next / Previous difference
+- `⌃⇧⇥` Focus the other side of the diff
+
+All three require `textCompareEditorVisible` or
+`activeCompareEditorCanSwap`, so they are inert outside a diff editor and
+the defaults they overlap keep working everywhere else.
+
+### Added — Workbench (`enableWorkbenchKeymap`, new)
+- `⌘⇧C` Copy Path (`copyFilePath`, which ships with no keybinding at all)
+- `⇧F12` Restore Default Layout
+- `⌃⌘F` Toggle Full Screen — already the VS Code default, registered
+  explicitly so it survives alongside another keymap extension
+
+### Not shipped, with reasons
+
+| Key | IntelliJ action | Why not |
+|---|---|---|
+| `⌘S` | Save All | `formatOnSave` and `codeActionsOnSave` would fire on every open file. Fidelity loses to not corrupting diffs. |
+| `⌘;` | Project Structure | `⌘;` is a **chord prefix** in VS Code — `⌘; A` runs all tests, and five more testing commands hang off it (`testExplorerActions.ts`). Binding `⌘;` alone kills the family. |
+| `⌃\`` | Quick Switch Scheme | It is Toggle Terminal on macOS (`terminal.contribution.ts` L129). Select Theme is already on `⌘K ⌘T`. |
+| `⌃⇥` | Switcher | VS Code's `⌃⇥` already *is* the switcher (`quickOpenPreviousRecentlyUsedEditorInGroup`, with quick-navigate). Nothing to add. |
+| `⌘,` | Preferences | Already `openGlobalSettings`. No-op, same as the v1.2.0 finding. |
+| `⌥⇥` / `⇧⌥⇥` | Goto next/prev splitter | The macOS application switcher takes these at OS level. Moved to the permanent-exclusion list. |
+
 ## [1.4.0] — 2026-08-21
 
 Run keymap, Debugging completed, and VSCodeVim coexistence.

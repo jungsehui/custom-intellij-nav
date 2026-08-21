@@ -184,12 +184,16 @@ keys to fall back to.
 | `⌘⌥K` | Push |
 | `⌘T` | Pull |
 | `⌘⌥Z` | Revert selected ranges (use with care) |
+| `⌃⌥⇧↓` / `⌃⌥⇧↑` | Next / Previous change |
 
 #### Tool Windows (`enableToolWindowKeymap`)
 | Mac key | IntelliJ action |
 |---|---|
 | `⌘3` / `⌘5` / `⌘9` / `⌘0` | Search / Debug / SCM / Problems |
 | `⌥F12` | Toggle Terminal |
+| `⌘7` | Structure |
+| `⌘⇧'` | Maximize tool window |
+| `⇧⎋` | Hide active tool window |
 
 #### Run (`enableRunKeymap`)
 
@@ -222,6 +226,30 @@ VSCodeVim — see [Using this with VSCodeVim](#using-this-with-vscodevim).
 The step and resume keys only fire while a debug session is **paused**
 (`debugState == 'stopped'`). Outside a session, `F7` and `F8` go back to
 being VS Code's Next Highlighted Usage and Go to Next Problem in Files.
+
+#### Diff (`enableDiffKeymap`)
+
+Only active while a diff editor is open, so nothing here displaces a
+default anywhere else.
+
+| Mac key | IntelliJ action |
+|---|---|
+| `F7` / `⇧F7` | Next / Previous difference |
+| `⌃⇧⇥` | Focus the other side |
+
+#### Workbench (`enableWorkbenchKeymap`)
+
+> ⚠️ Displaces `⇧F12` (Go to References). Find Usages is on `⌥F7` under
+> `enableNavigationKeymap`, which is where IntelliJ puts it.
+
+| Mac key | IntelliJ action |
+|---|---|
+| `⌘⇧C` | Copy Path |
+| `⇧F12` | Restore Default Layout |
+| `⌃⌘F` | Toggle Full Screen |
+
+`⌃⌘F` is already VS Code's default. It is registered explicitly so the
+behavior survives alongside another keymap extension.
 
 #### Explorer tree (`enableExplorerTreeKeymap`)
 
@@ -257,6 +285,8 @@ alone, expanding folders as you meet them.
   "customIntellijNav.enableExplorerTreeKeymap": true,
   "customIntellijNav.enableDebuggingKeymap": true,
   "customIntellijNav.enableRunKeymap": true,
+  "customIntellijNav.enableDiffKeymap": true,
+  "customIntellijNav.enableWorkbenchKeymap": true,
   "customIntellijNav.useCamelHumpsWords": false,
   "customIntellijNav.showErrorToasts": false,
   "customIntellijNav.showRefactorNotifications": true
@@ -296,6 +326,13 @@ Under `enableRefactoringKeymap`:
 `workbench.action.focusNextPart` while being bound to a command that does
 not exist. It is now scoped to `editorTextFocus`, so Focus Next Part
 works again everywhere outside the editor.
+
+Under `enableWorkbenchKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⇧F12` | **Go to References** (Find Usages is on `⌥F7`) | Restore Default Layout |
+| `⌘⇧C` | Open New External Terminal, outside the editor only | Copy Path |
 
 Under `enableRunKeymap`:
 
@@ -373,6 +410,16 @@ Per key, no need to turn off a whole category.
 VS Code's contribution model imposes a few hard constraints:
 
 - **`shift+shift` (Search Everywhere) and `ctrl+ctrl` (Run Anything)** — VS Code does not natively support double-tap modifier keys. The closest workaround is the `⌘⇧Space` chord routed to `workbench.action.quickOpen`.
+- **Save All (`⌘S`)** — not shipped. `formatOnSave` and
+  `codeActionsOnSave` would run against every open file, which quietly
+  corrupts diffs. Use `⌥⌘S` or the File menu.
+- **Project Structure (`⌘;`)** — not shipped. `⌘;` is a *chord prefix* in
+  VS Code: `⌘; A` runs all tests, and five more testing commands hang off
+  it. Binding `⌘;` alone would kill the whole family.
+- **Quick Switch Scheme (`⌃\`)** — not shipped. That is Toggle Terminal on
+  macOS, and Select Theme is already on `⌘K ⌘T`.
+- **Goto next/prev splitter (`⌥⇥`, `⇧⌥⇥`)** — impossible. The macOS
+  application switcher takes these before VS Code sees them.
 - **Postfix completion (`.var`, `.for`, `.return`)** — IntelliJ Live Templates have no first-class equivalent. Use VS Code snippets.
 - **Successively increasing code blocks** — `editor.action.smartSelect.expand` is close but not syntax-aware in the same way.
 - **Extract Field (`⌘⌥F`), Change Signature (`⌘F6`), Introduce Parameter (`⌘⌥P`)** — not shipped. Enumerating microsoft/TypeScript@v5.9.2 `src/services/refactors/` shows TypeScript emits no `refactor.extract.field`, `refactor.change.signature`, or `refactor.introduce.parameter`, so all three would be inert. `⌘⌥F` is additionally the macOS **Replace** shortcut (`editor.action.startFindReplaceAction`, `findController.ts` L1011), so binding it would cost a heavily-used default and return nothing. They will ship if and when a language server is measured to support them.

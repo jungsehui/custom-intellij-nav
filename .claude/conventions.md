@@ -209,6 +209,70 @@ same IntelliJ action. If a language has no matching kind, let the chain
 end and let `runRefactor` report it. `source.overrideMethods` for TS and
 bare `quickfix` for Implement Methods were both rejected on these grounds.
 
+Added during the v1.5.0 pass:
+
+| Key | Default command | Source |
+|---|---|---|
+| `⇧F12` | `editor.action.goToReferences` — **Go to References** | `goToCommands.ts` L681 |
+| `⌘⇧C` | `workbench.action.terminal.openNativeConsole`, when `terminalNotFocus` | `externalTerminal.contribution.ts` L32 |
+| `⌃⇥` / `⌃⇧⇥` | `quickOpenPreviousRecentlyUsedEditorInGroup` / `…LeastRecentlyUsed…` | `editorActions.ts` L1878, L1898 |
+| `⇧F7` | `wordHighlight.prev`, plus `accessibleDiffViewer.prev` when `isInDiffEditor` | `wordHighlighter.ts` L951, `diffEditor/commands.ts` L238 |
+| `⌃\`` | `workbench.action.terminal.toggleTerminal` (mac) | `terminal.contribution.ts` L129 |
+| `⌃⌘F` | `workbench.action.toggleFullScreen` | `windowActions.ts` L350 |
+| `⌘S` | `workbench.action.files.save` | `fileCommands.ts` L496 |
+| `⌘;` | **chord prefix** — `KeyChord(⌘;, …)` for the testing command family | `testExplorerActions.ts` L662 and 5 more |
+| `⌘7`, `⌘⇧'`, `⌃⌥⇧↑/↓`, `⌥⇥` | none — free | (absent from full source) |
+
+`copyFilePath`, `outline.focus`, `resetViewLocations` and
+`toggleMaximizedPanel` ship with **no** default keybinding, so binding
+them costs nothing.
+
+### A key can be a chord prefix, not just a key
+
+`⌘;` measured as "occupied by testing commands", but the shape matters:
+every hit was `KeyChord(KeyMod.CtrlCmd | KeyCode.Semicolon, …)`. That is
+`⌘;` followed by a second key — `⌘; A` runs all tests, and five more hang
+off the same prefix. Binding `⌘;` on its own does not displace one
+command, it kills the entire family, and nothing in the grep output says
+so unless you look at the `KeyChord(` wrapper.
+
+Check for `KeyChord(` before judging a two-modifier key cheap.
+
+### Loop-registered keybindings are invisible to a literal grep
+
+`⌘7` first measured as free. That is also exactly what `⌘1`–`⌘9` looks
+like when VS Code registers the family as `KeyCode.Digit1 + index` — no
+`KeyCode.Digit7` literal exists to find. Searching the `Digit1 +` and
+`Digit0 +` forms turned up the real call sites (the Sessions window, and a
+`⌘K ⌘0` chord), neither of which claims plain `⌘7`, so the original
+answer held. It would not always.
+
+Same failure mode as `terminalFocus` being declared through an enum
+constant. When a measurement says "free", ask how the thing would look if
+it were registered indirectly, and search for that shape too.
+
+### The coverage metric compares chords, so normalize modifier order
+
+Coverage is `overlap / k--kato chords`, both sides as sets of unique Mac
+chords. Until v1.5.0 the comparison was on raw strings, so `cmd+shift+c`
+and `shift+cmd+c` counted as two different chords — VS Code parses them as
+one. The published series was low by 1.6–1.9 points, and k--kato's
+denominator was 158 when it is really 157.
+
+Sort modifiers into a fixed order (`ctrl, shift, alt, cmd`) before
+comparing, and split on whitespace first so multi-chord sequences
+normalize per chord. Recomputed from the tags:
+
+| Version | Ours | Overlap | Coverage | Previously published |
+|---|---|---|---|---|
+| v1.1.0 | 102 | 87 | 55.4% | 53.8% |
+| v1.2.0 | 121 | 106 | 67.5% | 65.8% |
+| v1.3.0 | 125 | 109 | 69.4% | 67.7% |
+| v1.4.0 | 131 | 115 | 73.2% | 71.5% |
+| v1.5.0 | 141 | 125 | 79.6% | — |
+
+v1.0.1 has no tag, so its 37.6% stands as recorded.
+
 ### Measure against a complete checkout, never a handful of fetched files
 
 v1.1.0 through v1.3.0 measured VS Code defaults by `curl`-ing individual

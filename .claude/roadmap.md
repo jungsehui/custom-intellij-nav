@@ -2,21 +2,27 @@
 
 측정 기준: `custom-intellij-nav` v1.0.1, `vscode-intellij-idea-keybindings` v1.7.7.
 집계 단위는 **고유 Mac chord** 1개 = 1건. 같은 키에 `when` 절만 다른 엔트리는 1건으로 합산한다.
+**2026-08-21 계측기 수정**: chord 비교를 문자열 그대로 하고 있어서 `cmd+shift+c`와
+`shift+cmd+c`를 서로 다른 chord로 셌다. VS Code는 같은 chord로 파싱한다. modifier를
+고정 순서(`ctrl, shift, alt, cmd`)로 정규화하도록 고쳤고, 아래 표는 태그에서 전 구간
+재집계한 값이다. 기존 공표치는 1.6~1.9%p 낮았고 k--kato 분모도 158이 아니라 157이다.
 
 > 이전 갭 분석(`.planning/todos/pending/2026-04-28-...md`)의 "k--kato 216개 vs 우리 74개"는
 > 엔트리 단위 집계라 이 문서와 직접 비교할 수 없다. 이 문서가 최신이며 chord 단위로 재집계했다.
 
 ## 1. 현황
 
-| 항목 | v1.0.1 | v1.1.0 | v1.2.0 | v1.3.0 | **v1.4.0 (현재)** |
-|---|---|---|---|---|---|
-| 우리 고유 Mac chord | 73 | 102 | 121 | 125 | **131** |
-| k--kato 고유 Mac chord | 157 | 158 | 158 | 158 | 158 |
-| 겹침 (양쪽 보유) | 59 | 85 | 104 | 107 | **113** |
-| 순수 미구현 | 98 | 73 | 54 | 51 | **45** |
-| **커버율** | 37.6% | 53.8% | 65.8% | 67.7% | **71.5%** |
+| 항목 | v1.0.1† | v1.1.0 | v1.2.0 | v1.3.0 | v1.4.0 | **v1.5.0 (현재)** |
+|---|---|---|---|---|---|---|
+| 우리 고유 Mac chord | 73 | 102 | 121 | 125 | 131 | **141** |
+| k--kato 고유 Mac chord | 157 | 157 | 157 | 157 | 157 | 157 |
+| 겹침 (양쪽 보유) | 59 | 87 | 106 | 109 | 115 | **125** |
+| 순수 미구현 | 98 | 70 | 51 | 48 | 42 | **32** |
+| **커버율** | 37.6% | 55.4% | 67.5% | 69.4% | 73.2% | **79.6%** |
 
-> chord 총계가 157에서 158로 바뀐 것은 재집계 시 필터 차이다. v1.1.0 수치가 최신이다.
+† v1.0.1은 태그가 없어 재집계 불가. 기록된 값 그대로 둔다.
+v1.1.0~v1.4.0은 정규화 기준 재집계값이며 기존 공표치(53.8 / 65.8 / 67.7 / 71.5%)를 대체한다.
+분모가 158에서 157로 줄어든 것도 정규화 결과다. 같은 chord를 두 번 세고 있었다.
 
 98건에서 즉시 제외 대상을 빼면 실제 작업량은 79건이다.
 
@@ -34,13 +40,13 @@
 | Editing | 18 | 53 | 34% |
 | Navigation | 14 | 32 | 44% |
 | Refactoring | 9 | 14 | **64%** |
-| ToolWindow | 6 | 14 | 43% |
+| ToolWindow | 10 | 14 | **71%** |
 | Search | 4 | 10 | 40% |
 | Debugging | 12 | 11 | **100%** |
-| VCS | 4 | 6 | 67% |
+| VCS | 7 | 6 | **100%** |
 | Run / Build | 3 | 4 | **75%** |
-| Workbench 기타 | 0 | 11 | **0%** |
-| Diff / Notebook | 0 | 5 | **0%** |
+| Workbench 기타 | 3 | 11 | **27%** |
+| Diff / Notebook | 3 | 5 | **60%** |
 
 ### 우리에만 있는 14건 (경쟁 우위, 유지 대상)
 
@@ -144,7 +150,7 @@ v1.3.0 절에 있다. 예상대로 본체는 키 충돌이 아니라 kind 매핑
 (`microsoft/TypeScript@v5.9.2 src/services/refactors/`, 16개 파일). 계획 6건 중
 3건이 "키가 겹쳐서"가 아니라 "그 리팩터링이 존재하지 않아서" 탈락했다.
 
-다음 마일스톤(v1.4.0) 착수 전 확인 대상: `ctrl+r`(IntelliJ Run) — VS Code mac
+다음 마일스톤(v1.4.0) 착수 전 확인 대상: `ctrl+r`(IntelliJ Run): VS Code mac
 기본 점유 여부 미확인. `cmd+n`(Generate)은 아래 §3 v1.4.0 항목 참조.
 
 Refactoring 카테고리 분모가 11에서 14로 늘어난 것은 재집계 차이다. k--kato의
@@ -159,11 +165,11 @@ Refactoring 카테고리 분모가 11에서 14로 늘어난 것은 재집계 차
 
 | 버전 | 내용 | 건수 | 시간 | 누적 커버율 |
 |---|---|---|---|---|
-| ~~v1.1.0~~ | ✅ **완료 (2026-05-11)**. Editing 필수. 34 엔트리 추가 | 27 | 실제 ~3h | **53.8%** |
-| ~~v1.2.0~~ | ✅ **완료 (2026-05-11)**. Navigation + Search. 23 엔트리 추가 | 23 | 실제 ~2h | **65.8%** |
-| ~~v1.3.0~~ | ✅ **완료 (2026-08-20)**. Refactoring. 4 엔트리 추가 + 죽은 키 2건 수정 | 6 중 4 | 실제 ~2h | **67.7%** |
-| ~~v1.4.0~~ | ✅ **완료 (2026-08-21)**. Run 신설 + Debugging 마감 + Vim 공존 | 6 | 실제 ~2h | **71.5%** |
-| v1.5.0 | ToolWindow + Workbench + Diff | 17 (2건 제외 시 15) | 2.5~3h | 87% |
+| ~~v1.1.0~~ | ✅ **완료 (2026-05-11)**. Editing 필수. 34 엔트리 추가 | 27 | 실제 ~3h | **55.4%** |
+| ~~v1.2.0~~ | ✅ **완료 (2026-05-11)**. Navigation + Search. 23 엔트리 추가 | 23 | 실제 ~2h | **67.5%** |
+| ~~v1.3.0~~ | ✅ **완료 (2026-08-20)**. Refactoring. 4 엔트리 추가 + 죽은 키 2건 수정 | 6 중 4 | 실제 ~2h | **69.4%** |
+| ~~v1.4.0~~ | ✅ **완료 (2026-08-21)**. Run 신설 + Debugging 마감 + Vim 공존 | 6 | 실제 ~2h | **73.2%** |
+| ~~v1.5.0~~ | ✅ **완료 (2026-08-21)**. ToolWindow + VCS + Diff와 Workbench 신설 | 17 중 11 | 실제 ~2h | **79.6%** |
 | v2.0.0 | numpad 미러 + 토글 구조 정리 + 이관 가이드 | 17 + 정리 | 4~5h | 100% (실기능) |
 | | | **96** | **21~27h** | |
 
@@ -200,14 +206,14 @@ built-in `references-view.showTypeHierarchy`로 언어 중립화할 수 있다. 
 **출하**: `ctrl+t`(Refactor This) `ctrl+o`(Override) `ctrl+i`(Implement)
 `f6`(Move, 죽은 키 수정) + `ctrl+alt+i`(Auto-Indent Lines, Editing).
 
-**제외 3건 — 근거**: TypeScript가 내는 refactor kind를 전수 열거한 결과
+**제외 3건, 근거**: TypeScript가 내는 refactor kind를 전수 열거한 결과
 `refactor.extract.field`, `refactor.change.signature`,
 `refactor.introduce.parameter`가 **존재하지 않는다**. 셋 다 어느 언어에서도
 실측되기 전까지 등록하지 않는다. `cmd+alt+f`는 추가로 macOS의 Replace 키
 (`editor.action.startFindReplaceAction`, `findController.ts` L1011)라 점유 비용까지
 발생한다. k--kato는 셋 다 바인딩하고 있고, TypeScript에서 전부 죽은 키다.
 
-**부수 수확 — 자체 버그 2건**:
+**부수 수확, 자체 버그 2건**:
 1. `f6` → `workbench.action.files.move`는 **존재하지 않는 커맨드**였다. v1.0.0부터
    아무 동작도 안 하면서 기본값 `workbench.action.focusNextPart`만 뺏고 있었다.
 2. `inline`의 TS 체인 끝에 있던 `refactor.rewrite` 폴백이 `apply: "ifSingle"`과
@@ -239,18 +245,34 @@ Debugging 3건(`ctrl+alt+d` Debug 설정, `alt+f8` Evaluate Expression,
 이제 전체 체크아웃(`--filter=blob:none --sparse --depth=1`, .ts 11,832개)으로 측정하고,
 0건 결과에는 항상 양성 대조군을 붙인다. 상세는 `.claude/conventions.md`.
 
-### v1.5.0 — ToolWindow + Workbench + Diff (17건, 2.5~3h)
+### ~~v1.5.0 — ToolWindow + Workbench + Diff~~ ✅ 완료 (2026-08-21, 실제 ~2h)
 
-ToolWindow 3: `cmd+7` `cmd+shift+'` `shift+escape`
-VCS 2: `ctrl+alt+shift+down` `ctrl+alt+shift+up`
-Diff 2: `ctrl+shift+tab` `shift+f7`
-Workbench 10: `cmd+s` `cmd+,` `cmd+;` `ctrl+\`` `ctrl+cmd+f` `ctrl+tab` `shift+cmd+c`
-`shift+f12` `alt+tab` `shift+alt+tab`
+**출하 11건**: ToolWindow 3(`cmd+7` Structure, `cmd+shift+'` 최대화, `shift+escape`
+활성 도구창 숨김 3엔트리) + VCS 2(`ctrl+alt+shift+↓/↑` 다음/이전 변경) +
+Diff 신설 3(`f7`/`shift+f7` 다음/이전 차이, `ctrl+shift+tab` 반대편 포커스) +
+Workbench 신설 3(`cmd+shift+c` Copy Path, `shift+f12` 레이아웃 복원,
+`ctrl+cmd+f` 전체화면 명시 재등록). 신규 설정 `enableDiffKeymap`, `enableWorkbenchKeymap`.
 
-신규 설정: `enableWorkbenchKeymap`, `enableDiffKeymap`.
+**미출하 6건, 근거**:
+- `cmd+s`(Save All): `formatOnSave` / `codeActionsOnSave`가 열린 전 파일에 걸려 diff 오염.
+  로드맵 권고대로 제외. 충실도보다 안전이 우선이다.
+- `cmd+;`(Project Structure): `⌘;`는 단일 키가 아니라 **chord 접두**다.
+  `KeyChord(⌘;, A)` = Run All Tests 외 5건이 이 접두에 매달려 있다(`testExplorerActions.ts`).
+  단독 바인딩은 커맨드 하나가 아니라 계열 전체를 죽인다.
+- `ctrl+\``(Quick Switch Scheme): macOS Toggle Terminal(`terminal.contribution.ts` L129).
+  Select Theme은 이미 `⌘K ⌘T`에 있다.
+- `ctrl+tab`(Switcher): VS Code의 `⌃⇥`가 이미 스위처다. 추가할 게 없다.
+- `cmd+,`(Preferences): 이미 `openGlobalSettings`. v1.2.0과 같은 no-op 판정.
+- `alt+tab` / `shift+alt+tab`: macOS 앱 스위처가 OS 레벨 선점. **4절 영구 제외로 이동 완료.**
 
-`cmd+s`(Save All)는 **기본 제외 권장**. 넣더라도 별도 옵트인 설정으로.
-`alt+tab` 2건은 macOS 앱 스위처가 선점하므로 4절로 이동 예정 (실측 후 확정).
+**변위 2건**: `shift+f12`가 Go to References를, `cmd+shift+c`가 외부 터미널 열기를 가져간다.
+전자는 Find Usages가 이미 `alt+f7`(IntelliJ 키)에 있고, 후자는 에디터 밖에서만 발화한다.
+
+**§6 미확인 #2 해소**: GitLens는 `⌃⌥⇧↑/↓`를 점유하지 않는다. 키바인딩 59건 전수 확인,
+전혀 다른 chord 집합을 쓴다(`cmd+alt+g` 계열 + `alt+` 계열).
+
+**계측기 수정**: 커버율 chord 비교가 문자열 그대로여서 modifier 순서가 다른 같은 chord를
+서로 다르게 셌다. 1절 참조.
 
 ### v2.0.0 — 완전 대체 선언 (17건 + 구조 정리, 4~5h)
 
@@ -279,7 +301,7 @@ k--kato는 `src/package-with-comment.json`에서 **45개 IntelliJ 액션을 `"co
 | Search Everywhere | `shift shift` | 순수 modifier는 keybinding 이벤트를 발생시키지 않아 double-tap 감지 불가. `cmd+shift+space`로 우회 중 |
 | Run Anything | `ctrl ctrl` | 위와 동일 |
 | Brief Info | `cmd+mouseover` | `contributes.keybindings`는 키보드 전용, 마우스 제스처 등록 불가 |
-| Goto next/prev splitter | `alt+tab` | macOS 앱 스위처가 OS 레벨에서 선점 |
+| Goto next/prev splitter | `alt+tab`, `shift+alt+tab` | macOS 앱 스위처가 OS 레벨에서 선점. **v1.5.0에서 확정 제외** |
 
 ### IntelliJ 전용 서브시스템 (VS Code에 대응 개념 없음)
 
@@ -373,7 +395,8 @@ Vim이 점유하면 양보하며, `vim.handleKeys`로 되돌려주면 다시 우
 
 1. VS Code macOS 기본 키맵의 정확한 바인딩. 앱 번들이 minify돼 있어 `cursorWordStartLeft`
    문자열 존재만 확인했고 어느 키에 묶였는지는 미확인. 2절 실측 대상.
-2. GitLens 실제 키바인딩 목록 (확장 소스 미보유). v1.5.0 `ctrl+alt+shift+up/down` 충돌 가능.
+2. ~~GitLens 실제 키바인딩 목록~~ → **2026-08-21 해소.** 키바인딩 59건 전수 확인,
+   `ctrl+alt+shift+up/down` 미점유. 충돌 없음.
 3. `references-view.showTypeHierarchy`가 built-in인지 별도 확장인지. v1.2.0 착수 전 확인.
 
 ## 참고 파일

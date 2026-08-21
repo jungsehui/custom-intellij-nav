@@ -9,8 +9,8 @@ A single VS Code extension. ~795 LOC. Two user-facing capabilities:
    prefetch-based dispatcher that avoids the "No preferred code actions"
    toast.
 
-On top of those, a curated **143-keybinding IntelliJ Mac keymap** spread
-across 11 toggleable categories (`enableXxxKeymap`).
+On top of those, a curated **156-keybinding IntelliJ Mac keymap** spread
+across 13 toggleable categories (`enableXxxKeymap`).
 
 ## Module graph
 
@@ -53,8 +53,8 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | Surface | Count | Notes |
 |---|---|---|
 | Commands | 8 | All in the `intellij.*` namespace |
-| Keybindings | 143 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
-| Settings | 14 | 11 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
+| Keybindings | 156 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
+| Settings | 16 | 13 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)
 
@@ -66,11 +66,13 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | navigation | `enableNavigationKeymap` | 36 | off |
 | search | `enableSearchKeymap` | 10 | off |
 | refactoring | `enableRefactoringKeymap` | 5 | off |
-| vcs | `enableVcsKeymap` | 5 | off |
-| toolwindow | `enableToolWindowKeymap` | 5 | off |
+| vcs | `enableVcsKeymap` | 7 | off |
+| toolwindow | `enableToolWindowKeymap` | 10 | off |
 | explorertree | `enableExplorerTreeKeymap` | 1 | off |
 | debugging | `enableDebuggingKeymap` | 12 | off |
 | run | `enableRunKeymap` | 3 | off |
+| diff | `enableDiffKeymap` | 3 | off |
+| workbench | `enableWorkbenchKeymap` | 3 | off |
 
 Why off-by-default: each toggle conflicts with VS Code defaults or
 k--kato. Users opt-in incrementally so a single broken category never

@@ -2,7 +2,7 @@
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -153,6 +153,16 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable IntelliJ-style run/build keys (cmd+f9 build project, ctrl+alt+r run task, ctrl+r re-run last task). All three defer to a focused terminal, and ctrl+r additionally defers to VSCodeVim when Vim owns `<C-r>`."
+        },
+        "customIntellijNav.enableDiffKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style diff viewer keys (f7 / shift+f7 next and previous difference, ctrl+shift+tab focus the other side). All three only fire while a diff editor is open."
+        },
+        "customIntellijNav.enableWorkbenchKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style workbench keys (cmd+shift+c copy path, shift+f12 restore default layout, ctrl+cmd+f toggle full screen). `shift+f12` displaces Go to References, which this keymap already provides on alt+f7."
         }
       }
     },
@@ -1001,6 +1011,71 @@
         "command": "workbench.debug.action.focusBreakpointsView",
         "mac": "cmd+shift+f8",
         "when": "isMac && debuggersAvailable && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "outline.focus",
+        "mac": "cmd+7",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.action.toggleMaximizedPanel",
+        "mac": "cmd+shift+'",
+        "when": "isMac && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.action.toggleSidebarVisibility",
+        "mac": "shift+escape",
+        "when": "isMac && sideBarFocus && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.action.toggleAuxiliaryBar",
+        "mac": "shift+escape",
+        "when": "isMac && auxiliaryBarFocus && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.action.togglePanel",
+        "mac": "shift+escape",
+        "when": "isMac && panelFocus && config.customIntellijNav.enableToolWindowKeymap"
+      },
+      {
+        "command": "workbench.action.editor.nextChange",
+        "mac": "ctrl+alt+shift+down",
+        "when": "isMac && editorTextFocus && !textCompareEditorVisible && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "workbench.action.editor.previousChange",
+        "mac": "ctrl+alt+shift+up",
+        "when": "isMac && editorTextFocus && !textCompareEditorVisible && config.customIntellijNav.enableVcsKeymap"
+      },
+      {
+        "command": "workbench.action.compareEditor.nextChange",
+        "mac": "f7",
+        "when": "isMac && textCompareEditorVisible && config.customIntellijNav.enableDiffKeymap"
+      },
+      {
+        "command": "workbench.action.compareEditor.previousChange",
+        "mac": "shift+f7",
+        "when": "isMac && textCompareEditorVisible && config.customIntellijNav.enableDiffKeymap"
+      },
+      {
+        "command": "workbench.action.compareEditor.focusOtherSide",
+        "mac": "ctrl+shift+tab",
+        "when": "isMac && activeCompareEditorCanSwap && config.customIntellijNav.enableDiffKeymap"
+      },
+      {
+        "command": "copyFilePath",
+        "mac": "cmd+shift+c",
+        "when": "isMac && !editorFocus && !terminalFocus && config.customIntellijNav.enableWorkbenchKeymap"
+      },
+      {
+        "command": "workbench.action.resetViewLocations",
+        "mac": "shift+f12",
+        "when": "isMac && config.customIntellijNav.enableWorkbenchKeymap"
+      },
+      {
+        "command": "workbench.action.toggleFullScreen",
+        "mac": "ctrl+cmd+f",
+        "when": "isMac && config.customIntellijNav.enableWorkbenchKeymap"
       }
     ]
   },
