@@ -20,6 +20,16 @@ export default [{
             format: ["camelCase", "PascalCase"],
         }],
 
+        // Not on by default in this config, which is how a dead
+        // `import { migrateLegacySettings }` sat in extension.ts unnoticed:
+        // the call went through the navigator forwarder instead. Errors
+        // rather than warns, so `npm run lint` fails on it.
+        "@typescript-eslint/no-unused-vars": ["error", {
+            argsIgnorePattern: "^_",
+            varsIgnorePattern: "^_",
+            caughtErrorsIgnorePattern: "^_",
+        }],
+
         curly: "warn",
         eqeqeq: "warn",
         "no-throw-literal": "warn",

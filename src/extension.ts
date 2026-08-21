@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { IntelliJNavigator } from "./core/navigator";
-import { migrateLegacySettings } from "./core/migrate-settings";
 
 const COMMAND_ID = "intellij.goToDeclarationOrUsages";
 
