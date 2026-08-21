@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import type { IntelliJAction } from "../types";
 import { goToDeclarationOrUsages } from "../navigation/go-to-declaration";
 import { runRefactor } from "../refactor/run-refactor";
+import { migrateLegacySettings } from "./migrate-settings";
 import { Logger } from "./logger";
 
 /**
@@ -31,5 +32,9 @@ export class IntelliJNavigator implements vscode.Disposable {
 
   public runRefactor(action: IntelliJAction): Promise<void> {
     return runRefactor(action, this.logger);
+  }
+
+  public migrateLegacySettings(): Promise<void> {
+    return migrateLegacySettings(this.logger);
   }
 }

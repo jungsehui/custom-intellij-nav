@@ -189,6 +189,7 @@ keys to fall back to.
 | `⌘⌥K` | Push |
 | `⌘T` | Pull |
 | `⌘⌥Z` | Revert selected ranges (use with care) |
+| `⌘⌥⇧G` | Git graph — **requires [mhutchie.git-graph](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph)**; inert without it |
 | `⌃⌥⇧↓` / `⌃⌥⇧↑` | Next / Previous change |
 
 #### Tool Windows (`enableToolWindowKeymap`)
@@ -455,11 +456,13 @@ To migrate, delete it and enable the categories you actually want:
 ```
 
 If you had `enableBundledMacKeymap: false` to keep VS Code's `⌘B`, that
-still holds. Rename it when convenient:
+still holds — since 2.1.0 the extension moves the value to
+`enableGoToDeclarationOrUsages` once on activation and clears the old key,
+so nothing is needed from you.
 
-```jsonc
-{ "customIntellijNav.enableGoToDeclarationOrUsages": false }
-```
+> ⚠️ **On 2.0.0 exactly**, `⌘B` required *both* settings, so setting the new
+> one to `true` while the old one was still `false` did nothing. Upgrade to
+> 2.1.0, or delete `enableBundledMacKeymap` from your settings.
 
 ## Migrating off k--kato
 

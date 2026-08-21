@@ -1,16 +1,17 @@
 import * as vscode from "vscode";
 import { IntelliJNavigator } from "./core/navigator";
+import { migrateLegacySettings } from "./core/migrate-settings";
 
 const COMMAND_ID = "intellij.goToDeclarationOrUsages";
 
 export function activate(context: vscode.ExtensionContext): void {
-  console.log("[custom-intellij-nav] activate");
   vscode.window.setStatusBarMessage(
     "Custom IntelliJ Navigation activated",
     1500,
   );
 
   const navigator = new IntelliJNavigator();
+  void navigator.migrateLegacySettings();
 
   context.subscriptions.push(
     navigator,

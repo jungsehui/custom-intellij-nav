@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~795 LOC. Two user-facing capabilities:
+A single VS Code extension. ~1,250 LOC across 15 files (4 of them tests, 317 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
@@ -20,6 +20,10 @@ src/extension.ts (42 LOC) — activate() registers 8 commands
    ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
    ├─ src/core/snapshot.ts (48 LOC) — captureSnapshot() + isStale()
    ├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
+   ├─ src/core/migrate-settings.ts (61 LOC) — one-time 2.0.0 setting move.
+   │     A `when` clause sees only the *effective* value, so it cannot tell
+   │     an explicit `false` from an unset default. That is why the
+   │     deprecated-setting migration has to be code.
    ├─ src/navigation/go-to-declaration.ts (220 LOC) — cmd+B handler
    │  └─ src/navigation/location-utils.ts (68 LOC) — dedupe, normalize
    └─ src/refactor/run-refactor.ts (87 LOC) — refactoring handler
@@ -97,6 +101,27 @@ Rename sat under Refactoring.
 The two tier settings remain declared and honoured (`||`-ed into the moved
 bindings' `when`, and `&&`-ed into `⌘B`'s) so existing settings keep
 working. They go away in 3.0.0.
+
+### Staleness is a shared concern, not a navigation one
+
+Both user-facing flows await a language-server round-trip and then act on
+the editor. Both therefore need the same guard, and `core/snapshot.ts` owns
+it:
+
+| | navigation | refactoring |
+|---|---|---|
+| guard | `isStale(requestId, latest, snapshot, logger)` | `selectionMatches(snapshot, editor)` |
+| compares | request id, then uri + version | uri + version + **selection** |
+| why the difference | a newer `⌘B` supersedes an older one | `editor.action.codeAction` takes no URI and no range, so a moved caret redirects the edit |
+
+`editorMatches` and `selectionMatches` are pure — they take the editor
+rather than reading `vscode.window.activeTextEditor` — so the rules are
+unit-tested against real editors without mocking. `isStale` layers the
+request-id check on top and is the only one that touches global state.
+
+Until 2.1.0 the refactor path had no guard at all, and a focus change
+inside the prefetch round-trip could apply a refactoring to code the user
+never selected.
 
 ### Two kinds of `when` guard
 

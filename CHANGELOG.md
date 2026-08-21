@@ -6,6 +6,116 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] — 2026-08-21
+
+A code review pass. One critical race, three correctness fixes, a migration
+trap, and the manifest's dead weight. Test cases 1 → 20.
+
+### Fixed — a refactoring could land where you never selected (critical)
+
+`runRefactor` prefetched against a captured `editor.document.uri` and
+`editor.selection`, then dispatched `editor.action.codeAction` — which takes
+**no URI and no range** and acts on whatever is focused wherever the caret is
+*when it runs*. The provider round-trip between the two is an await boundary,
+tens of milliseconds warm and seconds on a cold TS server, and there was no
+staleness guard at all.
+
+Move the caret or click another file inside that window and, if exactly one
+action of the same kind matches at the new position, `apply: "ifSingle"`
+applies it **without asking**. Same failure class as the v1.3.0 Inline bug;
+that fix narrowed *which kind* is dispatched and left *where* unguarded.
+
+`core/snapshot.ts` now exposes `editorMatches` and `selectionMatches` as pure
+predicates — they take the editor instead of reading
+`vscode.window.activeTextEditor`, so the rule is unit-testable — and
+`runRefactor` bails if either fails immediately before dispatch.
+
+### Fixed — a superseded `⌘B` wrote over the one that replaced it
+
+`peekUsages` returned `false` both for "request superseded" and for "genuinely
+zero references", and the three call sites could not tell them apart. Press
+`⌘B` twice quickly and request 1 could put **"No usages found"** on the status
+bar while request 2 was navigating successfully. It now returns
+`"shown" | "none" | "stale"`. The `catch` block had the same leak and now
+re-checks staleness before reporting.
+
+### Fixed — exceptions were reported as "this language does not support it"
+
+Every attempt's error was swallowed, so if all attempts threw (TS server
+crash, extension-host hiccup) the user was told the language server does not
+implement the refactoring. That is the one message a user acts on: they would
+conclude the feature does not exist and stop pressing the key. Failures now
+say so.
+
+### Fixed — `enableBundledMacKeymap: false` could not be migrated
+
+2.0.0 gated `⌘B` on `enableGoToDeclarationOrUsages && enableBundledMacKeymap`.
+That preserved behavior in all four combinations, but created a trap: a 1.x
+user who had set the deprecated setting to `false`, then followed the
+deprecation notice and set the **new** setting to `true`, got nothing. The
+struck-through setting silently vetoed its own replacement.
+
+A `when` clause cannot distinguish an explicit `false` from an unset default,
+so this could not be fixed in the manifest. `core/migrate-settings.ts` now
+moves the value once at activation and clears the deprecated key, and `⌘B`
+gates on the current setting alone. The 17 `||` shims for the other tier
+setting are untouched — those are additive and were correct in all four
+combinations.
+
+### Changed — manifest
+
+- **128 unreachable `key` values removed.** Entries carried both `key` and
+  `mac` with divergent chords (`⌘B` had `"key": "ctrl+b"`). VS Code prefers
+  `mac` on macOS and every binding is `isMac`-gated, so the `key` chord could
+  never fire on any platform — it only advertised Windows and Linux chords on
+  the Marketplace that this extension does not support.
+- The Explorer `right` binding gained the `isMac` guard that
+  `conventions.md` requires and it alone was missing.
+- `enableVcsKeymap` now states that `⌘⌥⇧G` needs the third-party
+  **mhutchie.git-graph** extension and is inert without it.
+
+### Changed — source
+
+- `ProviderResolution.all` was written and never read. Removed.
+- `isLocationLink` and `toLocation` were exported but used only inside
+  `location-utils.ts`. Now module-private.
+- `runRefactor`'s table lookup uses `Object.hasOwn` instead of
+  `table[langId] ?? table["*"]`, which would have resolved a `languageId`
+  colliding with a prototype key (`constructor`, `toString`) to a function.
+- Dropped the `console.log` on activation. The Output channel exists for that.
+
+### Added — tests
+
+One test asserting a command was registered, now 20. They cover the pure
+predicates behind the critical fix (`editorMatches`, `selectionMatches`
+against real editors, including the moved-caret case), `location-utils`
+dedupe and normalization, and the action-table invariants — every action has
+a `"*"` chain, no chain repeats a kind or holds one that is a dot-prefix of
+another, every kind is well-formed.
+
+### Fixed — the test suite had never run
+
+`npm test` failed with `spawn … /Contents/MacOS/Electron ENOENT`.
+`@vscode/test-electron@2.5.2` looks for an executable named `Electron`;
+VS Code 1.134's macOS bundle names it `Code`. Upgraded to 3.1.0 (and
+`@vscode/test-cli` 0.0.11 → 0.0.15).
+
+With the harness working, the one pre-existing test turned out to be wrong:
+it asserted `intellij.goToDeclarationOrUsages` was in `getCommands()`, but
+the extension declares no `activationEvents` and so activates lazily —
+nothing in a test run triggers it, and a contributed-but-inactive command is
+not in the command registry. It now activates the extension in
+`suiteSetup` and checks both directions: every expected command is
+registered, and every command the manifest contributes is registered.
+
+### Checked and found not to be a problem
+
+`vscode.executeCodeActionProvider` was suspected of returning `disabled` code
+actions, which would let the prefetch gate pass on an unusable action and let
+VS Code raise a toast the extension cannot suppress. It returns
+`codeActionSet.validActions` (`codeAction.ts` L377), not `allActions`, so the
+concern does not apply.
+
 ## [2.0.1] — 2026-08-21
 
 ### Fixed — `⌃↑` and `⌃↓` were dead twice over

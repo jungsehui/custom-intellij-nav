@@ -71,8 +71,8 @@ export async function goToDeclarationOrUsages(
         return;
       }
 
-      const usagesShown = await peekUsages(requestId, snapshot, state, logger);
-      if (!usagesShown) {
+      const outcome = await peekUsages(requestId, snapshot, state, logger);
+      if (outcome === "none") {
         logger.showStatus("No usages found");
       }
       return;
@@ -97,21 +97,28 @@ export async function goToDeclarationOrUsages(
         return;
       }
 
-      const usagesShown = await peekUsages(requestId, snapshot, state, logger);
-      if (!usagesShown) {
+      const outcome = await peekUsages(requestId, snapshot, state, logger);
+      if (outcome === "none") {
         logger.showStatus("No usages found");
       }
       return;
     }
 
-    const usagesShown = await peekUsages(requestId, snapshot, state, logger);
-    if (!usagesShown) {
+    const outcome = await peekUsages(requestId, snapshot, state, logger);
+    if (outcome === "none") {
       logger.showStatus("No declaration, definition, or usages found");
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? (error.stack ?? "") : "";
     logger.log(`request#${requestId} error ${message}\n${stack}`);
+
+    // A superseded request must not write to the UI. Without this, throwing
+    // after being overtaken puts "Navigation failed" on the status bar while
+    // the newer request may be navigating successfully.
+    if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
+      return;
+    }
 
     // Provider transient failures (TS server hiccup, vue.volar inlay hint
     // internals, etc.) are environmental noise, not user intent — don't
@@ -160,7 +167,7 @@ async function resolveProvider(
     `request#${requestId} ${source}: all=${all.length}, external=${external.length}`,
   );
 
-  return { source, all, external };
+  return { source, external };
 }
 
 async function navigate(
@@ -181,12 +188,21 @@ async function navigate(
   );
 }
 
+/**
+ * Outcome of a usages lookup.
+ *
+ * "stale" is deliberately distinct from "none". Both used to return `false`,
+ * so a superseded request wrote "No usages found" to the status bar — while
+ * the request that superseded it may have been navigating successfully.
+ */
+type PeekOutcome = "shown" | "none" | "stale";
+
 async function peekUsages(
   requestId: number,
   snapshot: EditorSnapshot,
   state: RequestState,
   logger: Logger,
-): Promise<boolean> {
+): Promise<PeekOutcome> {
   const rawReferences =
     (await vscode.commands.executeCommand<vscode.Location[]>(
       "vscode.executeReferenceProvider",
@@ -195,7 +211,7 @@ async function peekUsages(
     )) ?? [];
 
   if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
-    return false;
+    return "stale";
   }
 
   const references = dedupeLocations(rawReferences).filter(
@@ -205,7 +221,7 @@ async function peekUsages(
   logger.log(`request#${requestId} references: external=${references.length}`);
 
   if (references.length === 0) {
-    return false;
+    return "none";
   }
 
   await vscode.commands.executeCommand(
@@ -216,5 +232,5 @@ async function peekUsages(
     "peek",
   );
 
-  return true;
+  return "shown";
 }

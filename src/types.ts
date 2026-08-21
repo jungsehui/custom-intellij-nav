@@ -14,7 +14,6 @@ export type ProviderSource = "declaration" | "definition";
 
 export interface ProviderResolution {
   readonly source: ProviderSource;
-  readonly all: vscode.Location[];
   readonly external: vscode.Location[];
 }
 
@@ -52,4 +51,6 @@ export interface EditorSnapshot {
   readonly uri: vscode.Uri;
   readonly version: number;
   readonly position: vscode.Position;
+  /** Full selection at request start. Refactorings apply to a range, not a caret. */
+  readonly selection: vscode.Selection;
 }

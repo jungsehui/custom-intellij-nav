@@ -94,7 +94,7 @@ everything else:
 {
   "command": "list.focusDown",
   "key": "right",
-  "when": "listFocus && !inputFocus && !treeElementCanExpand && !treeElementHasChild && config.customIntellijNav.enableExplorerTreeKeymap"
+  "when": "isMac && listFocus && !inputFocus && !treeElementCanExpand && !treeElementHasChild && config.customIntellijNav.enableExplorerTreeKeymap"
 }
 ```
 

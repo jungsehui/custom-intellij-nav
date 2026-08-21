@@ -2,13 +2,54 @@ import * as vscode from "vscode";
 import type { EditorSnapshot } from "../types";
 import type { Logger } from "./logger";
 
-/** Capture editor URI/version/position at the moment a request starts. */
+/** Capture editor URI/version/position/selection at the moment a request starts. */
 export function captureSnapshot(editor: vscode.TextEditor): EditorSnapshot {
   return {
     uri: editor.document.uri,
     version: editor.document.version,
     position: editor.selection.active,
+    selection: editor.selection,
   };
+}
+
+/**
+ * Whether `editor` is still the same document at the same revision the
+ * snapshot was taken from.
+ *
+ * Pure: takes the editor rather than reading `vscode.window.activeTextEditor`,
+ * so the rule can be unit-tested without a VS Code host.
+ */
+export function editorMatches(
+  snapshot: EditorSnapshot,
+  editor: vscode.TextEditor | undefined,
+): boolean {
+  if (!editor) {
+    return false;
+  }
+
+  return (
+    editor.document.uri.toString() === snapshot.uri.toString() &&
+    editor.document.version === snapshot.version
+  );
+}
+
+/**
+ * Same as `editorMatches`, plus the selection must be untouched.
+ *
+ * Refactorings need the stricter rule. `editor.action.codeAction` takes no
+ * URI and no range — it acts on whatever is focused and wherever the caret
+ * is *when it runs*. A moved caret means the edit lands somewhere the user
+ * never selected.
+ */
+export function selectionMatches(
+  snapshot: EditorSnapshot,
+  editor: vscode.TextEditor | undefined,
+): boolean {
+  if (!editorMatches(snapshot, editor) || !editor) {
+    return false;
+  }
+
+  return editor.selection.isEqual(snapshot.selection);
 }
 
 /**
@@ -16,7 +57,7 @@ export function captureSnapshot(editor: vscode.TextEditor): EditorSnapshot {
  * moved/changed since the snapshot was taken. Caller should bail out.
  *
  * `latestRequestId` and `requestId` are managed by the caller (typically
- * IntelliJNavigator) — this helper just compares snapshot vs current editor.
+ * IntelliJNavigator).
  */
 export function isStale(
   requestId: number,
@@ -29,17 +70,7 @@ export function isStale(
     return true;
   }
 
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
-    logger.log(`request#${requestId} ignored: no active editor`);
-    return true;
-  }
-
-  const sameDocument =
-    editor.document.uri.toString() === snapshot.uri.toString();
-  const sameVersion = editor.document.version === snapshot.version;
-
-  if (!sameDocument || !sameVersion) {
+  if (!editorMatches(snapshot, vscode.window.activeTextEditor)) {
     logger.log(`request#${requestId} ignored: editor changed while waiting`);
     return true;
   }

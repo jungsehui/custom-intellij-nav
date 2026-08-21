@@ -1,11 +1,11 @@
 import * as vscode from "vscode";
 import type { EditorSnapshot, RawLocation } from "../types";
 
-export function isLocationLink(item: RawLocation): item is vscode.LocationLink {
+function isLocationLink(item: RawLocation): item is vscode.LocationLink {
   return "targetUri" in item;
 }
 
-export function toLocation(item: RawLocation): vscode.Location {
+function toLocation(item: RawLocation): vscode.Location {
   if (isLocationLink(item)) {
     return new vscode.Location(
       item.targetUri,
