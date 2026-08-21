@@ -6,6 +6,39 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.1.1] — 2026-08-21
+
+### Fixed — the extension claimed things about languages it never measured
+
+`⌃O` (Override Methods) and `⌃I` (Implement Methods) resolve through the
+`"*"` chain in every language, and `language-action-table.ts` records that
+TypeScript has no counterpart at all. So in TypeScript both keys popped an
+information toast on **every press**, saying the language server does not
+implement it.
+
+That claim was never measured. A `"*"`-only chain means nobody checked. The
+notification is now gated on the table having an entry for the actual
+`languageId`; the status-bar line still reports the miss either way.
+
+`shouldClaimUnsupported()` uses `Object.hasOwn`, so a `languageId` colliding
+with a prototype key does not resolve to a function.
+
+### Closed — `⌘N` Generate is a permanent exclusion, not a deferral
+
+Listed as deferred in every handoff since v1.3.0. TypeScript's `source.*`
+actions are `source.fixAll.ts` and `source.removeUnused.ts`
+(`fixAll.ts` L130, L152) plus organize imports — cleanup, not Generate. Its
+only Generate-class refactor is
+`refactor.rewrite.property.generateAccessors`, which needs the caret on a
+property. `⌘N` would block New Untitled File inside the editor while doing
+nothing at most carets, **and `⌃T` (Refactor This) already surfaces it**.
+
+Third time an apparent gap closed because an existing binding already
+reached the capability: Open Recent on `⌘E`, Go to Next Problem on `F2`,
+and now this.
+
+Tests 22 → 27.
+
 ## [2.1.0] — 2026-08-21
 
 A code review pass. One critical race, three correctness fixes, a migration
