@@ -6,6 +6,28 @@ import type { IntelliJAction } from "../types";
 import { ACTION_LABELS, LANGUAGE_ACTION_TABLE } from "./language-action-table";
 
 /**
+ * Whether we are entitled to tell the user this language does not implement
+ * an action.
+ *
+ * Only for languages with a measured entry in the table. Everything else
+ * resolves through the "*" chain, which means nobody checked — and "the
+ * language server does not implement it" would be a claim about something we
+ * never looked at.
+ *
+ * The concrete case: `overrideMethods` and `implementMethods` have no
+ * per-language entry, and `language-action-table.ts` records that TypeScript
+ * has no counterpart at all. Without this gate, ctrl+O and ctrl+I pop an
+ * information toast on every single press in TypeScript, forever. The status
+ * bar still reports the miss either way.
+ */
+export function shouldClaimUnsupported(
+  action: IntelliJAction,
+  langId: string,
+): boolean {
+  return Object.hasOwn(LANGUAGE_ACTION_TABLE[action], langId);
+}
+
+/**
  * Apply an IntelliJ-style refactoring (Extract Variable / Method / Constant,
  * Inline, Move, Override / Implement Methods) at the current selection.
  *
@@ -108,7 +130,7 @@ export async function runRefactor(
 
   logger.showStatus(`No ${label} available for ${langId}`);
 
-  if (getShowRefactorNotifications()) {
+  if (getShowRefactorNotifications() && shouldClaimUnsupported(action, langId)) {
     void vscode.window.showInformationMessage(
       `Custom IntelliJ Nav: ${langId} offers no ${label} at this position. ` +
         `Either the language server does not implement it, or the caret is ` +
