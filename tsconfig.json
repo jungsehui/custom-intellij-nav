@@ -9,6 +9,14 @@
 		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true,   /* enable all strict type-checking options */
+		/* Explicit, rather than "everything in node_modules/@types". Without it
+		   an unrelated @types package can leak globals into every file, and
+		   TypeScript 7 refuses to resolve the mocha/node globals at all. */
+		"types": [
+			"node",
+			"mocha",
+			"vscode"
+		],
 		/* Additional Checks */
 		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
