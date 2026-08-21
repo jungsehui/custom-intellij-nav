@@ -108,6 +108,11 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌘⇧-` / `⌘⇧=` | Collapse all / Expand all |
 | `⌘.` | Fold selection (toggle) |
 
+**Numpad mirrors.** IntelliJ binds the numpad equivalents of folding and
+comments alongside the main keys, and so does this keymap:
+`⌘numpad/` `⌘⌥numpad/` `⌘numpad±` `⌘⌥numpad±` `⌘⇧numpad±`. Each is a
+clone of its non-numpad counterpart, so the two can never drift apart.
+
 **Word navigation** (`⌥←` `⌥→` `⌥⇧←` `⌥⇧→` `⌥⌫` `⌥⌦`) matches VS Code's
 macOS defaults, which already implement IntelliJ's semantics. They are
 registered explicitly so the behavior holds even alongside another
@@ -192,6 +197,7 @@ keys to fall back to.
 | `⌘3` / `⌘5` / `⌘9` / `⌘0` | Search / Debug / SCM / Problems |
 | `⌥F12` | Toggle Terminal |
 | `⌘7` | Structure |
+| `⌘numpad0` / `1` / `3` / `5` / `9` | numpad mirrors of `⌘0` / `⌘1` / `⌘3` / `⌘5` / `⌘9` |
 | `⌘⇧'` | Maximize tool window |
 | `⇧⎋` | Hide active tool window |
 
@@ -287,6 +293,7 @@ alone, expanding folders as you meet them.
   "customIntellijNav.enableRunKeymap": true,
   "customIntellijNav.enableDiffKeymap": true,
   "customIntellijNav.enableWorkbenchKeymap": true,
+  "customIntellijNav.enableGoToDeclarationOrUsages": true,
   "customIntellijNav.useCamelHumpsWords": false,
   "customIntellijNav.showErrorToasts": false,
   "customIntellijNav.showRefactorNotifications": true
@@ -326,6 +333,20 @@ Under `enableRefactoringKeymap`:
 `workbench.action.focusNextPart` while being bound to a command that does
 not exist. It is now scoped to `editorTextFocus`, so Focus Next Part
 works again everywhere outside the editor.
+
+Always on (`enableGoToDeclarationOrUsages`, default `true`):
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⌘B` | **Toggle Primary Side Bar** (this keymap puts it on `⌘1`, IntelliJ's Project window key) | Go to Declaration or Usages |
+
+Under `enableToolWindowKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⌘1` | Focus First Editor Group | Project (Explorer) |
+| `⌘0` | Focus into Primary Side Bar | Problems |
+| `⌘9` | Open Last Editor in Group — *secondary only*, `⌥0` / `⌃0` still work | Version control |
 
 Under `enableWorkbenchKeymap`:
 
@@ -371,7 +392,10 @@ a targeted unbind to your user `keybindings.json`:
 ]
 ```
 
-Each toggle is `false` by default except `enableBundledMacKeymap` (cmd+b is the headline feature). Enable categories incrementally to avoid surprises.
+Every keymap category is `false` by default. The one exception is
+`enableGoToDeclarationOrUsages`, which is `true` because `⌘B` is the
+extension's headline feature. Enable categories incrementally to avoid
+surprises.
 
 ## Using this with VSCodeVim
 
@@ -405,6 +429,106 @@ To hand a specific key back to this extension, add it to
 
 Per key, no need to turn off a whole category.
 
+## Migrating to 2.0.0
+
+2.0.0 deprecates two settings. **If you never changed the defaults, you do
+not need to do anything** — `⌘B` still works and nothing else turns on by
+itself.
+
+| Old setting | Replacement |
+|---|---|
+| `customIntellijNav.enableBundledMacKeymap` | `customIntellijNav.enableGoToDeclarationOrUsages` |
+| `customIntellijNav.enableExtendedMacKeymap` | its 15 bindings moved into `enableNavigationKeymap`, `enableEditingKeymap`, `enableRefactoringKeymap`, `enableToolWindowKeymap`, `enableWorkbenchKeymap`, `enableRunKeymap`, `enableDebuggingKeymap` |
+
+Both old settings still work in 2.0.0 and will be removed in 3.0.0.
+
+If you had `enableExtendedMacKeymap: true`, everything keeps working.
+To migrate, delete it and enable the categories you actually want:
+
+```jsonc
+{
+  // was: "customIntellijNav.enableExtendedMacKeymap": true
+  "customIntellijNav.enableRefactoringKeymap": true,   // cmd+alt+v/m/c/n, shift+f6, ctrl+t, ...
+  "customIntellijNav.enableNavigationKeymap": true,    // cmd+shift+b, cmd+alt+shift+n, ...
+  "customIntellijNav.enableToolWindowKeymap": true     // cmd+1, cmd+3, cmd+7, ...
+}
+```
+
+If you had `enableBundledMacKeymap: false` to keep VS Code's `⌘B`, that
+still holds. Rename it when convenient:
+
+```jsonc
+{ "customIntellijNav.enableGoToDeclarationOrUsages": false }
+```
+
+## Migrating off k--kato
+
+This extension does not need
+[`k--kato.intellij-idea-keybindings`](https://marketplace.visualstudio.com/items?itemName=k--kato.intellij-idea-keybindings).
+Running both means 138 chords are registered twice; the later-loaded
+extension wins, and load order is not guaranteed.
+
+1. **Enable the categories you use here first**, while k--kato is still
+   installed. Compare behavior key by key.
+2. **Uninstall k--kato**, then reload the window. Extension keybindings
+   are not released until reload.
+3. **Roll back** by reinstalling k--kato and setting every
+   `customIntellijNav.enable*Keymap` to `false`. Leave
+   `enableGoToDeclarationOrUsages` on if you want `⌘B` to keep merging
+   declaration and usages — k--kato binds `⌘B` to plain Go to Definition.
+
+While both are installed, pin `⌘B` explicitly in your user
+`keybindings.json` so load order stops mattering:
+
+```jsonc
+[
+  { "key": "cmd+b", "command": "-workbench.action.toggleSidebarVisibility" },
+  { "key": "cmd+b", "command": "-editor.action.goToDeclaration", "when": "editorTextFocus" },
+  { "key": "cmd+b", "command": "intellij.goToDeclarationOrUsages", "when": "editorTextFocus" }
+]
+```
+
+Category mapping, if you are used to k--kato's single on/off model:
+
+| What you used k--kato for | Enable here |
+|---|---|
+| Editing, folding, comments | `enableEditingKeymap` |
+| Navigation, hierarchies | `enableNavigationKeymap` |
+| Find, replace, usages | `enableSearchKeymap` |
+| Rename, extract, override | `enableRefactoringKeymap` |
+| Tool windows | `enableToolWindowKeymap` |
+| Git | `enableVcsKeymap` |
+| Debugging | `enableDebuggingKeymap` |
+| Run, build | `enableRunKeymap` |
+| Diff viewer | `enableDiffKeymap` |
+| Copy path, layout, full screen | `enableWorkbenchKeymap` |
+| Project view arrows | `enableExplorerTreeKeymap` |
+
+## Coverage and what is deliberately missing
+
+138 of k--kato's 157 unique Mac chords are covered (87.9%). The other 19
+are not oversights — each has a recorded reason:
+
+| Chord | IntelliJ action | Why not |
+|---|---|---|
+| `⌘⌥F` | Extract Field | TypeScript emits no `refactor.extract.field`; the key is also macOS **Replace** |
+| `⌘F6` | Change Signature | no such refactor kind in TypeScript |
+| `⌘⌥P` | Introduce Parameter | no such refactor kind in TypeScript |
+| `⌥⇥` / `⇧⌥⇥` | Goto next/prev splitter | macOS application switcher takes them first |
+| `⇧⇧` / `⌃⌃` | Search Everywhere / Run Anything | VS Code cannot detect double-tapped modifiers. `⌘⇧Space` is the workaround |
+| `⌘S` | Save All | would run `formatOnSave` against every open file |
+| `⌘;` | Project Structure | `⌘;` is a chord prefix for VS Code's testing commands |
+| `` ⌃` `` | Quick Switch Scheme | it is Toggle Terminal; Select Theme is `⌘K ⌘T` |
+| `⌃⇥` | Switcher | VS Code's `⌃⇥` already is the switcher |
+| `⌘,` / `⌘numpad,` | Preferences | already `openGlobalSettings` |
+| `⌘↑` / `⌘↓` | Nav Bar / View source | macOS document start and end; MacBooks have no Home / End key |
+| `↩` / `⇥` / `⌃↩` | various | identical to VS Code defaults, or notebook-only |
+| `⌘⇧↩` | Complete Current Statement | deferred |
+
+Beyond the keymap, IntelliJ subsystems with no VS Code equivalent are out
+of scope entirely: Live Templates, Surround With, postfix completion,
+structural search and replace, bookmarks, and Safe Delete.
+
 ## Limitations
 
 VS Code's contribution model imposes a few hard constraints:
@@ -423,24 +547,6 @@ VS Code's contribution model imposes a few hard constraints:
 - **Postfix completion (`.var`, `.for`, `.return`)** — IntelliJ Live Templates have no first-class equivalent. Use VS Code snippets.
 - **Successively increasing code blocks** — `editor.action.smartSelect.expand` is close but not syntax-aware in the same way.
 - **Extract Field (`⌘⌥F`), Change Signature (`⌘F6`), Introduce Parameter (`⌘⌥P`)** — not shipped. Enumerating microsoft/TypeScript@v5.9.2 `src/services/refactors/` shows TypeScript emits no `refactor.extract.field`, `refactor.change.signature`, or `refactor.introduce.parameter`, so all three would be inert. `⌘⌥F` is additionally the macOS **Replace** shortcut (`editor.action.startFindReplaceAction`, `findController.ts` L1011), so binding it would cost a heavily-used default and return nothing. They will ship if and when a language server is measured to support them.
-
-## If you also use `IntelliJ IDEA Keybindings` (k--kato)
-
-This extension does **not** require k--kato. If you have both installed, add these overrides to your user `keybindings.json` to ensure deterministic behavior on `cmd+b`:
-
-```jsonc
-[
-  { "key": "cmd+b", "command": "-workbench.action.toggleSidebarVisibility" },
-  { "key": "cmd+b", "command": "-editor.action.goToDeclaration", "when": "editorTextFocus" },
-  { "key": "cmd+b", "command": "intellij.goToDeclarationOrUsages", "when": "editorTextFocus" }
-]
-```
-
-To migrate fully off k--kato:
-1. Enable all `customIntellijNav.enable*Keymap` toggles in settings.
-2. Verify the keys you actually use (the tables above cover ~80% of common IntelliJ usage).
-3. Disable or uninstall k--kato.
-4. Add any remaining keys directly to your `keybindings.json` or open an issue.
 
 ## Why this extension exists
 

@@ -6,6 +6,104 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] — 2026-08-21
+
+**Breaking.** The two legacy tier toggles are deprecated and their bindings
+moved into functional categories. Numpad mirrors added. Coverage
+79.6% → 87.9%, and every one of the 19 remaining chords now has a recorded
+reason for not being implemented.
+
+Keybindings 156 → 170, settings 16 → 17.
+
+### Breaking: `enableBundledMacKeymap` and `enableExtendedMacKeymap` are deprecated
+
+The keymap had two axes that did not agree with each other. `⌘⌥V`
+(Extract Variable) is a refactoring but lived under `enableExtendedMacKeymap`,
+while `⇧F6` (Rename) lived under `enableRefactoringKeymap`. With 13
+categories that was already hard to reason about.
+
+All 16 bindings moved to where they belong:
+
+| Binding | Was | Now |
+|---|---|---|
+| `⌘B` Go to Declaration or Usages | `enableBundledMacKeymap` | **`enableGoToDeclarationOrUsages`** (new, default `true`) |
+| `⌘⇧B`, `⌘⌥⇧N` | `enableExtendedMacKeymap` | `enableNavigationKeymap` |
+| `⌘⌥V`, `⌘⌥M`, `⌘⌥C`, `⌘⌥N` | `enableExtendedMacKeymap` | `enableRefactoringKeymap` |
+| `⌥J`, `⌘⌃G` | `enableExtendedMacKeymap` | `enableEditingKeymap` |
+| `⌘1` (both entries) | `enableExtendedMacKeymap` | `enableToolWindowKeymap` |
+| `⌘N`, `⌘⇧N`, `⌘\` | `enableExtendedMacKeymap` | `enableWorkbenchKeymap` |
+| `⌃⇧R` | `enableExtendedMacKeymap` | `enableRunKeymap` |
+| `⌃⇧D` | `enableExtendedMacKeymap` | `enableDebuggingKeymap` |
+
+**Nothing breaks if you change nothing.** Both old settings are still
+declared and still honoured:
+
+- `⌘B` fires when **both** `enableGoToDeclarationOrUsages` and
+  `enableBundledMacKeymap` are true. Both default to `true`, so the
+  default path is unchanged — and if you had explicitly set
+  `enableBundledMacKeymap: false`, `⌘B` stays off.
+- The 15 moved bindings fire when **either** their new category **or**
+  `enableExtendedMacKeymap` is on. An existing
+  `enableExtendedMacKeymap: true` keeps all 15 working.
+
+Both deprecated settings will be removed in 3.0.0. To migrate now: drop
+`enableExtendedMacKeymap` and turn on the categories you actually want;
+rename `enableBundledMacKeymap` to `enableGoToDeclarationOrUsages`.
+
+### Added — numpad mirrors (13 chords, 14 entries)
+
+IntelliJ's numpad equivalents for folding, comments, and tool windows.
+Each is a clone of its non-numpad counterpart, so command and `when` can
+never drift apart:
+
+`⌘numpad/` `⌘⌥numpad/` `⌘numpad+` `⌘numpad-` `⌘⌥numpad+` `⌘⌥numpad-`
+`⌘⇧numpad+` `⌘⇧numpad-` `⌘numpad0` `⌘numpad1` `⌘numpad3` `⌘numpad5`
+`⌘numpad9`
+
+`⌘numpad,` (Preferences) was skipped for the same reason `⌘,` was: it is
+already `openGlobalSettings`.
+
+### Displaced defaults that were never documented
+
+A sweep of all 154 chords against the full VS Code source turned up four
+displacements that have shipped since v1.0.0 without a line in the README:
+
+| Key | VS Code default | Source |
+|---|---|---|
+| `⌘B` | **Toggle Primary Side Bar** | `layoutActions.ts` L306 |
+| `⌘1` | Focus First Editor Group | `editorActions.ts` L303 |
+| `⌘0` | Focus into Primary Side Bar | `sidebarActions.ts` L46 |
+| `⌘9` | Open Last Editor in Group — **secondary only**, primary `⌥0` / `⌃0` unaffected | `editorActions.ts` L1446 |
+
+Toggle Primary Side Bar is the notable one: this keymap puts it on `⌘1`,
+which is where IntelliJ has the Project window, so the capability moves
+rather than disappears.
+
+The sweep is not a clean bill of health for the other 100 chords that show
+some overlap. Most of those hits are narrowly scoped (chat, terminal,
+browser view, sessions) and are not displacements, but distinguishing them
+mechanically would need the `when` clause of every VS Code registration
+parsed, which was not done. The table above covers broad-scope
+displacements only.
+
+### Coverage: 87.9%, and the remaining 19 are all accounted for
+
+| Chord | Why not |
+|---|---|
+| `⌘⌥F`, `⌘F6`, `⌘⌥P` | TypeScript emits no such refactor kind (v1.3.0); `⌘⌥F` is also macOS Replace |
+| `⌥⇥`, `⇧⌥⇥` | macOS application switcher takes them at OS level |
+| `⇧⇧`, `⌃⌃` | VS Code cannot detect double-tapped modifiers |
+| `⌘S` | Save All would run `formatOnSave` on every open file |
+| `⌘;` | chord prefix for the whole testing command family |
+| `` ⌃` `` | Toggle Terminal; Select Theme is already `⌘K ⌘T` |
+| `⌃⇥` | VS Code's `⌃⇥` already is the switcher |
+| `⌘,`, `⌘numpad,` | already `openGlobalSettings` |
+| `⌘↑`, `⌘↓` | macOS document start / end; MacBooks have no Home / End key |
+| `↩`, `⇥`, `⌃↩` | identical to VS Code defaults, or notebook-only |
+| `⌘⇧↩` | Complete Current Statement, deferred |
+
+None of the 19 is an oversight. That is the claim this release is making.
+
 ## [1.5.0] — 2026-08-21
 
 Tool windows, diff navigation, and a Workbench category.

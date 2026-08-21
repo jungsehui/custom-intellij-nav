@@ -12,13 +12,18 @@
 
 ## 1. 현황
 
-| 항목 | v1.0.1† | v1.1.0 | v1.2.0 | v1.3.0 | v1.4.0 | **v1.5.0 (현재)** |
-|---|---|---|---|---|---|---|
-| 우리 고유 Mac chord | 73 | 102 | 121 | 125 | 131 | **141** |
-| k--kato 고유 Mac chord | 157 | 157 | 157 | 157 | 157 | 157 |
-| 겹침 (양쪽 보유) | 59 | 87 | 106 | 109 | 115 | **125** |
-| 순수 미구현 | 98 | 70 | 51 | 48 | 42 | **32** |
-| **커버율** | 37.6% | 55.4% | 67.5% | 69.4% | 73.2% | **79.6%** |
+| 항목 | v1.0.1† | v1.1.0 | v1.2.0 | v1.3.0 | v1.4.0 | v1.5.0 | **v2.0.0 (현재)** |
+|---|---|---|---|---|---|---|---|
+| 우리 고유 Mac chord | 73 | 102 | 121 | 125 | 131 | 141 | **154** |
+| k--kato 고유 Mac chord | 157 | 157 | 157 | 157 | 157 | 157 | 157 |
+| 겹침 (양쪽 보유) | 59 | 87 | 106 | 109 | 115 | 125 | **138** |
+| 순수 미구현 | 98 | 70 | 51 | 48 | 42 | 32 | **19** |
+| **커버율** | 37.6% | 55.4% | 67.5% | 69.4% | 73.2% | 79.6% | **87.9%** |
+
+**남은 19건은 전부 사유가 기록돼 있다. 누락이 아니라 판정된 제외다.**
+불가능 11건(앱 스위처 2, double-tap 2, TS 미지원 3, chord 접두 1, 이미 기본값 2, notebook 전용 1)과
+의도적 거부 8건(`cmd+s` diff 오염, `ctrl+\`` 터미널, `ctrl+tab` 중복, `cmd+up/down` 플랫폼 관례,
+`enter`/`tab`/`ctrl+enter` 기본값 동일, `cmd+shift+enter` 보류). 상세는 README와 4절.
 
 † v1.0.1은 태그가 없어 재집계 불가. 기록된 값 그대로 둔다.
 v1.1.0~v1.4.0은 정규화 기준 재집계값이며 기존 공표치(53.8 / 65.8 / 67.7 / 71.5%)를 대체한다.
@@ -37,14 +42,14 @@ v1.1.0~v1.4.0은 정규화 기준 재집계값이며 기존 공표치(53.8 / 65.
 
 | 카테고리 | 우리 | k--kato | 커버율 |
 |---|---|---|---|
-| Editing | 18 | 53 | 34% |
-| Navigation | 14 | 32 | 44% |
+| Editing | 60 | 53 | **100%** |
+| Navigation | 38 | 32 | **100%** |
 | Refactoring | 9 | 14 | **64%** |
-| ToolWindow | 10 | 14 | **71%** |
+| ToolWindow | 18 | 14 | **100%** |
 | Search | 4 | 10 | 40% |
 | Debugging | 12 | 11 | **100%** |
 | VCS | 7 | 6 | **100%** |
-| Run / Build | 3 | 4 | **75%** |
+| Run / Build | 4 | 4 | **100%** |
 | Workbench 기타 | 3 | 11 | **27%** |
 | Diff / Notebook | 3 | 5 | **60%** |
 
@@ -170,7 +175,7 @@ Refactoring 카테고리 분모가 11에서 14로 늘어난 것은 재집계 차
 | ~~v1.3.0~~ | ✅ **완료 (2026-08-20)**. Refactoring. 4 엔트리 추가 + 죽은 키 2건 수정 | 6 중 4 | 실제 ~2h | **69.4%** |
 | ~~v1.4.0~~ | ✅ **완료 (2026-08-21)**. Run 신설 + Debugging 마감 + Vim 공존 | 6 | 실제 ~2h | **73.2%** |
 | ~~v1.5.0~~ | ✅ **완료 (2026-08-21)**. ToolWindow + VCS + Diff와 Workbench 신설 | 17 중 11 | 실제 ~2h | **79.6%** |
-| v2.0.0 | numpad 미러 + 토글 구조 정리 + 이관 가이드 | 17 + 정리 | 4~5h | 100% (실기능) |
+| ~~v2.0.0~~ | ✅ **완료 (2026-08-21)**. numpad 미러 13 + 토글 구조 정리(BREAKING) + 이관 가이드 | 17 중 13 + 정리 | 실제 ~2h | **87.9%** |
 | | | **96** | **21~27h** | |
 
 ### v1.1.0 — Editing 필수 (27건, 3~4h)
@@ -274,20 +279,34 @@ Workbench 신설 3(`cmd+shift+c` Copy Path, `shift+f12` 레이아웃 복원,
 **계측기 수정**: 커버율 chord 비교가 문자열 그대로여서 modifier 순서가 다른 같은 chord를
 서로 다르게 셌다. 1절 참조.
 
-### v2.0.0 — 완전 대체 선언 (17건 + 구조 정리, 4~5h)
+### ~~v2.0.0 — 완전 대체 선언~~ ✅ 완료 (2026-08-21, 실제 ~2h)
 
 **numpad 미러 14건**: 폴딩 6, 주석 2, ToolWindow 5, Workbench 1. 기계적 배치, 기능 신규 없음.
 
-**니치 3건 스킵 권장**: `enter`, `tab`, `ctrl+enter` (VS Code 기본과 동일하거나 notebook 전용).
+**니치 3건 스킵 확정**: `enter`, `tab`, `ctrl+enter`. k--kato 매핑을 확인하니
+suggestion accept와 notebook 셀 실행이고, VS Code 기본과 사실상 동일하다.
+`cmd+numpad_separator`(= `cmd+,`)도 같은 이유로 제외해 실제 numpad는 14건이 아니라 13건이다.
 
-**구조 정리 (BREAKING의 핵심)**: `enableBundledMacKeymap`(1건) / `enableExtendedMacKeymap`(15건)
-두 토글이 기능 카테고리 8개와 개념적으로 중복된다. `cmd+alt+v`(Extract Variable)는 리팩터링인데
-`enableExtendedMacKeymap` 아래 있고, `shift+f6`(Rename)은 `enableRefactoringKeymap` 아래 있다.
-토글이 12개에서 15개로 늘어나는 시점에 이 이중 축을 정리하지 않으면 사용자가 어느 토글을
-켜야 할지 알 수 없게 된다. 두 토글을 폐기하고 15건을 기능 카테고리로 재배치하되,
-`enableBundledMacKeymap`만 default true이므로 마이그레이션 안내가 반드시 필요하다.
+**구조 정리 (BREAKING의 핵심) — 완료**. 이중 축을 하나로 접었다.
+- 기능 카테고리 토글 11개(전부 default false) + **기능 토글 1개**
+  `enableGoToDeclarationOrUsages`(default **true**). `cmd+b`는 키맵 리맵이 아니라
+  이 익스텐션 자체 커맨드이므로 카테고리가 아니라 기능으로 분류하는 게 맞다.
+- 구 토글 2개는 **선언을 유지하고 계속 인정**한다. 이동한 15건은
+  `(새 카테고리 || enableExtendedMacKeymap)`, `cmd+b`는
+  `enableGoToDeclarationOrUsages && enableBundledMacKeymap`. 덕분에
+  기존 설정이 명시적으로 true든 false든 동작이 완전히 보존된다. 3.0.0에서 제거.
 
-**문서**: k--kato 이관 가이드 (설정 키 대응표, 제거 순서, 롤백), 영구 제외 목록 공개, 커버리지 갱신.
+**부수 수확 — 미문서 변위 4건**: 전 chord 154개를 전체 소스와 대조해서
+`cmd+b`(Toggle Primary Side Bar), `cmd+1`(Focus First Editor Group),
+`cmd+0`(Focus into Primary Side Bar), `cmd+9`(lastEditorInGroup 보조키)를 찾았다.
+전부 v1.0.0부터 출시돼 있었고 README에 한 줄도 없었다. 다만 이 스윕은
+스코프 판별을 못 하므로(104건 겹침 중 대부분이 chat/terminal 한정) **후보 목록**이지
+판정이 아니다. 이 4건은 개별로 읽어 확인했다.
+
+**문서 — 완료**: README에 `Migrating to 2.0.0`(설정 대응표),
+`Migrating off k--kato`(활성화 → 제거 → 롤백 순서 + 카테고리 대응표),
+`Coverage and what is deliberately missing`(19건 전수와 사유) 신설.
+중복되던 구 "If you also use k--kato" 절은 흡수해 삭제했다.
 
 ## 4. 영구 제외 (구현 불가)
 

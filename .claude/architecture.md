@@ -9,8 +9,8 @@ A single VS Code extension. ~795 LOC. Two user-facing capabilities:
    prefetch-based dispatcher that avoids the "No preferred code actions"
    toast.
 
-On top of those, a curated **156-keybinding IntelliJ Mac keymap** spread
-across 13 toggleable categories (`enableXxxKeymap`).
+On top of those, a curated **170-keybinding IntelliJ Mac keymap** spread
+across 11 functional categories plus one feature toggle.
 
 ## Module graph
 
@@ -53,30 +53,50 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | Surface | Count | Notes |
 |---|---|---|
 | Commands | 8 | All in the `intellij.*` namespace |
-| Keybindings | 156 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
-| Settings | 16 | 13 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
+| Keybindings | 170 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
+| Settings | 17 | 11 category toggles + 1 feature toggle + 2 deprecated + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)
 
 | Category | Setting | Keys | Default |
 |---|---|---|---|
-| bundled | `enableBundledMacKeymap` | 1 (cmd+b) | **on** |
-| extended | `enableExtendedMacKeymap` | 15 | off |
-| editing | `enableEditingKeymap` | 50 | off |
-| navigation | `enableNavigationKeymap` | 36 | off |
+| *(feature)* | `enableGoToDeclarationOrUsages` | 1 (cmd+b) | **on** |
+| editing | `enableEditingKeymap` | 60 | off |
+| navigation | `enableNavigationKeymap` | 38 | off |
 | search | `enableSearchKeymap` | 10 | off |
-| refactoring | `enableRefactoringKeymap` | 5 | off |
+| refactoring | `enableRefactoringKeymap` | 9 | off |
 | vcs | `enableVcsKeymap` | 7 | off |
-| toolwindow | `enableToolWindowKeymap` | 10 | off |
+| toolwindow | `enableToolWindowKeymap` | 18 | off |
 | explorertree | `enableExplorerTreeKeymap` | 1 | off |
-| debugging | `enableDebuggingKeymap` | 12 | off |
-| run | `enableRunKeymap` | 3 | off |
+| debugging | `enableDebuggingKeymap` | 13 | off |
+| run | `enableRunKeymap` | 4 | off |
 | diff | `enableDiffKeymap` | 3 | off |
-| workbench | `enableWorkbenchKeymap` | 3 | off |
+| workbench | `enableWorkbenchKeymap` | 6 | off |
 
 Why off-by-default: each toggle conflicts with VS Code defaults or
 k--kato. Users opt-in incrementally so a single broken category never
 nukes their whole keyboard.
+
+### One axis, not two
+
+Until 2.0.0 there were two competing axes: functional categories
+(`enableEditingKeymap`, …) and tiers (`enableBundledMacKeymap`,
+`enableExtendedMacKeymap`). The same kind of binding could live under
+either — `⌘⌥V` Extract Variable sat under the tier toggle while `⇧F6`
+Rename sat under Refactoring.
+
+2.0.0 collapses this to one axis plus one exception:
+
+- **11 functional category toggles**, all default off. Each one displaces
+  VS Code defaults, so users opt in per area.
+- **One feature toggle**, `enableGoToDeclarationOrUsages`, default **on**.
+  `⌘B` is not a keymap remap, it is the extension's own command, and it
+  is why most people install this. It is the only thing that is on out of
+  the box.
+
+The two tier settings remain declared and honoured (`||`-ed into the moved
+bindings' `when`, and `&&`-ed into `⌘B`'s) so existing settings keep
+working. They go away in 3.0.0.
 
 ### Two kinds of `when` guard
 

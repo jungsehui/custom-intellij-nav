@@ -227,6 +227,50 @@ Added during the v1.5.0 pass:
 `toggleMaximizedPanel` ship with **no** default keybinding, so binding
 them costs nothing.
 
+Added during the v2.0.0 pass:
+
+| Key | Default command | Source |
+|---|---|---|
+| `⌘B` | **`workbench.action.toggleSidebarVisibility`** — Toggle Primary Side Bar | `layoutActions.ts` L306 |
+| `⌘1` | `workbench.action.focusFirstEditorGroup` — a **single** binding, not a `⌘1`–`⌘9` family | `editorActions.ts` L303 |
+| `⌘0` | `workbench.action.focusSideBar` | `sidebarActions.ts` L46 |
+| `⌘9` | `lastEditorInGroup` **secondary** (primary is `⌥0` / `⌃0`) | `editorActions.ts` L1446 |
+| `⌘⌥V` | `editorDictation.start` | `editorDictation.ts` L69 |
+| `⌘⌥N` | New Untitled File — **web only** (`isWeb ? ⌘⌥N : ⌘N`), free on desktop | `fileCommands.ts` L694 |
+| `⌘numpad0` | Reset Zoom | `windowActions.ts` L218 |
+| `⌘numpad-` | Zoom Out (secondary) | `windowActions.ts` L189 |
+| `⌘3`, `⌘5`, `⌘7`, `⌘⌥M` | none — free | (absent from full source) |
+
+Numpad chords use the lowercased UI label from the KeyCode table in
+`keyCodes.ts` (`'NumPad_Divide'` → `numpad_divide`, `'NumPad0'` →
+`numpad0`). Verified tokens: `numpad0`–`numpad9`, `numpad_add`,
+`numpad_subtract`, `numpad_divide`, `numpad_separator`, `numpad_decimal`.
+
+### A platform ternary can make a key free on the platform you care about
+
+`⌘⌥N` looked occupied: `fileCommands.ts` L694 binds New Untitled File to
+it. Reading the whole expression shows
+`isWeb ? (… ⌘⌥N) : ⌘N` — the `⌘⌥N` arm only exists in the web build. On
+desktop macOS the key is free.
+
+Grep output is one line of a ternary. Read the expression, not the match.
+
+### An audit that cannot separate scope is not an audit
+
+A sweep of all 154 chords against the full VS Code source reported 104
+overlaps. Most are meaningless: `⌥↓` "hits" the accessible diff viewer,
+notebook cell commands, and a history widget, none of which is a
+displacement of anything a user would notice.
+
+Separating a real displacement from a narrowly-scoped one requires parsing
+the `when` clause of every VS Code registration, which the sweep does not
+do. So the sweep is a *candidate list*, not a verdict. It found four
+genuine undocumented displacements (`⌘B`, `⌘1`, `⌘0`, `⌘9`) by pointing
+at broad-scope registrations that were then read individually.
+
+Say which of the two you produced. "104 chords overlap" published as-is
+would be alarming and wrong.
+
 ### A key can be a chord prefix, not just a key
 
 `⌘;` measured as "occupied by testing commands", but the shape matters:
