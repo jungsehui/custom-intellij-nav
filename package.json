@@ -2,7 +2,7 @@
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -442,18 +442,6 @@
         "command": "editor.action.marker.prev",
         "key": "shift+f2",
         "mac": "shift+f2",
-        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
-      },
-      {
-        "command": "workbench.action.gotoPrevSymbol",
-        "key": "alt+up",
-        "mac": "ctrl+up",
-        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
-      },
-      {
-        "command": "workbench.action.gotoNextSymbol",
-        "key": "alt+down",
-        "mac": "ctrl+down",
         "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
       },
       {

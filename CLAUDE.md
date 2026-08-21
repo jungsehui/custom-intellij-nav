@@ -13,7 +13,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
   (manual VSIX upload via the publisher management page — no PAT needed).
 - **Source**: `src/` — 11 TypeScript files, ~795 LOC total. `extension.ts` is a
   30-line entry point. Domain split: `core/` + `navigation/` + `refactor/`.
-- **Manifest**: `package.json` — 8 commands, 170 keybindings, 17 settings.
+- **Manifest**: `package.json` — 8 commands, 168 keybindings, 17 settings.
 
 ## Where to look first
 

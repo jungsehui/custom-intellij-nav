@@ -524,10 +524,28 @@ are not oversights — each has a recorded reason:
 | `⌘↑` / `⌘↓` | Nav Bar / View source | macOS document start and end; MacBooks have no Home / End key |
 | `↩` / `⇥` / `⌃↩` | various | identical to VS Code defaults, or notebook-only |
 | `⌘⇧↩` | Complete Current Statement | deferred |
+| `⌃↑` / `⌃↓` | Move Caret to Previous / Next Method | VS Code has no such command, and macOS Mission Control takes the keys |
 
 Beyond the keymap, IntelliJ subsystems with no VS Code equivalent are out
 of scope entirely: Live Templates, Surround With, postfix completion,
 structural search and replace, bookmarks, and Safe Delete.
+
+### macOS takes some keys before VS Code sees them
+
+Four `⌃`+arrow combinations are macOS Mission Control shortcuts, handled by
+the window server rather than the frontmost app. On a stock install:
+
+| Key | macOS uses it for |
+|---|---|
+| `⌃↑` | Mission Control |
+| `⌃↓` | Application Windows |
+| `⌃←` / `⌃→` | Move left / right a space |
+
+`⌃↑` and `⌃↓` are therefore **not bound** by this extension — see the
+table above. `⌃←` / `⌃→` *are* bound to previous / next editor, so they
+work only if you clear those two shortcuts in **System Settings →
+Keyboard → Keyboard Shortcuts → Mission Control**. Tab switching is also
+on `⌘⇧[` / `⌘⇧]`, which macOS does not intercept.
 
 ## Limitations
 

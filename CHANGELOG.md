@@ -6,6 +6,35 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.1] — 2026-08-21
+
+### Fixed — `⌃↑` and `⌃↓` were dead twice over
+
+Removed. They were bound to `workbench.action.gotoPrevSymbol` and
+`workbench.action.gotoNextSymbol`, **neither of which is a VS Code
+command**. The same defect class as the `F6` fix in 1.3.0: VS Code accepts
+a keybinding pointing at any string and warns about nothing.
+
+They also could not have worked even with correct commands. On this Mac,
+`AppleSymbolicHotKeys` has no override for IDs 32 and 33 (Mission Control,
+Application Windows), so both are at their factory assignment — `⌃↑` and
+`⌃↓` — and macOS consumes them before any application sees the event.
+
+The intent was IntelliJ's *Move Caret to Previous / Next Method*. VS Code
+has no equivalent command: searching the full source for any
+`nextSymbol` / `prevSymbol` / `nextMember` navigation action returns
+nothing, and the `outline.*` family only focuses and folds the Outline
+view. This is now a permanent exclusion, not a gap.
+
+`⌃←` / `⌃→` are kept. They point at real commands
+(`previousEditor` / `nextEditor`) and already carry `!terminalFocus`, but
+they are subject to the same preemption: symbolic hotkeys 79–82 ("Move
+left/right a space") are `enabled = 1` on this Mac with no parameter
+override, meaning default assignment. They work only if you turn those
+off in System Settings → Keyboard → Keyboard Shortcuts → Mission Control.
+
+Keybindings 170 → 168.
+
 ## [2.0.0] — 2026-08-21
 
 **Breaking.** The two legacy tier toggles are deprecated and their bindings

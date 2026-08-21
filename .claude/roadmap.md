@@ -321,6 +321,7 @@ k--kato는 `src/package-with-comment.json`에서 **45개 IntelliJ 액션을 `"co
 | Run Anything | `ctrl ctrl` | 위와 동일 |
 | Brief Info | `cmd+mouseover` | `contributes.keybindings`는 키보드 전용, 마우스 제스처 등록 불가 |
 | Goto next/prev splitter | `alt+tab`, `shift+alt+tab` | macOS 앱 스위처가 OS 레벨에서 선점. **v1.5.0에서 확정 제외** |
+| Move Caret to Previous/Next Method | `ctrl+up`, `ctrl+down` | VS Code에 대응 커맨드 부재(전수 확인) + macOS Mission Control 선점. **v2.0.1에서 제거** |
 
 ### IntelliJ 전용 서브시스템 (VS Code에 대응 개념 없음)
 
@@ -366,8 +367,22 @@ Go to super-method (`cmd+u`), Complete Current Statement (`cmd+shift+enter`).
 
 `alt+tab`, `shift+alt+tab` (앱 스위처), `ctrl+left`, `ctrl+right` (Mission Control).
 
-`ctrl+up`/`ctrl+down`은 **우리가 v1.0.0에서 이미 바인딩 중**이고 Mission Control과 겹친다.
-사용자 환경에 따라 이미 안 먹고 있을 수 있으므로 회귀 확인 대상.
+~~`ctrl+up`/`ctrl+down`은 우리가 v1.0.0에서 이미 바인딩 중이고 Mission Control과 겹친다~~
+→ **2026-08-21 v2.0.1에서 해소, 두 겹으로 죽어 있었다.**
+1. 커맨드 `workbench.action.gotoPrevSymbol` / `gotoNextSymbol`이 **VS Code에 존재하지 않는다.**
+   v1.3.0의 `workbench.action.files.move`와 같은 유형이고, 출처는 k--kato도 아니다
+   (k--kato는 `ctrl+up/down`을 아예 안 쓴다). v1.0.0에서 우리가 지어낸 이름이다.
+2. 이 맥의 `AppleSymbolicHotKeys`에 ID 32/33(Mission Control, Application Windows)이
+   **미저장 = 공장 기본값**이라 `⌃↑`/`⌃↓`가 활성이고, macOS가 앱보다 먼저 이벤트를 가져간다.
+
+의도했던 IntelliJ 액션은 *Move Caret to Previous/Next Method*인데 VS Code에 대응 커맨드가
+없다(`nextSymbol`/`prevSymbol`/`nextMember` 계열 전수 0건, `outline.*`는 뷰 포커스·접기 전용).
+**4절 영구 제외로 이동.** 두 바인딩은 제거했다.
+
+`ctrl+left`/`ctrl+right`는 유지한다. 커맨드가 실존하고 `!terminalFocus` 가드도 이미 있다.
+다만 ID 79~82("Move left/right a space")가 `enabled = 1`에 파라미터 오버라이드 없음
+(= 기본 할당)이라 같은 선점을 받는다. 시스템 설정에서 끄면 동작한다.
+탭 이동은 `⌘⇧[`/`⌘⇧]`에도 있고 그쪽은 macOS가 가로채지 않는다.
 
 ### VSCodeVim 충돌 (가장 심각)
 

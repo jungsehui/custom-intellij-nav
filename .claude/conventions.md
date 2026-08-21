@@ -246,6 +246,33 @@ Numpad chords use the lowercased UI label from the KeyCode table in
 `numpad0`). Verified tokens: `numpad0`–`numpad9`, `numpad_add`,
 `numpad_subtract`, `numpad_divide`, `numpad_separator`, `numpad_decimal`.
 
+### macOS symbolic hotkeys take keys before VS Code sees them
+
+Four `⌃`+arrow combinations belong to Mission Control and are handled by
+the window server, not the frontmost app. Binding them in a manifest is
+not an error and produces no warning — the key simply never fires.
+
+Check the machine rather than guessing:
+
+```bash
+defaults read com.apple.symbolichotkeys AppleSymbolicHotKeys
+```
+
+IDs 32 (Mission Control), 33 (Application Windows) and 79–82 (move a
+space). **An ID absent from that plist is at its factory default, which is
+enabled** — macOS only records overrides. An entry with `enabled = 1` and
+no `value`/`parameters` block is enabled at its default key.
+
+On this machine 32/33 are absent and 79–82 are `enabled = 1` with no
+parameters, so all four are live. `⌃↑` / `⌃↓` were removed in 2.0.1;
+`⌃←` / `⌃→` are kept because the same capability is also on `⌘⇧[` /
+`⌘⇧]`, which macOS does not intercept.
+
+Caveat worth stating: the plist proves the user has not overridden these,
+not what Apple's factory assignment is. No file on the machine declares
+the defaults. The assignment (`⌃↑` = Mission Control, and so on) is
+macOS's documented behavior, not something measured here.
+
 ### A platform ternary can make a key free on the platform you care about
 
 `⌘⌥N` looked occupied: `fileCommands.ts` L694 binds New Untitled File to
