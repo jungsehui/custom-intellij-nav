@@ -1,4 +1,7 @@
-import * as vscode from "vscode";
+// Type-only, and now declared as such: this file is in the inner ring that
+// eslint.config.mjs forbids from importing vscode at runtime. It was already
+// erased at compile time by accident; `import type` makes it on purpose.
+import type * as vscode from "vscode";
 
 // ============================================================
 // Navigation domain types
