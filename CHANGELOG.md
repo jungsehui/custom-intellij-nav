@@ -6,6 +6,84 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-08-21
+
+Run keymap, Debugging completed, and VSCodeVim coexistence.
+Coverage 67.7% → 71.5%. Keybindings 136 → 143, settings 13 → 14.
+Debugging 8 → 12, plus a new Run category.
+
+### The measurement pass caught its own instrument first
+
+The previous milestones measured VS Code defaults by grepping a handful of
+source files fetched on demand. That is unsound, and this time it produced
+a wrong answer: `⌥F8` showed zero hits and would have shipped as "free".
+The file that binds it had simply never been downloaded.
+
+Measurement now runs against a complete checkout
+(`git clone --filter=blob:none --sparse --depth=1`, 11,832 `.ts` files),
+and every zero-hit result is paired with a positive control. Two more
+tooling faults surfaced the same way: zsh eats an unquoted
+`--include=*.ts`, and `grep -c` on a *single* file omits the `file:`
+prefix, which silently zeroed a count pipeline.
+
+Re-measured occupancy:
+
+| Key | VS Code default | Source | Outcome |
+|---|---|---|---|
+| `⌘F9` | `workbench.action.chat.nextFileTree`, scoped to `inChatSession` | `chatFileTreeActions.ts` L23 | taken; scope does not overlap |
+| `⌃⌥R` | sessions picker + two terminal bindings, all narrowly scoped | `sessionsActions.ts` L73, `terminal.history.contribution.ts` L170 | taken behind `!terminalFocus` |
+| `⌃R` | **`workbench.action.openRecent`** | `windowActions.ts` L304 | displaced |
+| `⌥F8` | **`editor.action.marker.next`** (Go to Next Problem) | `gotoError.ts` L202 | displaced |
+| `⌃⌥D` | none | — | free |
+| `⌘⇧F8` | none | — | free |
+
+Both displacements are already covered elsewhere in this keymap, on
+IntelliJ's own keys: Open Recent is on `⌘E`, and Go to Next Problem is on
+`F2` / `⇧F2`. Neither capability is lost.
+
+### Added — Run (`enableRunKeymap`, new)
+- `⌘F9` Build Project (`workbench.action.tasks.build`)
+- `⌃⌥R` Run… (`workbench.action.tasks.runTask`)
+- `⌃R` Run last (`workbench.action.tasks.reRunTask`)
+
+### Added — Debugging
+- `⌃⌥D` Debug configuration (`workbench.action.debug.selectandstart`)
+- `⌥F8` Evaluate Expression — REPL toggle, or send selection when the
+  editor has one
+- `⌘⇧F8` View Breakpoints
+
+### Changed — the debugging keys now know whether you are debugging
+
+All eight pre-existing Debugging bindings were gated on nothing but
+`isMac`, so `F7` and `F8` fired at a dead debugger while permanently
+displacing `wordHighlight.next` and `editor.action.marker.nextInFiles`.
+They now carry real state:
+
+| Key | Added condition |
+|---|---|
+| `F7` / `F8` / `⇧F8` / `⌘⌥R` | `debugState == 'stopped'` |
+| `⌘F2` | `inDebugMode && !focusedSessionIsAttach` |
+| `⌘F8` | `debuggersAvailable && editorTextFocus` |
+| `⌥F9` | `debugState == 'stopped' && editorTextFocus` |
+| `⌃D` | `debuggersAvailable && !terminalFocus` |
+
+Outside a paused debug session those VS Code defaults work again.
+
+### Changed — VSCodeVim no longer collides
+
+Nine `⌃`-key bindings overlapped VSCodeVim. VSCodeVim publishes a context
+key per key it claims — `configuration.ts` L198 calls
+`VSCodeContext.set(\`vim.use${boundKey.key}\`, useKey)` — so each of ours
+now carries `!vim.use<C-x>`:
+
+`⌃J` `⌃D` `⌃G` `⌃H` `⌃M` `⌃T` `⌃O` `⌃I` `⌃R`
+
+Without Vim the key is undefined and our binding fires. With Vim it defers.
+Set `"vim.handleKeys": { "<C-t>": false }` and ours wins again — per key,
+no need to disable a whole category. The `<`/`>` in the identifier is legal:
+VS Code's context-key scanner allows it (`scanner.ts` L302) and there is a
+unit test for this exact expression (`contextkey.test.ts` L392).
+
 ## [1.3.0] — 2026-08-20
 
 Refactoring. Coverage 65.8% → 67.7% of the IntelliJ Mac keymap.

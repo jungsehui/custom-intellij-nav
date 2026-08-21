@@ -9,8 +9,8 @@ A single VS Code extension. ~795 LOC. Two user-facing capabilities:
    prefetch-based dispatcher that avoids the "No preferred code actions"
    toast.
 
-On top of those, a curated **136-keybinding IntelliJ Mac keymap** spread
-across 10 toggleable categories (`enableXxxKeymap`).
+On top of those, a curated **143-keybinding IntelliJ Mac keymap** spread
+across 11 toggleable categories (`enableXxxKeymap`).
 
 ## Module graph
 
@@ -53,8 +53,8 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | Surface | Count | Notes |
 |---|---|---|
 | Commands | 8 | All in the `intellij.*` namespace |
-| Keybindings | 136 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
-| Settings | 13 | 10 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
+| Keybindings | 143 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
+| Settings | 14 | 11 keymap toggles + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)
 
@@ -69,11 +69,31 @@ the only mutable state (`latestRequestId`) and the only resource handle
 | vcs | `enableVcsKeymap` | 5 | off |
 | toolwindow | `enableToolWindowKeymap` | 5 | off |
 | explorertree | `enableExplorerTreeKeymap` | 1 | off |
-| debugging | `enableDebuggingKeymap` | 8 | off |
+| debugging | `enableDebuggingKeymap` | 12 | off |
+| run | `enableRunKeymap` | 3 | off |
 
 Why off-by-default: each toggle conflicts with VS Code defaults or
 k--kato. Users opt-in incrementally so a single broken category never
 nukes their whole keyboard.
+
+### Two kinds of `when` guard
+
+Beyond the category toggle, bindings carry guards of two kinds, and the
+distinction matters when adding keys:
+
+- **Capability guards** decide whether the action is meaningful right now
+  — `debugState == 'stopped'`, `debuggersAvailable`, `editorHasSelection`,
+  `taskCommandsRegistered`. Without one, the key displaces a VS Code
+  default unconditionally while often doing nothing. All eight original
+  Debugging bindings had this bug until v1.4.0.
+- **Deference guards** hand the key to whoever owns it in context —
+  `!terminalFocus`, and `!vim.use<C-x>` for the nine keys VSCodeVim
+  claims. These let one chord serve two extensions instead of forcing the
+  user to disable a category.
+
+Every context key used in a guard must be verified to exist in the VS Code
+source before shipping. A `when` referring to a non-existent key never
+matches, so the binding fails closed and silently.
 
 ## Critical flows
 

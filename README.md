@@ -191,7 +191,22 @@ keys to fall back to.
 | `⌘3` / `⌘5` / `⌘9` / `⌘0` | Search / Debug / SCM / Problems |
 | `⌥F12` | Toggle Terminal |
 
+#### Run (`enableRunKeymap`)
+
+| Mac key | IntelliJ action |
+|---|---|
+| `⌘F9` | Build Project |
+| `⌃⌥R` | Run… (pick a task) |
+| `⌃R` | Run last |
+
+All three stand down while a terminal has focus. `⌃R` also defers to
+VSCodeVim — see [Using this with VSCodeVim](#using-this-with-vscodevim).
+
 #### Debugging (`enableDebuggingKeymap`)
+
+> ⚠️ Displaces `⌥F8` (Go to Next Problem). It is still on `F2` / `⇧F2`
+> under `enableNavigationKeymap`, which is where IntelliJ puts it.
+
 | Mac key | IntelliJ action |
 |---|---|
 | `F8` / `F7` / `⇧F8` | Step Over / Step Into / Step Out |
@@ -199,6 +214,14 @@ keys to fall back to.
 | `⌥F9` | Run to Cursor |
 | `⌘⌥R` | Resume Program |
 | `⌘F2` | Stop |
+| `⌃D` | Start Debugging |
+| `⌃⌥D` | Debug configuration picker |
+| `⌥F8` | Evaluate Expression |
+| `⌘⇧F8` | View Breakpoints |
+
+The step and resume keys only fire while a debug session is **paused**
+(`debugState == 'stopped'`). Outside a session, `F7` and `F8` go back to
+being VS Code's Next Highlighted Usage and Go to Next Problem in Files.
 
 #### Explorer tree (`enableExplorerTreeKeymap`)
 
@@ -233,6 +256,7 @@ alone, expanding folders as you meet them.
   "customIntellijNav.enableToolWindowKeymap": true,
   "customIntellijNav.enableExplorerTreeKeymap": true,
   "customIntellijNav.enableDebuggingKeymap": true,
+  "customIntellijNav.enableRunKeymap": true,
   "customIntellijNav.useCamelHumpsWords": false,
   "customIntellijNav.showErrorToasts": false,
   "customIntellijNav.showRefactorNotifications": true
@@ -273,11 +297,23 @@ Under `enableRefactoringKeymap`:
 not exist. It is now scoped to `editorTextFocus`, so Focus Next Part
 works again everywhere outside the editor.
 
+Under `enableRunKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⌃R` | **Open Recent…** (still on `⌘E`) | Run last task |
+
 Under `enableDebuggingKeymap`:
 
 | Key | VS Code default you lose | What it becomes |
 |---|---|---|
 | `F7` / `⇧F7` | Next / Previous highlighted usage | Step Into / Smart step into |
+| `⌥F8` | **Go to Next Problem** (still on `F2`) | Evaluate Expression |
+| `⌃D` | `deleteRight` (Emacs secondary; `⌦` unaffected) | Start Debugging |
+
+Both `F7` and `F8` are now conditional on a paused debug session, so the
+defaults they used to displace unconditionally are back whenever you are
+not debugging.
 
 Highlighted-usage navigation moves to `⌃⌥↓` / `⌃⌥↑` under
 `enableSearchKeymap`, which is where IntelliJ puts it.
@@ -299,6 +335,38 @@ a targeted unbind to your user `keybindings.json`:
 ```
 
 Each toggle is `false` by default except `enableBundledMacKeymap` (cmd+b is the headline feature). Enable categories incrementally to avoid surprises.
+
+## Using this with VSCodeVim
+
+Nine of the `⌃` keys in this keymap are also Vim keys. Rather than making
+you choose, every one of them defers to VSCodeVim when Vim has claimed
+that key:
+
+`⌃J` `⌃D` `⌃G` `⌃H` `⌃M` `⌃T` `⌃O` `⌃I` `⌃R`
+
+VSCodeVim publishes a context key per claimed key (`vim.use<C-t>` and so
+on), and each of our bindings carries `!vim.use<C-x>`. That gives three
+behaviors, in order of what you have installed:
+
+| Situation | What happens |
+|---|---|
+| No VSCodeVim | Context key is undefined, so our binding fires. |
+| VSCodeVim, default settings | Vim wins. `⌃O` is jumplist-back, `⌃T` is tag-stack-pop, and so on. |
+| VSCodeVim, key handed back | Ours fires. |
+
+To hand a specific key back to this extension, add it to
+`vim.handleKeys` in your settings:
+
+```jsonc
+{
+  "vim.handleKeys": {
+    "<C-t>": false,
+    "<C-o>": false
+  }
+}
+```
+
+Per key, no need to turn off a whole category.
 
 ## Limitations
 

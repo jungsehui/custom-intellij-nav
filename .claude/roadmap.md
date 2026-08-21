@@ -8,13 +8,13 @@
 
 ## 1. 현황
 
-| 항목 | v1.0.1 | v1.1.0 | v1.2.0 | **v1.3.0 (현재)** |
-|---|---|---|---|---|
-| 우리 고유 Mac chord | 73 | 102 | 121 | **125** |
-| k--kato 고유 Mac chord | 157 | 158 | 158 | 158 |
-| 겹침 (양쪽 보유) | 59 | 85 | 104 | **107** |
-| 순수 미구현 | 98 | 73 | 54 | **51** |
-| **커버율** | 37.6% | 53.8% | 65.8% | **67.7%** |
+| 항목 | v1.0.1 | v1.1.0 | v1.2.0 | v1.3.0 | **v1.4.0 (현재)** |
+|---|---|---|---|---|---|
+| 우리 고유 Mac chord | 73 | 102 | 121 | 125 | **131** |
+| k--kato 고유 Mac chord | 157 | 158 | 158 | 158 | 158 |
+| 겹침 (양쪽 보유) | 59 | 85 | 104 | 107 | **113** |
+| 순수 미구현 | 98 | 73 | 54 | 51 | **45** |
+| **커버율** | 37.6% | 53.8% | 65.8% | 67.7% | **71.5%** |
 
 > chord 총계가 157에서 158로 바뀐 것은 재집계 시 필터 차이다. v1.1.0 수치가 최신이다.
 
@@ -36,9 +36,9 @@
 | Refactoring | 9 | 14 | **64%** |
 | ToolWindow | 6 | 14 | 43% |
 | Search | 4 | 10 | 40% |
-| Debugging | 8 | 11 | 73% |
+| Debugging | 12 | 11 | **100%** |
 | VCS | 4 | 6 | 67% |
-| Run / Build | 0 | 4 | **0%** |
+| Run / Build | 3 | 4 | **75%** |
 | Workbench 기타 | 0 | 11 | **0%** |
 | Diff / Notebook | 0 | 5 | **0%** |
 
@@ -162,7 +162,7 @@ Refactoring 카테고리 분모가 11에서 14로 늘어난 것은 재집계 차
 | ~~v1.1.0~~ | ✅ **완료 (2026-05-11)**. Editing 필수. 34 엔트리 추가 | 27 | 실제 ~3h | **53.8%** |
 | ~~v1.2.0~~ | ✅ **완료 (2026-05-11)**. Navigation + Search. 23 엔트리 추가 | 23 | 실제 ~2h | **65.8%** |
 | ~~v1.3.0~~ | ✅ **완료 (2026-08-20)**. Refactoring. 4 엔트리 추가 + 죽은 키 2건 수정 | 6 중 4 | 실제 ~2h | **67.7%** |
-| v1.4.0 | Run 신설 + Debugging 마감 | 6 | 2~3h | 77% |
+| ~~v1.4.0~~ | ✅ **완료 (2026-08-21)**. Run 신설 + Debugging 마감 + Vim 공존 | 6 | 실제 ~2h | **71.5%** |
 | v1.5.0 | ToolWindow + Workbench + Diff | 17 (2건 제외 시 15) | 2.5~3h | 87% |
 | v2.0.0 | numpad 미러 + 토글 구조 정리 + 이관 가이드 | 17 + 정리 | 4~5h | 100% (실기능) |
 | | | **96** | **21~27h** | |
@@ -223,16 +223,21 @@ built-in `references-view.showTypeHierarchy`로 언어 중립화할 수 있다. 
 `cmd+n`을 걸면 대부분의 위치에서 아무것도 안 하면서 New File만 막는다.
 v1.4.0에서 `editor.action.sourceAction` 폴백과 함께 재검토한다.
 
-### v1.4.0 — Run 신설 + Debugging 마감 (6건, 2~3h)
+### ~~v1.4.0 — Run 신설 + Debugging 마감~~ ✅ 완료 (2026-08-21, 실제 ~2h)
 
-`cmd+f9` `ctrl+alt+r` `ctrl+r` (Run 신규)
-`ctrl+alt+d` `alt+f8` `cmd+shift+f8` (Debugging)
+**출하**: Run 카테고리 신설(`cmd+f9` Build, `ctrl+alt+r` Run…, `ctrl+r` Run last) +
+Debugging 3건(`ctrl+alt+d` Debug 설정, `alt+f8` Evaluate Expression,
+`cmd+shift+f8` View Breakpoints). 신규 설정 `enableRunKeymap`.
 
-신규 설정: `customIntellijNav.enableRunKeymap`.
+**부가 작업 완료**: 기존 Debugging 8건 전부 `debugState == 'stopped'` /
+`inDebugMode && !focusedSessionIsAttach` / `debuggersAvailable` 로 정밀화했다.
+디버그 세션 밖에서 `f7`/`f8`이 VS Code 기본값으로 되돌아온다.
 
-**부가 작업**: 기존 Debugging 8건의 `when` 절이 `isMac && config...` 뿐이다.
-k--kato는 `debugState == 'stopped'`, `inDebugMode`, `debuggersAvailable`로 정밀 게이팅한다.
-디버그 세션 밖에서 `f7`/`f8`이 무의미하게 발화하므로 이 마일스톤에서 함께 강화한다.
+**측정 방법론 교체**: v1.1.0~v1.3.0은 개별 소스 파일을 curl로 받아 grep했다.
+이번에 그게 틀린 답을 냈다. `alt+f8`이 0건으로 나와 "미점유"로 출하될 뻔했는데,
+실제로는 `editor.action.marker.next`다(`gotoError.ts` L202). 파일을 안 받았을 뿐이었다.
+이제 전체 체크아웃(`--filter=blob:none --sparse --depth=1`, .ts 11,832개)으로 측정하고,
+0건 결과에는 항상 양성 대조군을 붙인다. 상세는 `.claude/conventions.md`.
 
 ### v1.5.0 — ToolWindow + Workbench + Diff (17건, 2.5~3h)
 
@@ -335,8 +340,13 @@ Go to super-method (`cmd+u`), Complete Current Statement (`cmd+shift+enter`).
 | `ctrl+h` | backspace | v1.2.0 Type hierarchy |
 | `ctrl+m` | 캐리지 리턴 | v1.2.0 jumpToBracket |
 
-v1.2.0~v1.4.0이 Vim 사용자에게 **7개 키 동시 충돌**이다. `when` 절에 Vim 컨텍스트 키를
-넣을 수 있는지 조사하거나, README에 해당 토글을 끄라고 명시할 것.
+~~v1.2.0~v1.4.0이 Vim 사용자에게 7개 키 동시 충돌~~ → **2026-08-21 해결.**
+실제 충돌은 9건이었다(`ctrl+j`, `ctrl+r` 추가). VSCodeVim이 점유 키마다 컨텍스트 키를
+발행한다(`configuration.ts` L198의 `VSCodeContext.set(\`vim.use${boundKey.key}\`, useKey)`).
+9건 전부 `!vim.use<C-x>` 게이트를 달았다. Vim 미설치 시 키가 undefined라 우리 것이 발화하고,
+Vim이 점유하면 양보하며, `vim.handleKeys`로 되돌려주면 다시 우리 것이 잡는다.
+`<`/`>`는 `when` 파서가 허용한다(`scanner.ts` L302, 전용 유닛 테스트 `contextkey.test.ts` L392).
+토글을 끄라고 안내할 필요가 없어졌다.
 
 ### 되돌리기 어려운 항목
 

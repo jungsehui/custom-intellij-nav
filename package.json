@@ -2,7 +2,7 @@
   "name": "custom-intellij-nav",
   "displayName": "Custom IntelliJ Navigation",
   "description": "IntelliJ-style keymap and navigation for VS Code with language-aware Extract refactoring. Self-contained alternative to k--kato/intellij-idea-keybindings.",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "publisher": "jungsehui",
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -147,7 +147,12 @@
         "customIntellijNav.enableDebuggingKeymap": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable IntelliJ-style debugging keys (f7 step into, f8 step over, shift+f8 step out, cmd+f8 toggle breakpoint, cmd+f2 stop, cmd+alt+r resume, alt+f9 run to cursor, ctrl+d start debugging)."
+          "markdownDescription": "Enable IntelliJ-style debugging keys (f7 step into, f8 step over, shift+f8 step out, cmd+f8 toggle breakpoint, cmd+f2 stop, cmd+alt+r resume, alt+f9 run to cursor, ctrl+d start, ctrl+alt+d debug configuration, alt+f8 evaluate expression, cmd+shift+f8 view breakpoints). Step and resume keys only fire while a debug session is paused, so VS Code defaults such as f8 Go to Next Problem keep working outside a session."
+        },
+        "customIntellijNav.enableRunKeymap": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable IntelliJ-style run/build keys (cmd+f9 build project, ctrl+alt+r run task, ctrl+r re-run last task). All three defer to a focused terminal, and ctrl+r additionally defers to VSCodeVim when Vim owns `<C-r>`."
         }
       }
     },
@@ -336,7 +341,7 @@
         "command": "editor.action.showHover",
         "key": "ctrl+q",
         "mac": "ctrl+j",
-        "when": "isMac && editorTextFocus && config.customIntellijNav.enableEditingKeymap"
+        "when": "isMac && editorTextFocus && !vim.use<C-j> && config.customIntellijNav.enableEditingKeymap"
       },
       {
         "command": "workbench.action.closeActiveEditor",
@@ -556,49 +561,49 @@
         "command": "workbench.action.debug.stepInto",
         "key": "f7",
         "mac": "f7",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debugState == 'stopped' && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "workbench.action.debug.stepOver",
         "key": "f8",
         "mac": "f8",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debugState == 'stopped' && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "workbench.action.debug.stepOut",
         "key": "shift+f8",
         "mac": "shift+f8",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debugState == 'stopped' && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "workbench.action.debug.stop",
         "key": "ctrl+f2",
         "mac": "cmd+f2",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && inDebugMode && !focusedSessionIsAttach && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "editor.debug.action.toggleBreakpoint",
         "key": "ctrl+f8",
         "mac": "cmd+f8",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debuggersAvailable && editorTextFocus && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "workbench.action.debug.continue",
         "key": "f9",
         "mac": "cmd+alt+r",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debugState == 'stopped' && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "editor.debug.action.runToCursor",
         "key": "alt+f9",
         "mac": "alt+f9",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debugState == 'stopped' && editorTextFocus && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "workbench.action.debug.start",
         "key": "ctrl+d",
         "mac": "ctrl+d",
-        "when": "isMac && config.customIntellijNav.enableDebuggingKeymap"
+        "when": "isMac && debuggersAvailable && !terminalFocus && !vim.use<C-d> && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "cursorWordLeft",
@@ -754,7 +759,7 @@
         "command": "editor.action.addSelectionToNextFindMatch",
         "key": "alt+j",
         "mac": "ctrl+g",
-        "when": "isMac && editorFocus && config.customIntellijNav.enableEditingKeymap"
+        "when": "isMac && editorFocus && !vim.use<C-g> && config.customIntellijNav.enableEditingKeymap"
       },
       {
         "command": "cursorUndo",
@@ -838,7 +843,7 @@
         "command": "editor.showTypeHierarchy",
         "key": "ctrl+h",
         "mac": "ctrl+h",
-        "when": "isMac && editorHasTypeHierarchyProvider && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+        "when": "isMac && editorHasTypeHierarchyProvider && editorTextFocus && !vim.use<C-h> && config.customIntellijNav.enableNavigationKeymap"
       },
       {
         "command": "references-view.showCallHierarchy",
@@ -850,7 +855,7 @@
         "command": "editor.action.jumpToBracket",
         "key": "ctrl+shift+m",
         "mac": "ctrl+m",
-        "when": "isMac && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
+        "when": "isMac && editorTextFocus && !vim.use<C-m> && config.customIntellijNav.enableNavigationKeymap"
       },
       {
         "command": "editor.action.goToTypeDefinition",
@@ -945,22 +950,57 @@
       {
         "command": "editor.action.refactor",
         "mac": "ctrl+t",
-        "when": "isMac && editorHasCodeActionsProvider && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+        "when": "isMac && editorHasCodeActionsProvider && editorTextFocus && !editorReadonly && !vim.use<C-t> && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "intellij.overrideMethods",
         "mac": "ctrl+o",
-        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+        "when": "isMac && editorTextFocus && !editorReadonly && !vim.use<C-o> && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "intellij.implementMethods",
         "mac": "ctrl+i",
-        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
+        "when": "isMac && editorTextFocus && !editorReadonly && !vim.use<C-i> && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "editor.action.reindentselectedlines",
         "mac": "ctrl+alt+i",
         "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableEditingKeymap"
+      },
+      {
+        "command": "workbench.action.tasks.build",
+        "mac": "cmd+f9",
+        "when": "isMac && !terminalFocus && config.customIntellijNav.enableRunKeymap"
+      },
+      {
+        "command": "workbench.action.tasks.runTask",
+        "mac": "ctrl+alt+r",
+        "when": "isMac && taskCommandsRegistered && !terminalFocus && config.customIntellijNav.enableRunKeymap"
+      },
+      {
+        "command": "workbench.action.tasks.reRunTask",
+        "mac": "ctrl+r",
+        "when": "isMac && taskCommandsRegistered && !terminalFocus && !vim.use<C-r> && config.customIntellijNav.enableRunKeymap"
+      },
+      {
+        "command": "workbench.action.debug.selectandstart",
+        "mac": "ctrl+alt+d",
+        "when": "isMac && debuggersAvailable && !terminalFocus && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.debug.action.toggleRepl",
+        "mac": "alt+f8",
+        "when": "isMac && debuggersAvailable && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "editor.debug.action.selectionToRepl",
+        "mac": "alt+f8",
+        "when": "isMac && debuggersAvailable && editorTextFocus && editorHasSelection && config.customIntellijNav.enableDebuggingKeymap"
+      },
+      {
+        "command": "workbench.debug.action.focusBreakpointsView",
+        "mac": "cmd+shift+f8",
+        "when": "isMac && debuggersAvailable && config.customIntellijNav.enableDebuggingKeymap"
       }
     ]
   },

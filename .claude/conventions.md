@@ -165,6 +165,25 @@ Added during the v1.3.0 pass:
 `editor.action.transpose` (`linesOperations.ts` L1060) has no keybinding
 at all, so `⌃T` displaces nothing.
 
+Added during the v1.4.0 pass (first pass measured against a **complete**
+checkout — see the next section for why that matters):
+
+| Key | Default command | Source |
+|---|---|---|
+| `⌃R` | `workbench.action.openRecent` — **Open Recent…**, global, no `when` | `windowActions.ts` L304 |
+| `⌥F8` / `⇧⌥F8` | `editor.action.marker.next` / `.prev` — **Go to Next / Previous Problem** | `gotoError.ts` L202, L226 |
+| `F8` | `editor.action.marker.nextInFiles` | `gotoError.ts` L249 |
+| `⌘F9` | `workbench.action.chat.nextFileTree`, scoped to `inChatSession` | `chatFileTreeActions.ts` L23 |
+| `⌃⌥R` | sessions picker (`IsSessionsWindowContext`) + two terminal bindings (`terminalFocus`) | `sessionsActions.ts` L73, L231; `terminal.history.contribution.ts` L170 |
+| `⌃D` | `deleteRight` mac **secondary** (primary is `⌦`) | `coreCommands.ts` L2081 |
+| `⌃G` | `workbench.action.gotoLine` (mac) | `gotoLineQuickAccess.ts` L84 |
+| `⌃⌥D`, `⌘⇧F8`, `⌃M` | none — free | (absent from full source) |
+
+`⌃R` and `⌥F8` were taken anyway, because this keymap already carries both
+capabilities on IntelliJ's own keys: Open Recent is `⌘E`, and Go to Next
+Problem is `F2`. Check for that before deciding a displacement is costly —
+the second binding may already exist.
+
 ### Check that the command exists before binding a key to it
 
 `F6` shipped in v1.0.0 bound to `workbench.action.files.move`. There is no
@@ -189,6 +208,71 @@ Rule: a fallback kind must be a *narrower or equal* description of the
 same IntelliJ action. If a language has no matching kind, let the chain
 end and let `runRefactor` report it. `source.overrideMethods` for TS and
 bare `quickfix` for Implement Methods were both rejected on these grounds.
+
+### Measure against a complete checkout, never a handful of fetched files
+
+v1.1.0 through v1.3.0 measured VS Code defaults by `curl`-ing individual
+source files and grepping them. In v1.4.0 that method returned a wrong
+answer: `⌥F8` showed zero hits and was about to ship as "free", when it is
+`editor.action.marker.next` (`gotoError.ts` L202). The file had simply
+never been fetched. A partial corpus turns "not present" and "not looked
+at" into the same result.
+
+Get the whole thing once:
+
+```bash
+git clone --filter=blob:none --sparse --depth=1 https://github.com/microsoft/vscode.git
+cd vscode && git sparse-checkout set src/vs extensions
+```
+
+Blobless plus sparse keeps it small, and it yields 11,832 `.ts` files —
+every place a keybinding can be registered.
+
+Three tooling faults surfaced while doing this. All three return a
+plausible wrong answer rather than an error:
+
+- zsh expands an unquoted `--include=*.ts` before grep sees it. Quote it.
+- `grep -c pattern file` on a **single** file prints just the count, with
+  no `file:` prefix, so `awk -F: '{s+=$2}'` sums empty strings to 0.
+- Probe strings you type into a command get written to the session
+  transcript before your grep of that transcript runs, so a "should be
+  zero" control can legitimately return 2.
+
+Rule: pair every zero-hit result with a positive control in the same
+command. If the control is also zero, the instrument is broken.
+
+### Verify every context key before putting it in a `when`
+
+A `when` clause that names a context key which does not exist never
+matches. The binding fails closed and silently — the same failure mode as
+binding a non-existent command, and just as invisible.
+
+`terminalFocus` is the cautionary one: it is declared through an enum
+constant (`terminalContextKey.ts` L19, L52), not a string literal, so
+`grep "RawContextKey.*'terminalFocus'"` finds nothing. Search for the bare
+name before concluding it is absent.
+
+Verified and in use here: `debugState` (`'inactive'` | `'initializing'` |
+`'stopped'` | `'running'`, `debug.ts` L46), `debuggersAvailable`,
+`inDebugMode`, `focusedSessionIsAttach`, `taskCommandsRegistered`,
+`terminalFocus`, `editorHasSelection`, `editorTextFocus`.
+
+### Defer to VSCodeVim rather than fight it
+
+Nine `⌃` keys in this keymap are also Vim keys. VSCodeVim publishes a
+context key per key it claims — `configuration.ts` L198 calls
+`VSCodeContext.set(\`vim.use${boundKey.key}\`, useKey)` — so a binding can
+carry `!vim.use<C-x>` and get all three behaviors for free: fires when Vim
+is absent (key undefined), defers when Vim owns it, and fires again when
+the user hands it back via `vim.handleKeys`.
+
+The angle brackets are legal in a `when`. VS Code's scanner regex allows
+them (`scanner.ts` L302) and there is a unit test for this exact
+expression (`contextkey.test.ts` L392) — VS Code test-covers the
+VSCodeVim case specifically.
+
+Prefer this to telling users to disable a category. A category toggle is
+all-or-nothing; `vim.handleKeys` is per key.
 
 ### Enumerate what the language server can actually do
 
