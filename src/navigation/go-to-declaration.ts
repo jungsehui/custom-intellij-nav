@@ -16,6 +16,21 @@ import {
 } from "./location-utils";
 
 /**
+ * Providers to try, in order, first useful answer wins.
+ *
+ * This was two copies of the same eleven lines, differing only in the
+ * variable name. The risk that removes is concrete: fixing a staleness bug
+ * in one branch and missing the other, which is the class of defect 2.1.0
+ * shipped a fix for. `runRefactor` already walks its kind chain as a loop —
+ * same shape, and now written the same way.
+ */
+const PROVIDER_CHAIN: ReadonlyArray<readonly [ProviderSource, ProviderCommand]> =
+  [
+    ["declaration", "vscode.executeDeclarationProvider"],
+    ["definition", "vscode.executeDefinitionProvider"],
+  ];
+
+/**
  * IntelliJ-style "Go to Declaration or Usages" handler.
  *
  * Flow:
@@ -45,45 +60,24 @@ export async function goToDeclarationOrUsages(
   );
 
   try {
-    const declaration = await resolveProvider(
-      request,
-      "declaration",
-      "vscode.executeDeclarationProvider",
-    );
+    for (const [source, command] of PROVIDER_CHAIN) {
+      const resolution = await resolveProvider(request, source, command);
 
-    if (request.isStale()) {
-      return;
-    }
-
-    if (declaration) {
-      if (declaration.external.length > 0) {
-        await navigate(request, declaration.source, declaration.external);
+      if (request.isStale()) {
         return;
       }
 
-      const outcome = await peekUsages(request);
-      if (outcome === "none") {
-        logger.showStatus("No usages found");
+      if (!resolution) {
+        continue;
       }
-      return;
-    }
 
-    const definition = await resolveProvider(
-      request,
-      "definition",
-      "vscode.executeDefinitionProvider",
-    );
-
-    if (request.isStale()) {
-      return;
-    }
-
-    if (definition) {
-      if (definition.external.length > 0) {
-        await navigate(request, definition.source, definition.external);
+      if (resolution.external.length > 0) {
+        await navigate(request, resolution.source, resolution.external);
         return;
       }
 
+      // The provider answered, but only with the caret's own position. That
+      // is IntelliJ's "already at the declaration" case: show usages.
       const outcome = await peekUsages(request);
       if (outcome === "none") {
         logger.showStatus("No usages found");
