@@ -6,6 +6,89 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] — 2026-08-21
+
+An architecture pass, decided by grilling through sixteen questions and
+shipped as six commits. No user-facing behaviour changes; the keymap is
+identical. Tests 27 → 37.
+
+### The request now has an identity
+
+`IntelliJNavigator` held a counter, `isStale` needed it plus three other
+things it could not see, and `extension.ts` threaded an object literal
+between them. Five call sites each passed four arguments — none of which
+varies within a request — to get back one boolean, and `isStale` read
+`vscode.window.activeTextEditor` out of a global.
+
+`core/editor-request.ts` replaces all of it. `createRequestFactory` keeps
+the counter in a closure and returns `beginRequest()`. An `EditorRequest`
+owns its id, editor, snapshot, and a `log()` that already knows the id.
+Call sites ask `request.isStale()` with no arguments.
+
+Two rules rather than one, because the flows need different strictness:
+`isStale()` for navigation (superseded, or document changed) and
+`isSelectionStale()` for refactoring, which also fails on a moved caret
+because `editor.action.codeAction` takes no range.
+
+`IntelliJNavigator` is deleted. All three of its methods had exactly one
+caller.
+
+### One port, and it is why the rules are testable
+
+`ActiveEditorSource` is the only interface standing between this extension
+and a VS Code global, and `createVscodeEditorSource` is its only production
+adapter. `isStale` had zero tests before this — the untested predicate was
+exactly the one reading a global. It now has ten, driven through a fake
+source that can say "the user switched editors" or "the editor went away"
+without a single cast: the editors it serves are real ones in the test host.
+
+### The dependency rule is lint, not convention
+
+`refactor/policy.ts` holds the three decisions that need no editor: which
+kind chain to try, whether we may call a language unsupported, and what to
+say when nothing matched. It cannot import `vscode`, and neither can
+`types.ts` or `language-action-table.ts` —
+`@typescript-eslint/no-restricted-imports` fails the build if they do.
+
+The signal that these belonged elsewhere: `shouldClaimUnsupported` was
+exported but nothing outside its file called it. It was exported so a test
+could reach it — the interface widened to admit a test rather than the
+module being the right shape.
+
+`location-utils.ts` is deliberately outside the ring. It calls
+`new vscode.Location`, and that construction is the point of the module.
+
+### Smaller things
+
+- **The provider chain is a loop.** The declaration and definition branches
+  were the same eleven lines twice. Fixing a staleness bug in one and
+  missing the other is the class of defect 2.1.0 shipped a fix for.
+- **A type lives with whatever gives it meaning.** Five of seven types left
+  `types.ts`; the two that cross folders stayed. The old rule — "add new
+  types to `src/types.ts`" — was working exactly as written, which is why
+  `.claude/conventions.md` now decides by counting consumers.
+- **`.claude/glossary.md`** records what each word means *and where it
+  lives*. `chord` appears 56 times in the docs and zero times in `src/`,
+  which is correct: `src/` never touches keys.
+- **`npm run compile` wipes `out/` first.** `tsc` leaves stale output, so a
+  renamed test file kept running against exports that no longer existed —
+  five failures that looked like broken tests rather than a stale artifact.
+
+### What was deliberately not done
+
+Aggregates, entities, value objects, repositories and domain events. There
+are no complex invariants here and nothing is persisted; tactical DDD on a
+1,600-line extension would make it harder to change, not easier. One port,
+not a hexagon — only one dependency actually varies.
+
+TypeScript 7 stays out too, and the reason was measured rather than
+assumed: TS 7.0.2 compiles this project with zero errors, but its main entry
+exports two members and `createSourceFile` is `undefined`. The compiler API
+lives behind `./unstable/*`, so `@typescript-eslint/parser` genuinely cannot
+run against it. Its peer range is accurate, not conservative. Revisit at
+7.1. The trial did leave something behind: `tsconfig.json` now names its
+`types` explicitly, which is correct regardless.
+
 ## [2.1.1] — 2026-08-21
 
 ### Fixed — the extension claimed things about languages it never measured

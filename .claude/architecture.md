@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~1,320 LOC across 16 files (5 of them tests, 365 LOC). Two user-facing capabilities:
+A single VS Code extension. ~1626 LOC across 18 files (6 of them tests, 572 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
@@ -15,40 +15,59 @@ across 11 functional categories plus one feature toggle.
 ## Module graph
 
 ```
-src/extension.ts (42 LOC) — activate() registers 8 commands
-└─ src/core/navigator.ts (35 LOC) — IntelliJNavigator orchestrator class
-   ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
-   ├─ src/core/snapshot.ts (48 LOC) — captureSnapshot() + isStale()
-   ├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
-   ├─ src/core/migrate-settings.ts (61 LOC) — one-time 2.0.0 setting move.
-   │     A `when` clause sees only the *effective* value, so it cannot tell
-   │     an explicit `false` from an unset default. That is why the
-   │     deprecated-setting migration has to be code.
-   ├─ src/navigation/go-to-declaration.ts (220 LOC) — cmd+B handler
-   │  └─ src/navigation/location-utils.ts (68 LOC) — dedupe, normalize
-   └─ src/refactor/run-refactor.ts (87 LOC) — refactoring handler
-      └─ src/refactor/language-action-table.ts (173 LOC) — per-lang kind
-         table + ACTION_LABELS. Carries the measured census of every
-         refactor kind TypeScript emits; that census is the reason
-         cmd+alt+f / cmd+f6 / cmd+alt+p are not shipped.
-src/types.ts (55 LOC) — shared types (RawLocation, IntelliJAction, …)
+src/extension.ts (52 LOC) — builds the Logger and the request factory,
+│                            registers 8 commands from a data table
+├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
+├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
+├─ src/core/migrate-settings.ts (61 LOC) — one-time 2.0.0 setting move.
+│     A `when` clause sees only the *effective* value, so it cannot tell
+│     an explicit `false` from an unset default. That is why the
+│     deprecated-setting migration has to be code.
+├─ src/core/editor-request.ts (123 LOC) — the request lifecycle and the
+│  │   extension's one port. Owns the counter (in a closure), issues
+│  │   EditorRequests, answers isStale() / isSelectionStale().
+│  └─ src/core/snapshot.ts (52 LOC) — the pure rules: captureSnapshot,
+│         editorMatches, selectionMatches. No global reads.
+├─ src/navigation/go-to-declaration.ts (211 LOC) — cmd+B handler
+│  └─ src/navigation/location-utils.ts (73 LOC) — dedupe, normalize,
+│         and RawLocation
+└─ src/refactor/run-refactor.ts (101 LOC) — the adapter: talks to VS Code
+   └─ src/refactor/policy.ts (94 LOC) — the decisions: which chain, whether
+      │    we may call a language unsupported, what to say. No vscode.
+      └─ src/refactor/language-action-table.ts (185 LOC) — per-lang kind
+            table + ACTION_LABELS + CodeActionAttempt. Carries the measured
+            census of every refactor kind TypeScript emits; that census is
+            the reason cmd+alt+f / cmd+f6 / cmd+alt+p are not shipped.
+src/types.ts (31 LOC) — only types crossing folders: IntelliJAction,
+                        EditorSnapshot
 ```
 
-No cycles. Each file has one job. Pure helpers (`location-utils`,
-`snapshot`, `language-action-table`) take no `vscode` state — they
-receive inputs and return outputs. The class (`IntelliJNavigator`) owns
-the only mutable state (`latestRequestId`) and the only resource handle
-(`Logger`).
+No cycles. Each file has one job.
+
+**One port, one global.** `vscode.window.activeTextEditor` is read in
+exactly one place: the adapter behind `ActiveEditorSource` in
+`editor-request.ts`. Everything downstream receives an editor rather than
+reaching for one, which is what makes the staleness rules testable.
+
+**One counter.** The only mutable state in the extension is
+`latestId` inside `createRequestFactory`'s closure. Call sites never see it.
+
+**Three files may not import `vscode` at runtime** — `types.ts`,
+`language-action-table.ts`, `policy.ts`. That is enforced by
+`@typescript-eslint/no-restricted-imports` in `eslint.config.mjs`, not by
+convention. `location-utils.ts` is deliberately outside the ring: it calls
+`new vscode.Location`, and that construction is the point of the module.
 
 ## Domain layers
 
-- **`core/`** — VS Code-aware infrastructure (Logger, config getters,
-  snapshot/isStale, the orchestrator class).
-- **`navigation/`** — Go to Declaration or Usages flow. Pure(-ish)
-  handler that takes a `RequestState` (orchestrator-provided) + `Logger`
-  and runs the multi-provider lookup with stale-request guards.
-- **`refactor/`** — Extract refactoring. Pure handler that takes a
-  `Logger` and dispatches via the language→kind table.
+- **`core/`** — infrastructure: Logger, config getters, the request
+  lifecycle and its port, and the pure snapshot rules.
+- **`navigation/`** — Go to Declaration or Usages. Takes a `BeginRequest`
+  and a `Logger`, walks `PROVIDER_CHAIN` in order, guards every await
+  boundary with `request.isStale()`.
+- **`refactor/`** — split in two on purpose. `run-refactor.ts` is the
+  adapter that talks to VS Code; `policy.ts` and `language-action-table.ts`
+  are the decisions and the data, and cannot import `vscode`.
 - **`types.ts`** — All cross-module type definitions in one place to
   prevent circular type imports.
 
@@ -149,32 +168,37 @@ matches, so the binding fails closed and silently.
 ```
 keypress
   → intellij.goToDeclarationOrUsages
-  → IntelliJNavigator.goToDeclarationOrUsages()
-  → goToDeclaration(state, logger):
-      capture snapshot
-      try declaration provider
-      if external result → editor.action.goToLocations
-      if at-cursor result → peek references
-      else → try definition provider
+  → goToDeclarationOrUsages(beginRequest, logger):
+      request = beginRequest()          // bumps the counter, takes a snapshot
+      for (source, command) of PROVIDER_CHAIN:
+        resolve provider
+        if request.isStale() → return
+        if external result → editor.action.goToLocations
+        if at-cursor result → peek references, then return
+      else → peek references
       else → status bar "No declaration, definition, or usages found"
 ```
 
-Stale-request guard: every async hop checks `isStale(requestId, ...)`.
-Rapid keypresses don't interleave navigation.
+Stale-request guard: every await boundary is followed by
+`request.isStale()` — five of them, each with no arguments. Rapid
+keypresses don't interleave navigation, and a superseded request never
+writes to the UI.
 
 ### cmd+alt+V (Extract Variable), F6 (Move), ctrl+O (Override), …
 
 ```
 keypress
   → intellij.extractVariable
-  → IntelliJNavigator.runRefactor("extractVariable")
-  → for kind of LANGUAGE_ACTION_TABLE[action][langId]:
-      prefetch via vscode.executeCodeActionProvider
-      if 0 results → continue
-      else → editor.action.codeAction { kind, apply: "ifSingle" }
-            (single match auto-applies, multi shows picker)
-      return
-  if all kinds 0 → status bar + showInformationMessage
+  → runRefactor("extractVariable", beginRequest, logger):
+      request = beginRequest()
+      for attempt of resolveAttempts(action, langId):     // policy.ts
+        prefetch via vscode.executeCodeActionProvider
+        if 0 results → continue
+        if request.isSelectionStale() → return            // the caret moved
+        else → editor.action.codeAction { kind, apply: "ifSingle" }
+              (single match auto-applies, multi shows picker)
+        return
+  if all kinds 0 → describeOutcome() decides what may be said
 ```
 
 The `apply: "ifSingle"` is load-bearing: it's what surfaces VS Code's

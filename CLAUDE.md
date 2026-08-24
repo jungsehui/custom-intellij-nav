@@ -11,7 +11,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 
 - **Status**: v2.1.0 on GitHub. Marketplace has v1.0.0; publish pending
   (manual VSIX upload via the publisher management page — no PAT needed).
-- **Source**: `src/` — 16 TypeScript files, ~1,320 LOC (365 of it tests). `extension.ts` is a
+- **Source**: `src/` — 18 TypeScript files, ~1626 LOC (572 of it tests). `extension.ts` is a
   30-line entry point. Domain split: `core/` + `navigation/` + `refactor/`.
 - **Manifest**: `package.json` — 8 commands, 168 keybindings, 17 settings.
   Every binding carries `isMac`; none carries a `key` chord.
@@ -23,6 +23,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 | What does each module do, who imports who? | `.claude/architecture.md` |
 | How do I build / package / install / release? | `.claude/workflows.md` |
 | What patterns must I follow? Anti-patterns? | `.claude/conventions.md` |
+| What does a word in this project mean, and where does it live? | `.claude/glossary.md` |
 | What's the current state, what's next? | `.claude/handoff/` (latest dated file) |
 | What slash commands does this repo provide? | `.claude/commands/` |
 | What skills auto-trigger? | `.claude/skills/` |
