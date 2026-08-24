@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import type { Logger } from "../core/logger";
+import type { BeginRequest } from "../core/editor-request";
 import { getShowRefactorNotifications } from "../core/config";
-import { captureSnapshot, selectionMatches } from "../core/snapshot";
 import type { IntelliJAction } from "../types";
 import { describeOutcome, resolveAttempts } from "./policy";
 
@@ -34,18 +34,19 @@ import { describeOutcome, resolveAttempts } from "./policy";
  */
 export async function runRefactor(
   action: IntelliJAction,
+  beginRequest: BeginRequest,
   logger: Logger,
 ): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
+  const request = beginRequest();
+  if (!request) {
     return;
   }
 
-  const snapshot = captureSnapshot(editor);
+  const { editor } = request;
   const langId = editor.document.languageId;
   const attempts = resolveAttempts(action, langId);
 
-  logger.log(
+  request.log(
     `refactor ${action} lang=${langId} attempts=${attempts
       .map((a) => a.kind)
       .join(",")}`,
@@ -65,18 +66,16 @@ export async function runRefactor(
       );
 
       if (!available || available.length === 0) {
-        logger.log(`refactor ${action}: no actions for kind=${attempt.kind}`);
+        request.log(`refactor ${action}: no actions for kind=${attempt.kind}`);
         continue;
       }
 
-      if (!selectionMatches(snapshot, vscode.window.activeTextEditor)) {
-        logger.log(
-          `refactor ${action}: aborted, editor or selection moved during lookup`,
-        );
+      if (request.isSelectionStale()) {
+        request.log(`refactor ${action}: aborted before dispatch`);
         return;
       }
 
-      logger.log(
+      request.log(
         `refactor ${action}: ${available.length} action(s) found for kind=${attempt.kind}, apply=ifSingle`,
       );
 
@@ -88,7 +87,7 @@ export async function runRefactor(
     } catch (error) {
       sawError = true;
       const message = error instanceof Error ? error.message : String(error);
-      logger.log(`refactor ${action} kind=${attempt.kind} error ${message}`);
+      request.log(`refactor ${action} kind=${attempt.kind} error ${message}`);
       // Swallow and try the next attempt.
     }
   }

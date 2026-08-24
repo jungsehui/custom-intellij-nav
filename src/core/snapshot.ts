@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import type { EditorSnapshot } from "../types";
-import type { Logger } from "./logger";
 
 /** Capture editor URI/version/position/selection at the moment a request starts. */
 export function captureSnapshot(editor: vscode.TextEditor): EditorSnapshot {
@@ -50,30 +49,4 @@ export function selectionMatches(
   }
 
   return editor.selection.isEqual(snapshot.selection);
-}
-
-/**
- * True if the request is no longer the latest in flight or the editor has
- * moved/changed since the snapshot was taken. Caller should bail out.
- *
- * `latestRequestId` and `requestId` are managed by the caller (typically
- * IntelliJNavigator).
- */
-export function isStale(
-  requestId: number,
-  latestRequestId: number,
-  snapshot: EditorSnapshot,
-  logger: Logger,
-): boolean {
-  if (requestId !== latestRequestId) {
-    logger.log(`request#${requestId} ignored: superseded by newer request`);
-    return true;
-  }
-
-  if (!editorMatches(snapshot, vscode.window.activeTextEditor)) {
-    logger.log(`request#${requestId} ignored: editor changed while waiting`);
-    return true;
-  }
-
-  return false;
 }

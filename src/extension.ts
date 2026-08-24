@@ -1,7 +1,28 @@
 import * as vscode from "vscode";
-import { IntelliJNavigator } from "./core/navigator";
+import { createRequestFactory, createVscodeEditorSource } from "./core/editor-request";
+import { Logger } from "./core/logger";
+import { migrateLegacySettings } from "./core/migrate-settings";
+import { goToDeclarationOrUsages } from "./navigation/go-to-declaration";
+import { runRefactor } from "./refactor/run-refactor";
+import type { IntelliJAction } from "./types";
 
-const COMMAND_ID = "intellij.goToDeclarationOrUsages";
+const GO_TO_COMMAND_ID = "intellij.goToDeclarationOrUsages";
+
+/**
+ * Command id → action, as data.
+ *
+ * Adding a refactoring is a row here plus a row in LANGUAGE_ACTION_TABLE and
+ * a keybinding in package.json. No branching to edit, which is the point.
+ */
+const REFACTOR_COMMANDS: ReadonlyArray<readonly [string, IntelliJAction]> = [
+  ["intellij.extractVariable", "extractVariable"],
+  ["intellij.extractMethod", "extractMethod"],
+  ["intellij.extractConstant", "extractConstant"],
+  ["intellij.inline", "inline"],
+  ["intellij.move", "move"],
+  ["intellij.overrideMethods", "overrideMethods"],
+  ["intellij.implementMethods", "implementMethods"],
+];
 
 export function activate(context: vscode.ExtensionContext): void {
   vscode.window.setStatusBarMessage(
@@ -9,34 +30,23 @@ export function activate(context: vscode.ExtensionContext): void {
     1500,
   );
 
-  const navigator = new IntelliJNavigator();
-  void navigator.migrateLegacySettings();
+  const logger = new Logger();
+  const beginRequest = createRequestFactory(
+    createVscodeEditorSource(vscode),
+    logger,
+  );
+
+  void migrateLegacySettings(logger);
 
   context.subscriptions.push(
-    navigator,
-    vscode.commands.registerCommand(COMMAND_ID, () =>
-      navigator.goToDeclarationOrUsages(),
+    logger,
+    vscode.commands.registerCommand(GO_TO_COMMAND_ID, () =>
+      goToDeclarationOrUsages(beginRequest, logger),
     ),
-    vscode.commands.registerCommand("intellij.extractVariable", () =>
-      navigator.runRefactor("extractVariable"),
-    ),
-    vscode.commands.registerCommand("intellij.extractMethod", () =>
-      navigator.runRefactor("extractMethod"),
-    ),
-    vscode.commands.registerCommand("intellij.extractConstant", () =>
-      navigator.runRefactor("extractConstant"),
-    ),
-    vscode.commands.registerCommand("intellij.inline", () =>
-      navigator.runRefactor("inline"),
-    ),
-    vscode.commands.registerCommand("intellij.move", () =>
-      navigator.runRefactor("move"),
-    ),
-    vscode.commands.registerCommand("intellij.overrideMethods", () =>
-      navigator.runRefactor("overrideMethods"),
-    ),
-    vscode.commands.registerCommand("intellij.implementMethods", () =>
-      navigator.runRefactor("implementMethods"),
+    ...REFACTOR_COMMANDS.map(([id, action]) =>
+      vscode.commands.registerCommand(id, () =>
+        runRefactor(action, beginRequest, logger),
+      ),
     ),
   );
 }

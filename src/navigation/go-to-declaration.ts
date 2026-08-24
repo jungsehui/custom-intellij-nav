@@ -1,9 +1,8 @@
 import * as vscode from "vscode";
 import type { Logger } from "../core/logger";
-import { captureSnapshot, isStale } from "../core/snapshot";
+import type { BeginRequest, EditorRequest } from "../core/editor-request";
 import { getShowErrorToasts } from "../core/config";
 import type {
-  EditorSnapshot,
   ProviderCommand,
   ProviderResolution,
   ProviderSource,
@@ -16,13 +15,6 @@ import {
   pickGotoBehavior,
 } from "./location-utils";
 
-interface RequestState {
-  /** Caller's monotonic counter; incremented for each new request. */
-  bumpRequestId(): number;
-  /** Read the latest request id (for staleness checks). */
-  getLatestRequestId(): number;
-}
-
 /**
  * IntelliJ-style "Go to Declaration or Usages" handler.
  *
@@ -32,46 +24,44 @@ interface RequestState {
  *  3. If no declaration provider responds, fall back to definition provider.
  *  4. If everything fails, peek usages or surface a status message.
  *
- * Stale-request guard ensures rapid keypresses don't interleave navigation.
+ * Every await boundary is followed by `request.isStale()`, so rapid
+ * keypresses don't interleave navigation and a superseded request never
+ * writes to the UI.
  */
 export async function goToDeclarationOrUsages(
-  state: RequestState,
+  beginRequest: BeginRequest,
   logger: Logger,
 ): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
+  const request = beginRequest();
+  if (!request) {
     return;
   }
 
-  const snapshot = captureSnapshot(editor);
-  const requestId = state.bumpRequestId();
+  const { snapshot } = request;
   const startedAt = Date.now();
 
-  logger.log(
-    `request#${requestId} start ${snapshot.uri.toString()}@${snapshot.position.line}:${snapshot.position.character}`,
+  request.log(
+    `start ${snapshot.uri.toString()}@${snapshot.position.line}:${snapshot.position.character}`,
   );
 
   try {
     const declaration = await resolveProvider(
-      requestId,
-      snapshot,
+      request,
       "declaration",
       "vscode.executeDeclarationProvider",
-      state,
-      logger,
     );
 
-    if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
+    if (request.isStale()) {
       return;
     }
 
     if (declaration) {
       if (declaration.external.length > 0) {
-        await navigate(snapshot, declaration.source, declaration.external, logger);
+        await navigate(request, declaration.source, declaration.external);
         return;
       }
 
-      const outcome = await peekUsages(requestId, snapshot, state, logger);
+      const outcome = await peekUsages(request);
       if (outcome === "none") {
         logger.showStatus("No usages found");
       }
@@ -79,44 +69,41 @@ export async function goToDeclarationOrUsages(
     }
 
     const definition = await resolveProvider(
-      requestId,
-      snapshot,
+      request,
       "definition",
       "vscode.executeDefinitionProvider",
-      state,
-      logger,
     );
 
-    if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
+    if (request.isStale()) {
       return;
     }
 
     if (definition) {
       if (definition.external.length > 0) {
-        await navigate(snapshot, definition.source, definition.external, logger);
+        await navigate(request, definition.source, definition.external);
         return;
       }
 
-      const outcome = await peekUsages(requestId, snapshot, state, logger);
+      const outcome = await peekUsages(request);
       if (outcome === "none") {
         logger.showStatus("No usages found");
       }
       return;
     }
 
-    const outcome = await peekUsages(requestId, snapshot, state, logger);
+    const outcome = await peekUsages(request);
     if (outcome === "none") {
       logger.showStatus("No declaration, definition, or usages found");
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? (error.stack ?? "") : "";
-    logger.log(`request#${requestId} error ${message}\n${stack}`);
+    request.log(`error ${message}\n${stack}`);
 
     // A superseded request must not write to the UI. Without this, throwing
     // after being overtaken puts "Navigation failed" on the status bar while
     // the newer request may be navigating successfully.
-    if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
+    if (request.isStale()) {
       return;
     }
 
@@ -131,18 +118,17 @@ export async function goToDeclarationOrUsages(
       logger.showStatus("Navigation failed (see Output)");
     }
   } finally {
-    logger.log(`request#${requestId} end ${Date.now() - startedAt}ms`);
+    request.log(`end ${Date.now() - startedAt}ms`);
   }
 }
 
 async function resolveProvider(
-  requestId: number,
-  snapshot: EditorSnapshot,
+  request: EditorRequest,
   source: ProviderSource,
   command: ProviderCommand,
-  state: RequestState,
-  logger: Logger,
 ): Promise<ProviderResolution | undefined> {
+  const { snapshot } = request;
+
   const rawResults =
     (await vscode.commands.executeCommand<RawLocation[]>(
       command,
@@ -150,33 +136,31 @@ async function resolveProvider(
       snapshot.position,
     )) ?? [];
 
-  if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
+  if (request.isStale()) {
     return undefined;
   }
 
   const all = normalizeLocations(rawResults);
   if (all.length === 0) {
-    logger.log(`request#${requestId} ${source}: no results`);
+    request.log(`${source}: no results`);
     return undefined;
   }
 
   const external = all.filter(
     (location) => !isCurrentLocation(snapshot, location),
   );
-  logger.log(
-    `request#${requestId} ${source}: all=${all.length}, external=${external.length}`,
-  );
+  request.log(`${source}: all=${all.length}, external=${external.length}`);
 
   return { source, external };
 }
 
 async function navigate(
-  snapshot: EditorSnapshot,
+  request: EditorRequest,
   source: ProviderSource,
   targets: readonly vscode.Location[],
-  logger: Logger,
 ): Promise<void> {
-  logger.log(`navigate via ${source}: ${targets.length} target(s)`);
+  const { snapshot } = request;
+  request.log(`navigate via ${source}: ${targets.length} target(s)`);
 
   await vscode.commands.executeCommand(
     "editor.action.goToLocations",
@@ -197,12 +181,9 @@ async function navigate(
  */
 type PeekOutcome = "shown" | "none" | "stale";
 
-async function peekUsages(
-  requestId: number,
-  snapshot: EditorSnapshot,
-  state: RequestState,
-  logger: Logger,
-): Promise<PeekOutcome> {
+async function peekUsages(request: EditorRequest): Promise<PeekOutcome> {
+  const { snapshot } = request;
+
   const rawReferences =
     (await vscode.commands.executeCommand<vscode.Location[]>(
       "vscode.executeReferenceProvider",
@@ -210,7 +191,7 @@ async function peekUsages(
       snapshot.position,
     )) ?? [];
 
-  if (isStale(requestId, state.getLatestRequestId(), snapshot, logger)) {
+  if (request.isStale()) {
     return "stale";
   }
 
@@ -218,7 +199,7 @@ async function peekUsages(
     (location) => !isCurrentLocation(snapshot, location),
   );
 
-  logger.log(`request#${requestId} references: external=${references.length}`);
+  request.log(`references: external=${references.length}`);
 
   if (references.length === 0) {
     return "none";
