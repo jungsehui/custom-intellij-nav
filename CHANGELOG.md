@@ -6,6 +6,34 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.2.1] — 2026-08-24
+
+### Tested — the one piece of code that writes your settings
+
+`migrateLegacySettings` had zero tests. It is the only code in this
+extension that writes to `settings.json`, it runs once at activation, and
+when it is wrong it is wrong silently — the failure mode is `⌘B` quietly
+on or off and no way to tell why.
+
+Fourteen tests now cover the full matrix in both scopes: deprecated setting
+unset, `true`, or `false`, crossed with the replacement unset or already
+chosen. Plus idempotence, and that the two scopes are judged independently.
+
+`.vscode-test.mjs` opens `test-fixtures/workspace` so
+`ConfigurationTarget.Workspace` is writable. Without a folder open that
+branch was unreachable, and the module has two.
+
+The tests were themselves checked by mutation: inverting the `false` guard,
+dropping the "replacement already set" check, skipping the clear of the
+deprecated key, writing `true` instead of `false`, and collapsing the
+workspace scope each produce failures (8, 4, 6, 6 and 2 respectively). A
+test that cannot fail is not evidence.
+
+Test host isolation was verified rather than assumed: the real
+`settings.json` is byte-identical before and after a run.
+
+Tests 37 → 51. No behaviour change.
+
 ## [2.2.0] — 2026-08-21
 
 An architecture pass, decided by grilling through sixteen questions and

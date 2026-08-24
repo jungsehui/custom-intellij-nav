@@ -37,3 +37,4 @@ media/build-icon.js
 .env
 .env.*
 
+test-fixtures/**
