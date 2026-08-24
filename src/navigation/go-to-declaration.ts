@@ -2,18 +2,26 @@ import * as vscode from "vscode";
 import type { Logger } from "../core/logger";
 import type { BeginRequest, EditorRequest } from "../core/editor-request";
 import { getShowErrorToasts } from "../core/config";
-import type {
-  ProviderCommand,
-  ProviderResolution,
-  ProviderSource,
-  RawLocation,
-} from "../types";
+import type { RawLocation } from "./location-utils";
 import {
   dedupeLocations,
   isCurrentLocation,
   normalizeLocations,
   pickGotoBehavior,
 } from "./location-utils";
+
+/** Which provider answered. Only this module cares. */
+type ProviderSource = "declaration" | "definition";
+
+/** The API commands behind each provider. Only this module calls them. */
+type ProviderCommand =
+  | "vscode.executeDeclarationProvider"
+  | "vscode.executeDefinitionProvider";
+
+interface ProviderResolution {
+  readonly source: ProviderSource;
+  readonly external: vscode.Location[];
+}
 
 /**
  * Providers to try, in order, first useful answer wins.

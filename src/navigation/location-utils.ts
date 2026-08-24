@@ -1,5 +1,13 @@
 import * as vscode from "vscode";
-import type { EditorSnapshot, RawLocation } from "../types";
+import type { EditorSnapshot } from "../types";
+
+/**
+ * What a definition/declaration provider can hand back.
+ *
+ * Lives here because `toLocation` below is what turns either shape into a
+ * plain Location, and `go-to-declaration.ts` already imports this module.
+ */
+export type RawLocation = vscode.Location | vscode.LocationLink;
 
 function isLocationLink(item: RawLocation): item is vscode.LocationLink {
   return "targetUri" in item;

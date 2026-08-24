@@ -1,5 +1,6 @@
 import { ACTION_LABELS, LANGUAGE_ACTION_TABLE } from "./language-action-table";
-import type { CodeActionAttempt, IntelliJAction } from "../types";
+import type { IntelliJAction } from "../types";
+import type { CodeActionAttempt } from "./language-action-table";
 
 /**
  * Decisions about a refactoring that need no editor, no language server and

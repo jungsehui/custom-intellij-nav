@@ -5,12 +5,15 @@
 - **Keep `extension.ts` thin.** It's an entry point — register commands,
   push subscriptions, return. New logic goes in `core/` /`navigation/` /
   `refactor/`.
-- **Write pure handlers when you can.** `goToDeclaration` and
-  `runRefactor` take a `Logger` (and a `RequestState` for navigation)
-  and never reach into singleton state. The class owns state; handlers
-  are stateless.
-- **Add new types to `src/types.ts`.** Keeps cross-module type imports
-  acyclic.
+- **Handlers take what they need; they do not reach for it.**
+  `goToDeclarationOrUsages` and `runRefactor` take a `BeginRequest` and a
+  `Logger`. Neither reads a global. The only mutable state in the extension
+  is the request counter, closed over inside `createRequestFactory`, and the
+  only place `vscode.window.activeTextEditor` is read is the one adapter
+  behind `ActiveEditorSource`. If you find yourself reaching for a global,
+  that is the signal a port is missing.
+- **A type lives with whatever gives it meaning.** See "Where a type lives"
+  below — `src/types.ts` is only for types shared across *folders*.
 - **Add new languages to `LANGUAGE_ACTION_TABLE`** when you encounter an
   LSP that uses different `kind` values. The `"*"` fallback chain
   catches the unknown case but a named entry is more reliable.
@@ -491,6 +494,42 @@ This repo follows that. References:
 - [Angular Style Guide — symbols and file names](https://angular.dev/style-guide) (canonical `<feature>.<role>.ts` kebab-case)
 - [Biome `useFilenamingConvention`](https://biomejs.dev/linter/rules/use-filenaming-convention/) (lints this automatically)
 
+### Where a type lives
+
+The old rule was "add new types to `src/types.ts`, keeps cross-module type
+imports acyclic". It worked exactly as written, and that was the problem: it
+drew no distinction between a type two folders share and a type one function
+uses. By v2.1.1 three of seven types in there had a single consumer, and the
+file was drifting from an index into a dumping ground.
+
+Three cases, decided by counting consumers:
+
+| Consumers | Where it goes |
+|---|---|
+| More than one **folder** | `src/types.ts` |
+| More than one file, all in **one folder** | whichever of them the others already import |
+| Exactly one | next to it, and **not exported** |
+
+Worked examples as of v2.1.1:
+
+- `IntelliJAction` — `core/` and `refactor/` and `extension.ts`. Stays in
+  `types.ts`.
+- `EditorSnapshot` — `core/` and `navigation/`. Stays.
+- `RawLocation` — `location-utils.ts` and `go-to-declaration.ts`, both in
+  `navigation/`. Moved to `location-utils.ts`, because `toLocation` there is
+  what turns either shape into a plain `Location` and the other file already
+  imports the module.
+- `CodeActionAttempt` — `language-action-table.ts` and `policy.ts`, both in
+  `refactor/`. Moved to the table, which is the thing whose rows have that
+  shape.
+- `ProviderSource`, `ProviderCommand`, `ProviderResolution` — only
+  `go-to-declaration.ts`. Moved there and **un-exported**. An exported type
+  with one consumer is a claim that someone else might want it; nobody did.
+
+Check before adding, and check again when a file splits — creating
+`policy.ts` turned `CodeActionAttempt` from a one-consumer type into a
+two-consumer one, which changed the answer.
+
 ### File & folder names
 
 | Kind | Style | Example |
@@ -507,11 +546,11 @@ This repo follows that. References:
 
 | Kind | Style | Example |
 |---|---|---|
-| Class / Interface / Type alias / Enum | `PascalCase` | `IntelliJNavigator`, `EditorSnapshot`, `IntelliJAction` |
-| Variable / function / method / parameter | `camelCase` | `runRefactor`, `latestRequestId`, `getShowErrorToasts` |
+| Class / Interface / Type alias / Enum | `PascalCase` | `EditorRequest`, `ActiveEditorSource`, `EditorSnapshot`, `IntelliJAction` |
+| Variable / function / method / parameter | `camelCase` | `runRefactor`, `beginRequest`, `createRequestFactory`, `getShowErrorToasts` |
 | Module-level constant (treated as compile-time literal) | `SCREAMING_SNAKE_CASE` | `LANGUAGE_ACTION_TABLE`, `OUTPUT_CHANNEL_NAME`, `COMMAND_ID` |
-| Boolean | prefix `is` / `has` / `should` / `can` | `isStale`, `hasReferences` |
-| Private fields | `camelCase` (TypeScript `private` modifier — no underscore prefix) | `this.logger`, `this.latestRequestId` |
+| Boolean | prefix `is` / `has` / `should` / `can` | `isStale`, `isSelectionStale`, `shouldClaimUnsupported` |
+| Private fields | `camelCase` (TypeScript `private` modifier — no underscore prefix) | `this.output` in `Logger` |
 
 ### When you rename a file
 
