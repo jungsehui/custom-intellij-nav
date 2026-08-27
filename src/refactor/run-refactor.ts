@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import type { CommandRunner } from "../core/command-runner";
 import type { Logger } from "../core/logger";
 import type { BeginRequest } from "../core/editor-request";
 import { getShowRefactorNotifications } from "../core/config";
@@ -35,6 +36,7 @@ import { describeOutcome, resolveAttempts } from "./policy";
 export async function runRefactor(
   action: IntelliJAction,
   beginRequest: BeginRequest,
+  commands: CommandRunner,
   logger: Logger,
 ): Promise<void> {
   const request = beginRequest();
@@ -56,9 +58,7 @@ export async function runRefactor(
 
   for (const attempt of attempts) {
     try {
-      const available = await vscode.commands.executeCommand<
-        vscode.CodeAction[]
-      >(
+      const available = await commands.run<vscode.CodeAction[]>(
         "vscode.executeCodeActionProvider",
         editor.document.uri,
         editor.selection,
@@ -79,7 +79,7 @@ export async function runRefactor(
         `refactor ${action}: ${available.length} action(s) found for kind=${attempt.kind}, apply=ifSingle`,
       );
 
-      await vscode.commands.executeCommand("editor.action.codeAction", {
+      await commands.run("editor.action.codeAction", {
         kind: attempt.kind,
         apply: "ifSingle",
       });

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { createVscodeCommandRunner } from "./core/command-runner";
 import { createRequestFactory, createVscodeEditorSource } from "./core/editor-request";
 import { Logger } from "./core/logger";
 import { migrateLegacySettings } from "./core/migrate-settings";
@@ -31,6 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   const logger = new Logger();
+  const commands = createVscodeCommandRunner(vscode);
   const beginRequest = createRequestFactory(
     createVscodeEditorSource(vscode),
     logger,
@@ -41,11 +43,11 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     logger,
     vscode.commands.registerCommand(GO_TO_COMMAND_ID, () =>
-      goToDeclarationOrUsages(beginRequest, logger),
+      goToDeclarationOrUsages(beginRequest, commands, logger),
     ),
     ...REFACTOR_COMMANDS.map(([id, action]) =>
       vscode.commands.registerCommand(id, () =>
-        runRefactor(action, beginRequest, logger),
+        runRefactor(action, beginRequest, commands, logger),
       ),
     ),
   );

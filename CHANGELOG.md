@@ -6,6 +6,46 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] — 2026-08-24
+
+### Added — a second port, so the critical path is observable
+
+`runRefactor`'s orchestration had zero tests. The v2.1.0 critical defect
+lived exactly there: the prefetch names a URI and a range,
+`editor.action.codeAction` names neither, and without a guard between them
+an action found for one selection is applied at another.
+
+Testing that by asserting on document text turns out to be impossible here.
+`editor.action.codeAction` applies nothing in the test host — measured
+across `apply: "ifSingle"`, `"first"` and `"never"`, and
+`editor.action.refactor` — while `vscode.workspace.applyEdit` works fine.
+The code-action widget needs UI the host does not drive.
+
+Worse, it fails silently in the direction that matters: "the document is
+unchanged" passes **even with the staleness guard deleted**. Two such
+assertions were written, looked green, and were removed after a mutation
+run exposed them as tests that cannot fail.
+
+`CommandRunner` routes command dispatch through an interface, so a test can
+see that dispatch was reached and with which kind. The prefetch still hits
+the real language server, because that is what decides availability and
+faking it would test the fake.
+
+This is the same shape as `ActiveEditorSource` in 2.2.0, for the same
+reason: something unverifiable, at the exact place a defect shipped.
+
+### Verified
+
+Six tests, mutation-checked. Deleting the guard, moving it before the
+prefetch, ignoring the availability check, hardcoding the dispatched kind,
+and dropping the chain fallback produce 1, 2, 2, 2 and 3 failures.
+
+One mutation could not be made at all: replacing the availability check
+with `if (false)` fails to compile, because the narrowing that keeps
+`request` defined goes with it. The compiler is the guard there.
+
+Tests 51 → 57. No behaviour change.
+
 ## [2.2.1] — 2026-08-24
 
 ### Tested — the one piece of code that writes your settings

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import type { Logger } from "../core/logger";
 import type { BeginRequest, EditorRequest } from "../core/editor-request";
+import type { CommandRunner } from "../core/command-runner";
 import { getShowErrorToasts } from "../core/config";
 import type { RawLocation } from "./location-utils";
 import {
@@ -53,6 +54,7 @@ const PROVIDER_CHAIN: ReadonlyArray<readonly [ProviderSource, ProviderCommand]> 
  */
 export async function goToDeclarationOrUsages(
   beginRequest: BeginRequest,
+  commands: CommandRunner,
   logger: Logger,
 ): Promise<void> {
   const request = beginRequest();
@@ -69,7 +71,7 @@ export async function goToDeclarationOrUsages(
 
   try {
     for (const [source, command] of PROVIDER_CHAIN) {
-      const resolution = await resolveProvider(request, source, command);
+      const resolution = await resolveProvider(request, commands, source, command);
 
       if (request.isStale()) {
         return;
@@ -80,20 +82,20 @@ export async function goToDeclarationOrUsages(
       }
 
       if (resolution.external.length > 0) {
-        await navigate(request, resolution.source, resolution.external);
+        await navigate(request, commands, resolution.source, resolution.external);
         return;
       }
 
       // The provider answered, but only with the caret's own position. That
       // is IntelliJ's "already at the declaration" case: show usages.
-      const outcome = await peekUsages(request);
+      const outcome = await peekUsages(request, commands);
       if (outcome === "none") {
         logger.showStatus("No usages found");
       }
       return;
     }
 
-    const outcome = await peekUsages(request);
+    const outcome = await peekUsages(request, commands);
     if (outcome === "none") {
       logger.showStatus("No declaration, definition, or usages found");
     }
@@ -126,13 +128,14 @@ export async function goToDeclarationOrUsages(
 
 async function resolveProvider(
   request: EditorRequest,
+  commands: CommandRunner,
   source: ProviderSource,
   command: ProviderCommand,
 ): Promise<ProviderResolution | undefined> {
   const { snapshot } = request;
 
   const rawResults =
-    (await vscode.commands.executeCommand<RawLocation[]>(
+    (await commands.run<RawLocation[]>(
       command,
       snapshot.uri,
       snapshot.position,
@@ -158,13 +161,14 @@ async function resolveProvider(
 
 async function navigate(
   request: EditorRequest,
+  commands: CommandRunner,
   source: ProviderSource,
   targets: readonly vscode.Location[],
 ): Promise<void> {
   const { snapshot } = request;
   request.log(`navigate via ${source}: ${targets.length} target(s)`);
 
-  await vscode.commands.executeCommand(
+  await commands.run(
     "editor.action.goToLocations",
     snapshot.uri,
     snapshot.position,
@@ -183,11 +187,14 @@ async function navigate(
  */
 type PeekOutcome = "shown" | "none" | "stale";
 
-async function peekUsages(request: EditorRequest): Promise<PeekOutcome> {
+async function peekUsages(
+  request: EditorRequest,
+  commands: CommandRunner,
+): Promise<PeekOutcome> {
   const { snapshot } = request;
 
   const rawReferences =
-    (await vscode.commands.executeCommand<vscode.Location[]>(
+    (await commands.run<vscode.Location[]>(
       "vscode.executeReferenceProvider",
       snapshot.uri,
       snapshot.position,
@@ -207,7 +214,7 @@ async function peekUsages(request: EditorRequest): Promise<PeekOutcome> {
     return "none";
   }
 
-  await vscode.commands.executeCommand(
+  await commands.run(
     "editor.action.peekLocations",
     snapshot.uri,
     snapshot.position,
