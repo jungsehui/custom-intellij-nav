@@ -6,6 +6,36 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.1] — 2026-08-24
+
+### Tested — the navigation flow, including the paths that stay silent
+
+`goToDeclarationOrUsages` had no behavioural tests. Twelve now cover the
+whole flow: navigating to an external declaration, peeking usages when the
+declaration is the caret itself, falling through to the definition provider,
+reporting when nothing answers, and the two failure paths.
+
+The `CommandRunner` port added in 2.3.0 is what makes this possible. Provider
+answers come from a script, and `editor.action.goToLocations` /
+`peekLocations` are observed rather than executed, so the assertions are
+about the decision rather than about VS Code's UI.
+
+Two of these tests pin defects fixed in 2.1.0 that had no coverage until
+now: a request superseded during the usages lookup must write nothing (the
+`"stale"` / `"none"` distinction), and a provider failure on a superseded
+request must stay quiet.
+
+Mutation-checked, seven ways: collapsing `"stale"` into `"none"`, removing
+either staleness guard, inverting the caret filter, dropping the definition
+provider from the chain, disabling dedupe, and pinning the goto behaviour
+all produce failures.
+
+Two of those mutations first reported "0 failing" — because an orphaned
+import failed lint and the tests never ran at all. The probe now
+distinguishes "nothing caught it" from "nothing executed".
+
+Tests 57 → 69. No behaviour change.
+
 ## [2.3.0] — 2026-08-24
 
 ### Added — a second port, so the critical path is observable
