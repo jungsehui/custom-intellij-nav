@@ -308,6 +308,27 @@ desktop macOS the key is free.
 
 Grep output is one line of a ternary. Read the expression, not the match.
 
+### A green local run says nothing about CI
+
+Three separate things in this project passed on one Mac and failed on a
+Linux runner, and each looked like a different bug until measured:
+
+- The VS Code test suite needs a display. On Linux that means
+  `xvfb-run -a npm test`; without it the run dies before the first test.
+- The TypeScript language server answers code-action queries instantly on a
+  warm machine and not at all on a cold runner. A test that assumes it is
+  ready reads an empty prefetch as "nothing was dispatched, as expected" —
+  passing for the wrong reason locally and failing honestly in CI.
+- Polling that server in a tight loop gets in-flight requests cancelled. The
+  rejection escaped a `suiteSetup`, and a throwing hook takes its whole
+  suite down: the run reported 63 passing where main had 69. **The missing
+  five were the signal, not the one failure.** Always compare the total, not
+  just the failure count.
+
+Corollary for CI itself: this repo ran `check`, `compile` and `package` for
+months without ever running `lint` or `test`. A workflow that is green
+proves only that the steps it contains passed.
+
 ### An audit that cannot separate scope is not an audit
 
 A sweep of all 154 chords against the full VS Code source reported 104

@@ -6,6 +6,25 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.3] — 2026-08-31
+
+### Fixed — the language-server wait took the whole suite down with it
+
+2.3.2 added a wait so the dispatch tests would not run against an unstarted
+TypeScript server. The wait itself was fragile: polling in a tight loop gets
+in-flight requests cancelled, and the rejection escaped the `suiteSetup`
+hook. A throwing hook takes its whole suite with it, so the tag build
+reported 63 passing where main had 69 — the missing five were the story, not
+the one failure.
+
+Each probe is now isolated, so a cancelled attempt means "not ready yet"
+rather than "the suite is broken". The budget is wall-clock rather than a
+fixed iteration count, and it still fails loudly, with an attempt count, if
+the server never answers.
+
+With this, the tag build passes for the first time since v2.2.0, and
+`v2.3.3` is the first GitHub Release to carry its VSIX.
+
 ## [2.3.2] — 2026-08-31
 
 ### Fixed — CI failed on every tag push, and never ran the tests
