@@ -92,34 +92,50 @@ function countingRequest(
 /**
  * Wait until the TypeScript language server answers code-action queries.
  *
- * On a warm machine it answers on the first try, which is what the original
- * version of these tests assumed. On a cold CI runner it does not, and the
- * prefetch comes back empty — so the dispatch assertions failed there while
- * passing locally. Readiness is a precondition of this suite, not something
- * to discover per test.
+ * On a warm machine it answers on the first try, which is what the first
+ * version of these tests assumed after measuring exactly one Mac. A cold CI
+ * runner does not, so the prefetch came back empty and "nothing was
+ * dispatched" read as correct.
+ *
+ * The first attempt at this wait was itself too fragile: polling in a tight
+ * loop gets in-flight requests cancelled, the rejection escaped the hook,
+ * and a failing `suiteSetup` took all six tests down with it — 63 passing
+ * where main had 69. Each attempt is now isolated, so a cancelled or
+ * throwing probe just means "not ready yet".
  */
 async function waitForLanguageServer(): Promise<void> {
   const editor = await openTypescript(TOP_LEVEL_EXPRESSION);
   editor.selection = EXPRESSION_RANGE;
 
-  for (let attempt = 0; attempt < 60; attempt++) {
-    const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
-      "vscode.executeCodeActionProvider",
-      editor.document.uri,
-      editor.selection,
-      "refactor.extract.constant",
-    );
-    if (actions && actions.length > 0) {
-      await vscode.commands.executeCommand("workbench.action.closeAllEditors");
-      return;
+  const deadline = Date.now() + 90_000;
+  let attempts = 0;
+
+  while (Date.now() < deadline) {
+    attempts += 1;
+    try {
+      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        "vscode.executeCodeActionProvider",
+        editor.document.uri,
+        editor.selection,
+        "refactor.extract.constant",
+      );
+      if (actions && actions.length > 0) {
+        await vscode.commands.executeCommand(
+          "workbench.action.closeAllEditors",
+        );
+        return;
+      }
+    } catch {
+      // A cancelled probe is not an answer. Try again.
     }
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   await vscode.commands.executeCommand("workbench.action.closeAllEditors");
   assert.fail(
-    "the TypeScript language server never offered refactor.extract.constant; " +
-      "the dispatch tests below cannot mean anything without it",
+    `the TypeScript language server never offered refactor.extract.constant ` +
+      `after ${attempts} attempts; the dispatch tests below cannot mean ` +
+      `anything without it`,
   );
 }
 
@@ -127,7 +143,7 @@ suite("runRefactor", () => {
   const logger = new Logger();
 
   suiteSetup(async function () {
-    this.timeout(60000);
+    this.timeout(120000);
     await waitForLanguageServer();
   });
 
