@@ -6,6 +6,53 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.2] — 2026-08-31
+
+### Fixed — CI failed on every tag push, and never ran the tests
+
+Every tag since v2.2.0 failed while the matching `main` push passed. The
+`publish` job ran `vsce publish` against a `VSCE_PAT` secret that does not
+exist, and Azure DevOps answered with `TF400813: the user
+'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' is not authorized` — what it returns
+for an absent token.
+
+That secret was never coming. Creating the Azure DevOps organisation a PAT
+requires kept demanding a payment card, so this project moved to manual
+VSIX upload months ago. The job was waiting on a credential the project had
+already decided not to have.
+
+The tag build now attaches the VSIX to the GitHub Release instead, so the
+manual upload is a download rather than a local `vsce package`. There were
+seven tags and zero releases.
+
+Two gaps closed alongside:
+
+- **CI never ran `lint` or `test`.** 69 tests only ever ran on one Mac. The
+  suite drives a real VS Code, so on Linux it needs `xvfb-run -a`.
+- `actions/checkout` and `setup-node` moved from v4 to v5; v4 targets
+  Node 20, which the runners now force onto Node 24.
+
+### Fixed — a test that only passed on a warm machine
+
+With CI finally running the suite, one test failed there and nowhere else:
+on a cold runner the TypeScript language server has not started, the
+prefetch returns empty, and "nothing was dispatched" reads as correct.
+
+The original assumption came from measuring that server answer on the first
+try on one machine. Readiness is now a precondition — a `suiteSetup` polls
+until it offers `refactor.extract.constant` and fails loudly if it never
+does.
+
+### Changed — `@types/vscode` pinned to the engines floor
+
+It was `^1.106.0`, resolving to 1.110.0, four versions ahead of what
+`engines.vscode` promises. An API added after 1.106 would have compiled
+here and broken on the oldest VS Code the manifest claims to support.
+
+Compiling against exactly 1.106.0 gives zero errors, so nothing newer is in
+use and the risk was latent. Pinned anyway: the compiler now enforces the
+floor instead of trusting it.
+
 ## [2.3.1] — 2026-08-24
 
 ### Tested — the navigation flow, including the paths that stay silent
