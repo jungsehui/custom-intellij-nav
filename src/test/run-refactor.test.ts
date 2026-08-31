@@ -89,8 +89,47 @@ function countingRequest(
   return { begin: () => request, guardChecks: () => checks };
 }
 
+/**
+ * Wait until the TypeScript language server answers code-action queries.
+ *
+ * On a warm machine it answers on the first try, which is what the original
+ * version of these tests assumed. On a cold CI runner it does not, and the
+ * prefetch comes back empty — so the dispatch assertions failed there while
+ * passing locally. Readiness is a precondition of this suite, not something
+ * to discover per test.
+ */
+async function waitForLanguageServer(): Promise<void> {
+  const editor = await openTypescript(TOP_LEVEL_EXPRESSION);
+  editor.selection = EXPRESSION_RANGE;
+
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+      "vscode.executeCodeActionProvider",
+      editor.document.uri,
+      editor.selection,
+      "refactor.extract.constant",
+    );
+    if (actions && actions.length > 0) {
+      await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+  assert.fail(
+    "the TypeScript language server never offered refactor.extract.constant; " +
+      "the dispatch tests below cannot mean anything without it",
+  );
+}
+
 suite("runRefactor", () => {
   const logger = new Logger();
+
+  suiteSetup(async function () {
+    this.timeout(60000);
+    await waitForLanguageServer();
+  });
 
   suiteTeardown(() => {
     logger.dispose();
