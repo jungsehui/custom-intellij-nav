@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~1626 LOC across 18 files (6 of them tests, 572 LOC). Two user-facing capabilities:
+A single VS Code extension. ~2,365 LOC across 22 files (9 of them tests, 1,267 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
@@ -15,39 +15,52 @@ across 11 functional categories plus one feature toggle.
 ## Module graph
 
 ```
-src/extension.ts (52 LOC) — builds the Logger and the request factory,
-│                            registers 8 commands from a data table
+src/extension.ts (54 LOC) — builds the Logger, both port adapters and the
+│                            request factory, registers 8 commands from a
+│                            data table
 ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
 ├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
 ├─ src/core/migrate-settings.ts (61 LOC) — one-time 2.0.0 setting move.
 │     A `when` clause sees only the *effective* value, so it cannot tell
 │     an explicit `false` from an unset default. That is why the
 │     deprecated-setting migration has to be code.
+├─ src/core/command-runner.ts (35 LOC) — the second port. Every
+│     `vscode.commands.executeCommand` in this extension goes through it,
+│     so a test can see which command was dispatched instead of asserting
+│     on UI that does not run headlessly.
 ├─ src/core/editor-request.ts (123 LOC) — the request lifecycle and the
-│  │   extension's one port. Owns the counter (in a closure), issues
-│  │   EditorRequests, answers isStale() / isSelectionStale().
+│  │   first port. Owns the counter (in a closure), issues EditorRequests,
+│  │   answers isStale() / isSelectionStale().
 │  └─ src/core/snapshot.ts (52 LOC) — the pure rules: captureSnapshot,
 │         editorMatches, selectionMatches. No global reads.
-├─ src/navigation/go-to-declaration.ts (211 LOC) — cmd+B handler
-│  └─ src/navigation/location-utils.ts (73 LOC) — dedupe, normalize,
+├─ src/navigation/go-to-declaration.ts (226 LOC) — cmd+B handler
+│  └─ src/navigation/location-utils.ts (76 LOC) — dedupe, normalize,
 │         and RawLocation
 └─ src/refactor/run-refactor.ts (101 LOC) — the adapter: talks to VS Code
-   └─ src/refactor/policy.ts (94 LOC) — the decisions: which chain, whether
-      │    we may call a language unsupported, what to say. No vscode.
-      └─ src/refactor/language-action-table.ts (185 LOC) — per-lang kind
-            table + ACTION_LABELS + CodeActionAttempt. Carries the measured
-            census of every refactor kind TypeScript emits; that census is
-            the reason cmd+alt+f / cmd+f6 / cmd+alt+p are not shipped.
+   └─ src/refactor/policy.ts (95 LOC) — the decisions: which chain, whether
+   │     we may call a language unsupported, what to say. No vscode.
+   └─ src/refactor/language-action-table.ts (186 LOC) — per-lang kind
+         table + ACTION_LABELS + CodeActionAttempt. Carries the measured
+         census of every refactor kind TypeScript emits; that census is
+         the reason cmd+alt+f / cmd+f6 / cmd+alt+p are not shipped.
 src/types.ts (31 LOC) — only types crossing folders: IntelliJAction,
                         EditorSnapshot
 ```
 
 No cycles. Each file has one job.
 
-**One port, one global.** `vscode.window.activeTextEditor` is read in
-exactly one place: the adapter behind `ActiveEditorSource` in
-`editor-request.ts`. Everything downstream receives an editor rather than
-reaching for one, which is what makes the staleness rules testable.
+**Two ports, and each exists because something was unverifiable.**
+
+| Port | Adapter reads / calls | Why it exists |
+|---|---|---|
+| `ActiveEditorSource` (`editor-request.ts`) | `vscode.window.activeTextEditor` | The staleness rules read a global three levels down, so they could not be tested. Two of the three defects fixed in 2.1.0 were staleness bugs. |
+| `CommandRunner` (`command-runner.ts`) | `vscode.commands.executeCommand` | `editor.action.codeAction` applies nothing in a headless test host, so "the refactoring was applied" and "it was not" were equally unobservable. Asserting the document was unchanged passed even with the guard deleted. |
+
+Neither was added for symmetry. Both replaced a place where a defect had
+already shipped and no test could have caught it. The second adapter in each
+case is a test fake rather than a second production implementation, which is
+a weaker justification than two real ones and is why there are two ports and
+not five.
 
 **One counter.** The only mutable state in the extension is
 `latestId` inside `createRequestFactory`'s closure. Call sites never see it.
