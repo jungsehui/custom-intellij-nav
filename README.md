@@ -323,7 +323,7 @@ Under `enableNavigationKeymap`:
 |---|---|---|
 | `⌘[` | Outdent Lines (still on `⇧Tab`) | Navigate Back |
 | `⌘]` | Indent Lines (still on `Tab`) | Move to bracket |
-| `⌘E` | Markdown Editor's *Toggle Locked*, only inside that editor (VS Code 1.135+, opened through *Open With…*) | Recent Files |
+| `⌘E` | Markdown Editor's *Toggle Locked*, only inside that editor (opened through *Open With…*; present in VS Code 1.140, absent through 1.136) | Recent Files |
 
 Under `enableRefactoringKeymap`:
 

@@ -446,6 +446,8 @@ and nothing of ours collides. Parse `KeyMod`/`KeyCode` in `.ts` and
 `"key"`/`"mac"` in extension `package.json`. Two limits: a registration
 split across lines is missed, and many hits are widget event handlers
 (`event.equals(KeyCode.RightArrow)`), not keybindings. Read each hit.
+In zsh, write `git show "${v}:extensions/..."`, never `"$v:extensions"`:
+`:e` is a modifier, so the path silently becomes `0xtensions/...`.
 
 **Who wins a collision** (1.140.0): `KeybindingWeight` is EditorCore 0,
 EditorContrib 100, WorkbenchContrib 200, SessionsContrib 250,
@@ -461,7 +463,7 @@ the `when` stripped of those terms and of `()&|!`; empty means exposed.
 
 | Chord | VS Code | Ours | Verdict |
 |---|---|---|---|
-| `⌘E` | `markdown.editor.toggleLocked`, `activeCustomEditorId == 'vscode.markdown.editor' && markdownEditorFocus && isMac` (markdown extension `package.json`, new) | `openRecent`, no focus condition | We win. **Kept**: IntelliJ's `⌘E` is Recent Files everywhere, and that editor is opt-in (`priority: option`). Listed in README *Displaced defaults* |
+| `⌘E` | `markdown.editor.toggleLocked`, `activeCustomEditorId == 'vscode.markdown.editor' && markdownEditorFocus && isMac` (markdown extension `package.json`; absent in 1.136.2, present in 1.140.0, checked in the cached test builds) | `openRecent`, no focus condition | We win. **Kept**: IntelliJ's `⌘E` is Recent Files everywhere, and that editor is opt-in (`priority: option`). Listed in README *Displaced defaults* |
 | `⌥↑` `⌥↓` `⇧⌥↑` `⇧⌥↓` `⌃J` | `markdown.editor.*`, same scope (new) | all require `editorTextFocus` | No conflict, *assuming* the custom editor, a webview, never sets `editorTextFocus`. Unverified |
 | `⌘W` | Agents Window close chat tab (`sessionsActions.ts` L869, SessionsContrib + 10); in 1.134 it was close session | `closeActiveEditor`, no focus condition | **Not new**, and was unrecorded. Whether user-extension keybindings load in the Agents Window at all is unverified |
 | `F2`, `⌘⌫` | Agents Window rename / archive session | require `editorTextFocus` / `textInputFocus` | No conflict |

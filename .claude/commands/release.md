@@ -27,7 +27,9 @@ Ask the user to confirm the bump.
 - Bump `package.json` `version`.
 - Prepend a new section to `CHANGELOG.md` with today's date and grouped
   `### Added`, `### Changed`, `### Fixed`. Match the v1.0.0 entry's
-  prose style.
+  prose style. If an `## [Unreleased]` section exists, rename it to the
+  new version instead of adding one above it, or its entries are
+  orphaned.
 - If the surface changed (new keys, new settings, new commands), update
   the relevant tables in `README.md`.
 

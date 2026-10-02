@@ -64,6 +64,11 @@ not silent.
 - That the weekly schedule fires: known after the first Monday on `main`.
 - Whether user-extension keybindings load in the Agents Window at all.
 - That the Markdown Editor, a webview, never sets `editorTextFocus`.
+- The new refactor suite on Linux. It has run only on macOS; the xvfb run
+  on a cold language server happens on the first CI run after push.
+- Which of 1.137 to 1.139 added the Markdown Editor's `⌘E`. Narrowing it
+  failed twice on zsh's `$v:e` modifier and was stopped there; README
+  says what is known (absent through 1.136, present in 1.140).
 - TypeScript 6.0.3: `tsc --noEmit` is clean on all 22 files; lint under it
   was not run. typescript-eslint 8.71 still caps TS at `<6.1.0`, so TS 7
   stays blocked.
@@ -71,7 +76,8 @@ not silent.
 ## Next
 
 1. **Publish** the unreleased fix when convenient: `/release` as 2.3.4,
-   then upload the VSIX the tag build attaches.
+   renaming `## [Unreleased]` rather than adding a section above it, then
+   upload the VSIX the tag build attaches.
 2. **On or after 2026-10-19**: plan Task 4 (v3.0.0). Ask before deleting
    `src/test/migrate-settings.test.ts`.
 3. **Each VS Code release**: diff from 1.140.0 per conventions.md.
