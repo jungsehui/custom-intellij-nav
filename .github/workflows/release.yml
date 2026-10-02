@@ -7,6 +7,16 @@ on:
       - main
     tags:
       - "v*"
+  # Weekly, Monday 00:00 UTC (09:00 KST). VS Code ships whether or not this
+  # repo does: between 2026-09-09 and 2026-10-02 it went from 1.134 to 1.140
+  # while CI ran zero times. .vscode-test.mjs pins no version, so each run
+  # tests whatever stable is that day.
+  #
+  # Two GitHub limits: schedules run on the default branch only, and GitHub
+  # disables them after 60 days without repository activity. The `release`
+  # job is gated on a tag ref, so a scheduled run never publishes anything.
+  schedule:
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 permissions:
