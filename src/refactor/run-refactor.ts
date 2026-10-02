@@ -92,6 +92,14 @@ export async function runRefactor(
     }
   }
 
+  // A superseded request must not write to the UI, the same rule navigation
+  // follows. The prefetches above are awaits; if a newer request started
+  // during them, the user has moved on, and "No Extract Method available"
+  // would describe a place they already left.
+  if (request.isStale()) {
+    return;
+  }
+
   const outcome = describeOutcome(action, langId, sawError);
   logger.showStatus(outcome.status);
 

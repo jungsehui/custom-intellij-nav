@@ -6,6 +6,17 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed — a superseded refactoring still reported "not available"
+
+Navigation has long followed one rule: a request that a newer one overtook
+does not write to the UI. Refactoring did not. If you pressed Extract
+Method, then `⌘B` while the language server was still answering, and the
+server came back empty, the old request put "No Extract Method available"
+on the status bar, and for a measured language a notification too, about a
+place you had already left. It now drops out silently, like navigation.
+
 ## [2.3.3] — 2026-08-31
 
 ### Fixed — the language-server wait took the whole suite down with it

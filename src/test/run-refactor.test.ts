@@ -242,3 +242,83 @@ suite("runRefactor", () => {
     assert.deepStrictEqual(dispatched(), []);
   });
 });
+
+/** Records the status bar instead of writing to it. */
+class RecordingLogger extends Logger {
+  readonly statuses: string[] = [];
+
+  public override showStatus(message: string): void {
+    this.statuses.push(message);
+  }
+}
+
+/**
+ * A request that is, or is not, overtaken by a newer one.
+ *
+ * Both predicates answer the same: a request a newer one replaced is stale
+ * in every sense. In these tests the prefetch finds nothing, so only the
+ * "nothing available" path runs.
+ */
+function overtakenRequest(
+  editor: vscode.TextEditor,
+  overtaken: boolean,
+): BeginRequest {
+  const request: EditorRequest = {
+    id: 1,
+    editor,
+    snapshot: captureSnapshot(editor),
+    isStale: () => overtaken,
+    isSelectionStale: () => overtaken,
+    log: () => undefined,
+  };
+
+  return () => request;
+}
+
+suite("runRefactor, once nothing is available", () => {
+  // TypeScript offers no source.overrideMethods, so the prefetch is a real
+  // await that comes back empty. That is the path that writes to the status
+  // bar, and for a measured language also raises a notification.
+  const OVERRIDE_TARGET = "class A {}\nclass B extends A {}\n";
+
+  teardown(async () => {
+    await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+  });
+
+  test("says so on the status bar", async () => {
+    // The control. Without it, the test below would pass against a
+    // recorder that records nothing.
+    const editor = await openTypescript(OVERRIDE_TARGET);
+    const logger = new RecordingLogger();
+    const { runner } = recordingCommands();
+
+    await runRefactor(
+      "overrideMethods",
+      overtakenRequest(editor, false),
+      runner,
+      logger,
+    );
+    logger.dispose();
+
+    assert.strictEqual(logger.statuses.length, 1);
+  });
+
+  test("says nothing once a newer request has taken over", async () => {
+    // Navigation's rule, which refactoring did not follow: a superseded
+    // request must not write to the UI. The user has already moved on, and
+    // "No Override Methods available" would describe a place they left.
+    const editor = await openTypescript(OVERRIDE_TARGET);
+    const logger = new RecordingLogger();
+    const { runner } = recordingCommands();
+
+    await runRefactor(
+      "overrideMethods",
+      overtakenRequest(editor, true),
+      runner,
+      logger,
+    );
+    logger.dispose();
+
+    assert.deepStrictEqual(logger.statuses, []);
+  });
+});
