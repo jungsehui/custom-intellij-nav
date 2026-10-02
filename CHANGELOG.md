@@ -6,6 +6,40 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.3.5] — 2026-10-02
+
+### Fixed — `⌘W` and `⌘\` took VS Code's contextual defaults away
+
+Both re-bound a chord to the command VS Code already gives it: `⌘W` to
+Close Active Editor, `⌘\` to Split Editor. That changed nothing you could
+see except priority. An extension's keybinding outranks every built-in one,
+so with the Editing or Workbench keymap on, these two beat every
+*contextual* default on the same chord:
+
+- `⌘W`: Close Window when no editor is open, Close Group on an empty group
+  in a split, Restore Auxiliary Bar while it is maximized, and Kill Terminal
+  Editor. Very likely Close Chat Tab in the Agents Window too.
+- `⌘\`: Split Terminal in the terminal, and Split Active Tab in the
+  terminal tabs.
+
+Neither is bound any more. This is not a breaking change: VS Code's own
+`⌘W` and `⌘\` run the same commands, so closing and splitting editors work
+exactly as before, and the contextual defaults come back. Coverage of
+k--kato's chords goes from 138 to 137 of 157 (87.3%), because k--kato binds
+`⌘W`; it moves to the "already the default" list. A new test fails if
+either pair is bound again.
+
+### Documented — what the remaining keys displace
+
+Every binding whose `when` has no focus condition (25 of 166) was checked
+against the default keybindings VS Code 1.140 reports about itself, and
+README *Displaced defaults* is now complete for them. The notable additions:
+`⌘E` takes Use Selection for Find, `⌥⌘←` / `⌥⌘→` take Previous / Next
+Editor (still on `⇧⌘[` / `⇧⌘]`), `⇧⌘Space` takes Trigger Parameter Hints,
+`⌥F12` takes Peek Definition, and `⌘3` / `⌘5` / `⌘7` take Focus Third /
+Fifth / Seventh Editor Group. These stay: each is the IntelliJ meaning of
+the key.
+
 ## [2.3.4] — 2026-10-02
 
 ### Fixed — a superseded refactoring still reported "not available"
