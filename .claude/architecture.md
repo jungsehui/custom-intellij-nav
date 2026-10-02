@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~2,453 LOC across 22 files (9 of them tests, 1,347 LOC). Two user-facing capabilities:
+A single VS Code extension. ~2,530 LOC across 23 files (10 of them tests, 1,424 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
@@ -9,7 +9,7 @@ A single VS Code extension. ~2,453 LOC across 22 files (9 of them tests, 1,347 L
    prefetch-based dispatcher that avoids the "No preferred code actions"
    toast.
 
-On top of those, a curated **168-keybinding IntelliJ Mac keymap** spread
+On top of those, a curated **166-keybinding IntelliJ Mac keymap** spread
 across 11 functional categories plus one feature toggle.
 
 ## Module graph
@@ -89,7 +89,7 @@ convention. `location-utils.ts` is deliberately outside the ring: it calls
 | Surface | Count | Notes |
 |---|---|---|
 | Commands | 8 | All in the `intellij.*` namespace |
-| Keybindings | 168 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
+| Keybindings | 166 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
 | Settings | 17 | 11 category toggles + 1 feature toggle + 2 deprecated + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)

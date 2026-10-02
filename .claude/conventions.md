@@ -53,6 +53,12 @@
 - **Don't run `vsce publish` from a tag-triggered CI job without a PAT
   rotation plan.** PATs expire. Either keep the manual publish
   ritual or set up a calendar reminder.
+- **Don't re-bind a chord to the command VS Code already gives it.** It
+  changes nothing visible except priority, and an extension's binding
+  outranks every built-in one, so it silently beats every *contextual*
+  default on that chord. `⌘W` → `closeActiveEditor` took Close Window,
+  Close Group and three more until 2.3.5. `src/test/keymap-manifest.test.ts`
+  holds the measured pairs; add to it when you find another.
 - **Don't use `cmd+.` for Toggle Fold without a flag.** It's VS Code's
   default Quick Fix. Mapping it would silently break a heavily-used
   built-in. If we add Toggle Fold, do it under `enableEditingKeymap`
@@ -440,9 +446,11 @@ git diff -U0 1.140.0 NEW -- src/vs extensions ':!*.test.ts' ':!**/test/**' > kb.
 
 Intersect every added *and removed* chord with two sets: ours (normalized
 as in the coverage section below) and the defaults we rely on without
-binding (roadmap.md, *이미 기본에 있던 것*). The second set is the one a
-check of our own chords cannot see: if VS Code moves `⌘G`, parity breaks
-and nothing of ours collides. Parse `KeyMod`/`KeyCode` in `.ts` and
+binding. The second set is the one a check of our own chords cannot see:
+if VS Code moves one, parity breaks and nothing of ours collides. It is
+only three chords: `⌘,`, `⌘↑`, `⌘↓`. *Corrected 2026-10-02*: this used to
+say fourteen, from roadmap.md's *이미 기본에 있던 것*, but we bind eleven of
+those ourselves, mostly to pair them with a camelHumps variant. Parse `KeyMod`/`KeyCode` in `.ts` and
 `"key"`/`"mac"` in extension `package.json`. Two limits: a registration
 split across lines is missed, and many hits are widget event handlers
 (`event.equals(KeyCode.RightArrow)`), not keybindings. Read each hit.
@@ -454,20 +462,64 @@ EditorContrib 100, WorkbenchContrib 200, SessionsContrib 250,
 BuiltinExtension 300, ExternalExtension 400 (`keybindingsRegistry.ts`
 L62). We are ExternalExtension. The resolver walks matches from the end
 (`keybindingResolver.ts` L381), so when both `when` clauses hold, we win.
-The exposure is therefore our 27 bindings (of 168) whose `when` holds
-nothing but `isMac` and `config.*` terms: any contextual default VS Code
-later adds on one of those chords loses to us, silently. Count them with
-the `when` stripped of those terms and of `()&|!`; empty means exposed.
+The exposure is therefore our bindings whose `when` holds nothing but
+`isMac` and `config.*` terms: 25 of 166 since 2.3.5 (27 of 168 before it).
+Any contextual default VS Code later adds on one of those chords loses to
+us, silently. Count them with the `when` stripped of those terms and of
+`()&|!`; empty means exposed.
 
 1.134.0 → 1.140.0:
 
 | Chord | VS Code | Ours | Verdict |
 |---|---|---|---|
 | `⌘E` | `markdown.editor.toggleLocked`, `activeCustomEditorId == 'vscode.markdown.editor' && markdownEditorFocus && isMac` (markdown extension `package.json`; absent in 1.136.2, present in 1.140.0, checked in the cached test builds) | `openRecent`, no focus condition | We win. **Kept**: IntelliJ's `⌘E` is Recent Files everywhere, and that editor is opt-in (`priority: option`). Listed in README *Displaced defaults* |
-| `⌥↑` `⌥↓` `⇧⌥↑` `⇧⌥↓` `⌃J` | `markdown.editor.*`, same scope (new) | all require `editorTextFocus` | No conflict, *assuming* the custom editor, a webview, never sets `editorTextFocus`. Unverified |
-| `⌘W` | Agents Window close chat tab (`sessionsActions.ts` L869, SessionsContrib + 10); in 1.134 it was close session | `closeActiveEditor`, no focus condition | **Not new**, and was unrecorded. Whether user-extension keybindings load in the Agents Window at all is unverified |
+| `⌥↑` `⌥↓` `⇧⌥↑` `⇧⌥↓` `⌃J` | `markdown.editor.*`, same scope (new) | all require `editorTextFocus` | No conflict. Confirmed from source: the editor is a `CustomTextEditorProvider` rendering into a `WebviewPanel` (`markdownEditorProvider.ts` L175, L220-225); `editorTextFocus` belongs to the code editor widget (`codeEditorWidget.ts` L129), and the webview and custom-editor code never mention it (control: 10 files there mention `focus`) |
+| `⌘W` | Agents Window close chat tab (`sessionsActions.ts` L869, SessionsContrib + 10); in 1.134 it was close session | `closeActiveEditor`, no focus condition | **Not new**, and was unrecorded. The Agents Window loads the workbench keybinding service and an extension host (`sessions.common.main.ts` L86, `sessions.desktop.main.ts` L97), so ours very likely won there too. **Removed in 2.3.5**; see the audit below |
 | `F2`, `⌘⌫` | Agents Window rename / archive session | require `editorTextFocus` / `textInputFocus` | No conflict |
-| 14 relied-upon defaults | unchanged: 0 hits (control: adding `alt+up` gave 3) | not bound | Parity intact |
+| 14 chords from roadmap.md's *이미 기본에 있던 것* | unchanged: 0 hits (control: adding `alt+up` gave 3) | 11 bound, 3 not | Parity intact |
+
+### Audit the exposed bindings against VS Code's own default keybindings
+
+The tag diff above parses source, so it misses registrations split across
+lines and cannot tell a keybinding from a key handler. VS Code will print
+its resolved defaults itself, which is the better instrument. Run a test
+host with a throwaway extension and read the virtual document:
+
+```js
+// extensionTestsPath module, run via @vscode/test-electron runTests()
+const doc = await vscode.workspace.openTextDocument(
+  vscode.Uri.parse("vscode://defaultsettings/keybindings.json"));
+fs.writeFileSync(out, doc.getText());   // JSONC: strip comments first
+```
+
+Wait a few seconds after start so every built-in manifest is read. Then
+check controls before trusting it: `cmd+w` must show both
+`closeActiveEditor` and `closeWindow`, `cmd+e` must show
+`markdown.editor.toggleLocked` (a built-in *extension* binding), and
+nothing may mention `customIntellijNav`. On macOS the result is already
+platform-resolved: 1,306 entries for 1.140.0, `isMac` folded away.
+
+One trap: `--user-data-dir` must be a short path. VS Code puts a Unix
+socket in it, macOS caps socket paths at 104 bytes, and a long scratch
+path dies with `listen EINVAL` before any test code runs.
+`.vscode-test/kbdump-ud` works.
+
+Result on 1.140.0, all 168 bindings then present:
+
+- **Pure duplicates** (same chord, command and args; the default has no
+  `when`): 5. `⌘W` and `⌘\` were also exposed, displaced 4 and 2
+  defaults, and had no recorded reason, so **2.3.5 removes them**.
+  `⇧⌘[` / `⇧⌘]` are kept: roadmap.md records them as an explicit
+  re-registration, gated `!terminalFocus`. `⌘X` is kept: its `when`
+  already requires `editorTextFocus`, so it displaces nothing.
+- **Conditional duplicates** (the default has a narrower `when`): 14,
+  mostly the word-motion keys. Removing ours would lose behaviour outside
+  that `when`, so these stay.
+- **Displacements** by the 25 exposed bindings that remain: listed in
+  README *Displaced defaults*, which is now complete for them. This
+  overrides the reading in *An audit that cannot separate scope is not an
+  audit*: for a binding with no focus condition, "only in chat or the
+  terminal" is still a real displacement, because 400 wins there too.
 
 ### Verify every context key before putting it in a `when`
 

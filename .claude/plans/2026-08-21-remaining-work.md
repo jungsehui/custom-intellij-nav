@@ -262,7 +262,7 @@ git commit -m "docs: v2.1.0 handoff, and close the two resolved roadmap unknowns
 ### Task 4: v3.0.0 deprecation removal — planned, gated, NOT executed now
 
 **Files (when the gate opens, not now):**
-- Modify: `package.json` — delete the two deprecated settings; strip `|| config.customIntellijNav.enableExtendedMacKeymap` from 17 `when` clauses
+- Modify: `package.json` — delete the two deprecated settings; strip `|| config.customIntellijNav.enableExtendedMacKeymap` from 16 `when` clauses (17 until 2.3.5 removed `⌘\`)
 - Delete: `src/core/migrate-settings.ts`
 - Delete: `src/test/migrate-settings.test.ts` (14 tests). It is orphaned once its subject is gone, but deleting a test file needs the user's explicit go-ahead at that time (global AGENTS.md §2.3). Ask; do not assume.
 - Modify: `src/extension.ts` (drop the `migrateLegacySettings` import and call). *Corrected 2026-10-02: this used to name `src/core/navigator.ts`, which v2.3.0 deleted.*
@@ -291,7 +291,7 @@ console.log("bundled when-refs:", KB.filter(b=>(b.when||"").includes("enableBund
 console.log("extended when-refs:", KB.filter(b=>(b.when||"").includes("enableExtendedMacKeymap")).length);
 '
 ```
-Expected today: `bundled when-refs: 0`, `extended when-refs: 17`.
+Expected today: `bundled when-refs: 0`, `extended when-refs: 16`.
 
 - [ ] **Step 2 (when gated open): Strip the shims**
 
