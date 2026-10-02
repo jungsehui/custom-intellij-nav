@@ -210,11 +210,6 @@
         "when": "isMac && sideBarFocus && activeViewlet == 'workbench.view.explorer' && (config.customIntellijNav.enableToolWindowKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
       },
       {
-        "command": "workbench.action.splitEditor",
-        "mac": "cmd+\\",
-        "when": "isMac && (config.customIntellijNav.enableWorkbenchKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
-      },
-      {
         "command": "testing.runAtCursor",
         "mac": "ctrl+shift+r",
         "when": "isMac && editorTextFocus && (config.customIntellijNav.enableRunKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
@@ -328,11 +323,6 @@
         "command": "editor.action.showHover",
         "mac": "ctrl+j",
         "when": "isMac && editorTextFocus && !vim.use<C-j> && config.customIntellijNav.enableEditingKeymap"
-      },
-      {
-        "command": "workbench.action.closeActiveEditor",
-        "mac": "cmd+w",
-        "when": "isMac && config.customIntellijNav.enableEditingKeymap"
       },
       {
         "command": "workbench.action.openRecent",

@@ -61,7 +61,7 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌘⌥⇧N` | Go to Symbol in Workspace |
 | `⌘N` / `⌘⇧N` | New File / Folder (Explorer) |
 | `⌘1` | Focus / toggle Explorer |
-| `⌘\` | Split Editor |
+| `⌘\` | Split Editor (VS Code's own default; not re-bound since 2.3.5) |
 | `⌃⇧R` / `⌃⇧D` | Run / Debug Test at Cursor |
 | `⌥J` | Add Selection to Next Find Match |
 | `⌘⌃G` | Select Highlights |
@@ -93,7 +93,7 @@ Optional keymap categories (each independently toggleable via settings, default 
 | `⌃J` | Quick documentation |
 | `F1` | Quick documentation lookup |
 | `⌘F1` | Show error/warning at caret |
-| `⌘W` | Close active editor |
+| `⌘W` | Close active editor (VS Code's own default; not re-bound since 2.3.5) |
 | `⌘Home` / `⌘End` | Move caret to text start / end |
 | `⌃G` / `⌃⇧G` | Add selection to next occurrence / unselect |
 | `⇧⌘8` | Column selection mode |
@@ -307,6 +307,12 @@ Turning on `enableEditingKeymap` takes five keys away from VS Code. This
 is deliberate, because IntelliJ uses those keys for something else, but
 you should know before you flip the switch.
 
+The keys that carry no focus condition matter most: an extension's binding
+outranks every built-in one, so such a key wins in every context, chat and
+terminal included. In 2.3.5 each of them was checked against the default
+keybindings VS Code 1.140 itself reports, and for those keys the tables below
+are complete.
+
 Under `enableEditingKeymap`:
 
 | Key | VS Code default you lose | What it becomes |
@@ -323,7 +329,19 @@ Under `enableNavigationKeymap`:
 |---|---|---|
 | `⌘[` | Outdent Lines (still on `⇧Tab`) | Navigate Back |
 | `⌘]` | Indent Lines (still on `Tab`) | Move to bracket |
-| `⌘E` | Markdown Editor's *Toggle Locked*, only inside that editor (opened through *Open With…*; present in VS Code 1.140, absent through 1.136) | Recent Files |
+| `⌘E` | **Use Selection for Find**; Markdown Editor's *Toggle Locked* inside that editor (opened through *Open With…*; present in VS Code 1.140, absent through 1.136); Toggle Screen Reader Mode inside accessibility help | Recent Files |
+| `⌘L` | Expand Line Selection (in text inputs); Focus URL (integrated browser) | Go to Line |
+| `⌥⌘←` / `⌥⌘→` | **Previous / Next Editor** (still on `⇧⌘[` / `⇧⌘]`); focus previous / next pane in a split terminal; Accept in Background (`⌥⌘→` in Quick Open) | Back / Forward |
+| `⇧⌘⌫` | Delete File Results (search editor); Unarchive (agent sessions view) | Last Edit Location |
+
+Under `enableSearchKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⇧⌘A` | Open Agents Window; focus helpers in chat, notifications and the integrated browser | Find Action |
+| `⇧⌘Space` | **Trigger Parameter Hints** (in the editor; this keymap's Parameter Info is `⌘P`); voice input in chat | Search Everywhere |
+| `⇧⌘F` | Search Workspace from a terminal selection | Find in Files |
+| `⇧⌘R` | Search Again (search editor); Hard Reload (integrated browser); issue reporter recording | Replace in Files |
 
 Under `enableRefactoringKeymap`:
 
@@ -349,13 +367,22 @@ Under `enableToolWindowKeymap`:
 | `⌘1` | Focus First Editor Group | Project (Explorer) |
 | `⌘0` | Focus into Primary Side Bar | Problems |
 | `⌘9` | Open Last Editor in Group — *secondary only*, `⌥0` / `⌃0` still work | Version control |
+| `⌘3` / `⌘5` / `⌘7` | **Focus Third / Fifth / Seventh Editor Group** | Find / Debug / Structure |
+| `⌥F12` | **Peek Definition** (in the editor) | Terminal |
+| `⌘Numpad0` | **Reset Zoom**; reset zoom in the integrated browser | Problems |
 
 Under `enableWorkbenchKeymap`:
 
 | Key | VS Code default you lose | What it becomes |
 |---|---|---|
-| `⇧F12` | **Go to References** (Find Usages is on `⌥F7`) | Restore Default Layout |
+| `⇧F12` | **Go to References** (Find Usages is on `⌥F7`); Go to Previous Reference in the references view | Restore Default Layout |
 | `⌘⇧C` | Open New External Terminal, outside the editor only | Copy Path |
+
+Under `enableVcsKeymap`:
+
+| Key | VS Code default you lose | What it becomes |
+|---|---|---|
+| `⇧⌥⌘G` | Announce Cursor Position (screen reader mode only) | Git Graph |
 
 Under `enableRunKeymap`:
 
@@ -510,7 +537,7 @@ Category mapping, if you are used to k--kato's single on/off model:
 
 ## Coverage and what is deliberately missing
 
-138 of k--kato's 157 unique Mac chords are covered (87.9%). The other 19
+137 of k--kato's 157 unique Mac chords are covered (87.3%). The other 20
 are not oversights — each has a recorded reason:
 
 | Chord | IntelliJ action | Why not |
@@ -525,6 +552,7 @@ are not oversights — each has a recorded reason:
 | `` ⌃` `` | Quick Switch Scheme | it is Toggle Terminal; Select Theme is `⌘K ⌘T` |
 | `⌃⇥` | Switcher | VS Code's `⌃⇥` already is the switcher |
 | `⌘,` / `⌘numpad,` | Preferences | already `openGlobalSettings` |
+| `⌘W` | Close Tab | VS Code's own `⌘W` already closes the active editor. Until 2.3.5 this keymap re-bound it anyway, which only raised its priority and took Close Window, Close Group and three other contextual defaults away |
 | `⌘↑` / `⌘↓` | Nav Bar / View source | macOS document start and end; MacBooks have no Home / End key |
 | `↩` / `⇥` / `⌃↩` | various | identical to VS Code defaults, or notebook-only |
 | `⌘⇧↩` | Complete Current Statement | deferred |
