@@ -6,7 +6,7 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [2.3.4] — 2026-10-02
 
 ### Fixed — a superseded refactoring still reported "not available"
 
@@ -16,6 +16,15 @@ Method, then `⌘B` while the language server was still answering, and the
 server came back empty, the old request put "No Extract Method available"
 on the status bar, and for a measured language a notification too, about a
 place you had already left. It now drops out silently, like navigation.
+
+### Changed — checked against VS Code 1.140
+
+VS Code shipped 1.135 through 1.140 since the last release. The suite passes
+on 1.140.0, and the default keybindings were re-measured across that range.
+One new overlap: inside the Markdown Editor (opened through *Open With…*),
+`⌘E` stays Recent Files rather than the editor's *Toggle Locked*. It is
+listed under *Displaced defaults*. CI now also runs weekly, so the next
+VS Code release is tested even if this repository is quiet.
 
 ## [2.3.3] — 2026-08-31
 
