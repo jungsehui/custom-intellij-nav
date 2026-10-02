@@ -19,6 +19,11 @@ out/test/**
 .planning/**
 .claude/**
 CLAUDE.md
+# Codex's view of the same docs. vsce follows symlinks, so ignoring
+# CLAUDE.md does not cover AGENTS.md.
+AGENTS.md
+.agents/**
+.codex/**
 .cursor/**
 .idea/**
 .github/**

@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'root=$(git rev-parse --show-toplevel 2>/dev/null) || { echo \"{}\"; exit 0; }; changed=$(git -C \"$root\" diff --name-only HEAD 2>/dev/null; git -C \"$root\" diff --name-only --cached 2>/dev/null); if echo \"$changed\" | grep -qE \"^(src/|package\\.json|\\.github/workflows/)\" && ! echo \"$changed\" | grep -qE \"^(README\\.md|CHANGELOG\\.md|CLAUDE\\.md|\\.claude/)\"; then echo \"{\\\"systemMessage\\\":\\\"[keep-docs-current] Code changed but docs (README/CHANGELOG/.claude/) were not updated this session. Consider running /docs-sync before wrapping.\\\"}\"; else echo \"{}\"; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}

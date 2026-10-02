@@ -1,6 +1,7 @@
 # CLAUDE.md — custom-intellij-nav
 
-Auto-loaded entry point for any Claude Code session in this repo. Keep it under
+Auto-loaded entry point for Claude Code, and for Codex via `AGENTS.md`, which
+is a symlink to this file. Never replace it with a copy. Keep this file under
 60 lines. Detail lives in `.claude/`.
 
 ## Project at a glance
@@ -52,8 +53,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 ## Slash commands
 
 - `/ship` — typecheck + compile + package + install (dev loop).
-- `/release` — bump version + CHANGELOG + commit + push + tag (when ready
-  to publish).
+- `/release` — bump version + CHANGELOG + commit + push + tag, to publish.
 - `/docs-sync` — re-sync README/CHANGELOG/handoff after a code change.
 
 See `.claude/commands/` for the actual definitions.
