@@ -25,7 +25,8 @@ machines.
 ```
 
 The root `CLAUDE.md` is the auto-loaded entry — it points into this
-folder. Keep `CLAUDE.md` short (under 60 lines); detail belongs here.
+folder. Codex reads the same file through `AGENTS.md`, a symlink, and
+`.agents/skills/` holds pointers back to `commands/` and `skills/`. Keep `CLAUDE.md` short (under 60 lines); detail belongs here.
 
 ## Reading order for a fresh session
 

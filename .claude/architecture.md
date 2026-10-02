@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~2,365 LOC across 22 files (9 of them tests, 1,267 LOC). Two user-facing capabilities:
+A single VS Code extension. ~2,453 LOC across 22 files (9 of them tests, 1,347 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
@@ -36,7 +36,7 @@ src/extension.ts (54 LOC) — builds the Logger, both port adapters and the
 ├─ src/navigation/go-to-declaration.ts (226 LOC) — cmd+B handler
 │  └─ src/navigation/location-utils.ts (76 LOC) — dedupe, normalize,
 │         and RawLocation
-└─ src/refactor/run-refactor.ts (101 LOC) — the adapter: talks to VS Code
+└─ src/refactor/run-refactor.ts (109 LOC) — the adapter: talks to VS Code
    └─ src/refactor/policy.ts (95 LOC) — the decisions: which chain, whether
    │     we may call a language unsupported, what to say. No vscode.
    └─ src/refactor/language-action-table.ts (186 LOC) — per-lang kind

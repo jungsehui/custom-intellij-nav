@@ -42,9 +42,12 @@ gh auth switch -u jungsehui  # repo owner — gh default is jungsehui202
 git push origin main --tags
 ```
 
-The tag triggers `.github/workflows/release.yml`'s `publish` job (if a
-PAT is configured for `vsce publish`). Currently the workflow builds the
-VSIX in CI but doesn't publish — see `.github/workflows/release.yml`.
+The tag triggers `.github/workflows/release.yml`: check, lint, test,
+package, then the `release` job attaches the VSIX to the GitHub Release.
+There is no `vsce publish` job and no PAT; the Marketplace upload is manual
+(see below). The same build also runs on every push to `main`, on pull
+requests, and weekly on Monday 00:00 UTC against the VS Code stable of
+that day.
 
 The slash command `/release` walks this with prompts.
 

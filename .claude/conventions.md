@@ -423,6 +423,50 @@ plausible wrong answer rather than an error:
 Rule: pair every zero-hit result with a positive control in the same
 command. If the control is also zero, the instrument is broken.
 
+### Re-measure each VS Code release by diffing tags
+
+**Baseline: 1.140.0, measured 2026-10-02.** Diff from there next time.
+The corpus before it was `main` on 2026-08-21, which is newer than tag
+1.134.0 (2026-08-19), so `1.134.0..1.140.0` covered it. A range that
+starts too early only adds hits; one that starts too late hides them.
+
+```bash
+git init vsdiff && cd vsdiff
+git remote add origin https://github.com/microsoft/vscode.git
+git fetch --depth=1 --filter=blob:none origin \
+  refs/tags/1.140.0:refs/tags/1.140.0 refs/tags/NEW:refs/tags/NEW
+git diff -U0 1.140.0 NEW -- src/vs extensions ':!*.test.ts' ':!**/test/**' > kb.diff
+```
+
+Intersect every added *and removed* chord with two sets: ours (normalized
+as in the coverage section below) and the defaults we rely on without
+binding (roadmap.md, *이미 기본에 있던 것*). The second set is the one a
+check of our own chords cannot see: if VS Code moves `⌘G`, parity breaks
+and nothing of ours collides. Parse `KeyMod`/`KeyCode` in `.ts` and
+`"key"`/`"mac"` in extension `package.json`. Two limits: a registration
+split across lines is missed, and many hits are widget event handlers
+(`event.equals(KeyCode.RightArrow)`), not keybindings. Read each hit.
+
+**Who wins a collision** (1.140.0): `KeybindingWeight` is EditorCore 0,
+EditorContrib 100, WorkbenchContrib 200, SessionsContrib 250,
+BuiltinExtension 300, ExternalExtension 400 (`keybindingsRegistry.ts`
+L62). We are ExternalExtension. The resolver walks matches from the end
+(`keybindingResolver.ts` L381), so when both `when` clauses hold, we win.
+The exposure is therefore our 27 bindings (of 168) whose `when` holds
+nothing but `isMac` and `config.*` terms: any contextual default VS Code
+later adds on one of those chords loses to us, silently. Count them with
+the `when` stripped of those terms and of `()&|!`; empty means exposed.
+
+1.134.0 → 1.140.0:
+
+| Chord | VS Code | Ours | Verdict |
+|---|---|---|---|
+| `⌘E` | `markdown.editor.toggleLocked`, `activeCustomEditorId == 'vscode.markdown.editor' && markdownEditorFocus && isMac` (markdown extension `package.json`, new) | `openRecent`, no focus condition | We win. **Kept**: IntelliJ's `⌘E` is Recent Files everywhere, and that editor is opt-in (`priority: option`). Listed in README *Displaced defaults* |
+| `⌥↑` `⌥↓` `⇧⌥↑` `⇧⌥↓` `⌃J` | `markdown.editor.*`, same scope (new) | all require `editorTextFocus` | No conflict, *assuming* the custom editor, a webview, never sets `editorTextFocus`. Unverified |
+| `⌘W` | Agents Window close chat tab (`sessionsActions.ts` L869, SessionsContrib + 10); in 1.134 it was close session | `closeActiveEditor`, no focus condition | **Not new**, and was unrecorded. Whether user-extension keybindings load in the Agents Window at all is unverified |
+| `F2`, `⌘⌫` | Agents Window rename / archive session | require `editorTextFocus` / `textInputFocus` | No conflict |
+| 14 relied-upon defaults | unchanged: 0 hits (control: adding `alt+up` gave 3) | not bound | Parity intact |
+
 ### Verify every context key before putting it in a `when`
 
 A `when` clause that names a context key which does not exist never

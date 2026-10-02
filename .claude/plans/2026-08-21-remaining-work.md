@@ -264,7 +264,8 @@ git commit -m "docs: v2.1.0 handoff, and close the two resolved roadmap unknowns
 **Files (when the gate opens, not now):**
 - Modify: `package.json` — delete the two deprecated settings; strip `|| config.customIntellijNav.enableExtendedMacKeymap` from 17 `when` clauses
 - Delete: `src/core/migrate-settings.ts`
-- Modify: `src/core/navigator.ts` (drop `migrateLegacySettings`), `src/extension.ts` (drop the call)
+- Delete: `src/test/migrate-settings.test.ts` (14 tests). It is orphaned once its subject is gone, but deleting a test file needs the user's explicit go-ahead at that time (global AGENTS.md §2.3). Ask; do not assume.
+- Modify: `src/extension.ts` (drop the `migrateLegacySettings` import and call). *Corrected 2026-10-02: this used to name `src/core/navigator.ts`, which v2.3.0 deleted.*
 - Modify: `README.md` (drop the *Migrating to 2.0.0* section), `.claude/architecture.md`
 
 **Interfaces:**
@@ -275,8 +276,8 @@ git commit -m "docs: v2.1.0 handoff, and close the two resolved roadmap unknowns
 
 **Gate — all three must hold:**
 
-1. v2.1.0 or later has been on the Marketplace for at least one full release cycle, so `migrateLegacySettings` has actually run on installed machines.
-2. `enableBundledMacKeymap` has zero `when` references (already true — verify with the command below) **and** the migration has been shipping long enough that a fresh install cannot still carry the old key.
+1. **On or after 2026-10-19.** That is eight weeks after 2.2.0 went live on the Marketplace on 2026-08-24 (the user's upload report at 05:23Z and the Marketplace `lastUpdated` at 05:27Z agree). The migration first reached the Marketplace three days earlier, in 2.1.1 on 2026-08-21, so 2.2.0 is the later and more conservative anchor. *Set 2026-10-02.* It replaces "one full release cycle", which could never be checked: there is no telemetry, so whether the migration ran on installed machines is unknowable. Elapsed time with auto-update on is the measurable proxy.
+2. `enableBundledMacKeymap` has zero `when` references (already true — verify with the command below).
 3. The version bump is a major one, with the removal called out at the top of the CHANGELOG entry.
 
 - [ ] **Step 1 (when gated open): Confirm the current shim surface**
@@ -316,7 +317,7 @@ Expected: `shims stripped: 17`.
 ```bash
 git rm src/core/migrate-settings.ts
 ```
-Then remove the `migrateLegacySettings` import and method from `src/core/navigator.ts`, and the `void navigator.migrateLegacySettings();` line from `src/extension.ts`.
+Then remove the `migrateLegacySettings` import (L5) and the `void migrateLegacySettings(logger);` call (L41) from `src/extension.ts`. Deleting `src/test/migrate-settings.test.ts` waits for the user's explicit yes (see Files above).
 
 - [ ] **Step 4 (when gated open): Verify**
 
