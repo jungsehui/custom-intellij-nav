@@ -6,6 +6,17 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added — a keybinding audit for maintainers
+
+`npm run audit:keybindings` asks VS Code for its own macOS default
+keybindings and checks this keymap against them: chords re-bound to their
+own default, defaults displaced by keys with no focus condition, and what
+changed since a baseline version. It checks three controls first and
+refuses to conclude anything if one fails. It ships nothing to users: the
+script is excluded from the VSIX.
+
 ## [2.3.5] — 2026-10-02
 
 ### Fixed — `⌘W` and `⌘\` took VS Code's contextual defaults away

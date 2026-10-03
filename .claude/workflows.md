@@ -73,6 +73,22 @@ gh auth setup-git  # configures credential helper for the active account
 git push origin main
 ```
 
+## Re-measure keybindings after a VS Code release
+
+```bash
+npm run audit:keybindings -- --baseline 1.140.0
+```
+
+macOS only. It asks VS Code for its own default keybindings (stable by
+default, or pass a version), checks three controls before concluding
+anything, then reports pure duplicates, conditional duplicates, every
+default the exposed bindings displace, and what changed since the
+baseline on our chords and the three relied-upon ones. It exits 1 on a
+failed control or a pure duplicate that `KEPT_DUPLICATES` does not
+explain. Dumps are cached in `.vscode-test/kbdump/` (gitignored), so a
+baseline is downloaded and dumped once. When the result is clean, move
+the baseline in `.claude/conventions.md` to the new version.
+
 ## Tests
 
 `npm test` exists but the suite is a single smoke test

@@ -619,6 +619,10 @@ npm run compile
 
 Press `F5` in VS Code to open an Extension Development Host window.
 
+After a VS Code release, `npm run audit:keybindings -- --baseline 1.140.0`
+(macOS) checks this keymap against the default keybindings VS Code itself
+reports. See `.claude/workflows.md`.
+
 ## Packaging
 
 Requires Node.js 20+.

@@ -481,9 +481,15 @@ us, silently. Count them with the `when` stripped of those terms and of
 ### Audit the exposed bindings against VS Code's own default keybindings
 
 The tag diff above parses source, so it misses registrations split across
-lines and cannot tell a keybinding from a key handler. VS Code will print
-its resolved defaults itself, which is the better instrument. Run a test
-host with a throwaway extension and read the virtual document:
+lines and cannot tell a keybinding from a key handler, nor see a `when`
+change. VS Code will print its resolved defaults itself, which is the
+better instrument. **`npm run audit:keybindings -- --baseline 1.140.0`**
+(`scripts/audit-default-keybindings.mjs`) does all of what follows; the
+tag diff is now the fallback. Proven against a known change: run on
+1.136.2 with the 1.140.0 baseline, it reports the Markdown Editor's `⌘E`
+as absent, and it lists 24 differences there, 14 of them `when` edits the
+source diff could not see. What it does: run a test host with a
+throwaway extension and read the virtual document:
 
 ```js
 // extensionTestsPath module, run via @vscode/test-electron runTests()
@@ -493,10 +499,13 @@ fs.writeFileSync(out, doc.getText());   // JSONC: strip comments first
 ```
 
 Wait a few seconds after start so every built-in manifest is read. Then
-check controls before trusting it: `cmd+w` must show both
-`closeActiveEditor` and `closeWindow`, `cmd+e` must show
-`markdown.editor.toggleLocked` (a built-in *extension* binding), and
-nothing may mention `customIntellijNav`. On macOS the result is already
+check controls before trusting it: `cmd+w` must show `closeActiveEditor`,
+a long-standing built-in *extension* binding must be there (the script
+uses `cmd+k v` → `markdown.showPreviewToSide`), and nothing may mention
+`customIntellijNav`. One limit: a few keybindings register only when their
+view first loads, so the dump is a lower bound for those. Two runs on
+1.140.0 differed by two `escape` bindings (the Models editor's search and
+the Output filter), neither on our chords. On macOS the result is already
 platform-resolved: 1,306 entries for 1.140.0, `isMac` folded away.
 
 One trap: `--user-data-dir` must be a short path. VS Code puts a Unix
