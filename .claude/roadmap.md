@@ -302,6 +302,9 @@ suggestion accept와 notebook 셀 실행이고, VS Code 기본과 사실상 동�
   `(새 카테고리 || enableExtendedMacKeymap)`, `cmd+b`는
   `enableGoToDeclarationOrUsages && enableBundledMacKeymap`. 덕분에
   기존 설정이 명시적으로 true든 false든 동작이 완전히 보존된다. 3.0.0에서 제거.
+  (*2026-10-04 실제*: 3.0.0은 `enableExtendedMacKeymap`과 그 `||` 16곳만 제거했다.
+  `enableBundledMacKeymap`은 마이그레이션이 그 키를 지워야 해서 선언을 유지한다.
+  VS Code는 선언되지 않은 키에 쓰지 못한다. 상세는 plans Task 4 머리말.)
 
 **부수 수확 — 미문서 변위 4건**: 전 chord 154개를 전체 소스와 대조해서
 `cmd+b`(Toggle Primary Side Bar), `cmd+1`(Focus First Editor Group),

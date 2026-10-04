@@ -74,4 +74,29 @@ suite("keymap manifest", () => {
 
     assert.deepStrictEqual(rebound, []);
   });
+
+  test("every setting a when clause names is a declared setting", () => {
+    // `config.x` of an undeclared key is never true, and VS Code says
+    // nothing. A typo, or a setting removed from `configuration` but not
+    // from the `when` clauses, silently switches a binding off for good.
+    const extension = vscode.extensions.getExtension(EXTENSION_ID);
+    assert.ok(extension, `${EXTENSION_ID} is not installed in the test host`);
+
+    const manifest = extension.packageJSON as {
+      contributes: {
+        keybindings: Array<ManifestKeybinding & { readonly when?: string }>;
+        configuration: { properties: Record<string, unknown> };
+      };
+    };
+    const declared = new Set(Object.keys(manifest.contributes.configuration.properties));
+
+    const named = manifest.contributes.keybindings.flatMap((binding) =>
+      [...(binding.when ?? "").matchAll(/config\.([\w.]+)/g)].map((m) => m[1]),
+    );
+    // Without a match this would pass on any manifest at all.
+    assert.ok(named.length > 100, `found ${named.length} config references`);
+
+    const undeclared = [...new Set(named)].filter((key) => !declared.has(key));
+    assert.deepStrictEqual(undeclared, []);
+  });
 });

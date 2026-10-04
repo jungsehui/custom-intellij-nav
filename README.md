@@ -49,12 +49,12 @@ Provider call failures (TypeScript server hiccups, `vue.volar` inlay hint intern
 
 Optional keymap categories (each independently toggleable via settings, default `false`):
 
-#### Bundled (default `true`)
+#### `⌘B` (`enableGoToDeclarationOrUsages`, default `true`)
 | Mac key | IntelliJ action |
 |---|---|
 | `⌘B` | Go to Declaration or Usages |
 
-#### Extended (`enableExtendedMacKeymap`)
+#### Formerly *Extended* (each key now sits under its category toggle; the `enableExtendedMacKeymap` toggle itself was removed in 3.0.0)
 | Mac key | IntelliJ action |
 |---|---|
 | `⌘⇧B` | Go to Type Definition |
@@ -281,8 +281,6 @@ alone, expanding folders as you meet them.
 
 ```json
 {
-  "customIntellijNav.enableBundledMacKeymap": true,
-  "customIntellijNav.enableExtendedMacKeymap": true,
   "customIntellijNav.enableEditingKeymap": true,
   "customIntellijNav.enableNavigationKeymap": true,
   "customIntellijNav.enableSearchKeymap": true,
@@ -458,21 +456,28 @@ To hand a specific key back to this extension, add it to
 
 Per key, no need to turn off a whole category.
 
-## Migrating to 2.0.0
+## Migrating to 2.0.0 and 3.0.0
 
-2.0.0 deprecates two settings. **If you never changed the defaults, you do
-not need to do anything** — `⌘B` still works and nothing else turns on by
-itself.
+2.0.0 deprecated two settings; 3.0.0 removed one of them.
+**If you never changed the defaults, you do not need to do anything** —
+`⌘B` still works and nothing else turns on by itself.
+
+**3.0.0 in one line:** `enableExtendedMacKeymap` is gone, so a `true` there
+no longer turns anything on; enable the categories you want instead (below).
+`enableBundledMacKeymap: false` is still carried over for you.
 
 | Old setting | Replacement |
 |---|---|
 | `customIntellijNav.enableBundledMacKeymap` | `customIntellijNav.enableGoToDeclarationOrUsages` |
 | `customIntellijNav.enableExtendedMacKeymap` | its 15 bindings moved into `enableNavigationKeymap`, `enableEditingKeymap`, `enableRefactoringKeymap`, `enableToolWindowKeymap`, `enableWorkbenchKeymap`, `enableRunKeymap`, `enableDebuggingKeymap` |
 
-Both old settings still work in 2.0.0 and will be removed in 3.0.0.
+Through 2.x both old settings kept working. In 3.0.0 `enableExtendedMacKeymap`
+is removed. `enableBundledMacKeymap` stays declared, with no effect of its
+own, only because VS Code cannot clear a setting that is not declared, and
+clearing it is the last step of its migration.
 
-If you had `enableExtendedMacKeymap: true`, everything keeps working.
-To migrate, delete it and enable the categories you actually want:
+If you had `enableExtendedMacKeymap: true`, delete it and enable the
+categories you actually want:
 
 ```jsonc
 {

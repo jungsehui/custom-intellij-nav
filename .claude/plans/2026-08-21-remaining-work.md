@@ -259,7 +259,18 @@ git commit -m "docs: v2.1.0 handoff, and close the two resolved roadmap unknowns
 
 ---
 
-### Task 4: v3.0.0 deprecation removal — planned, gated, NOT executed now
+### Task 4: v3.0.0 deprecation removal — **executed 2026-10-04, differently**
+
+> **What actually shipped in 3.0.0.** `enableExtendedMacKeymap` and its 16
+> `||` clauses were removed as planned. `enableBundledMacKeymap` and
+> `migrateLegacySettings` were **kept**, with the user's agreement, which
+> made the date gate unnecessary: late upgraders stay protected however late
+> they are. The declaration had to stay too. Removing it was tried, and 12
+> of the 14 migration tests failed with "Unable to write to User Settings
+> because customIntellijNav.enableBundledMacKeymap is not a registered
+> configuration": VS Code will not write an undeclared key, so the
+> migration could no longer clear it. No test file was changed or deleted.
+> The original plan follows, unchanged, for the record.
 
 **Files (when the gate opens, not now):**
 - Modify: `package.json` — delete the two deprecated settings; strip `|| config.customIntellijNav.enableExtendedMacKeymap` from 16 `when` clauses (17 until 2.3.5 removed `⌘\`)

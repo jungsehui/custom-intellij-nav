@@ -530,6 +530,21 @@ Result on 1.140.0, all 168 bindings then present:
   audit*: for a binding with no focus condition, "only in chat or the
   terminal" is still a real displacement, because 400 wins there too.
 
+### VS Code will not write a setting it does not declare
+
+Measured on 1.140 while doing 3.0.0: with `enableBundledMacKeymap` removed
+from `contributes.configuration`, every `config.update` of it failed with
+"Unable to write to User Settings because customIntellijNav.
+enableBundledMacKeymap is not a registered configuration", in both user
+and workspace scope. Clearing (`update(key, undefined)`) fails the same
+way. So a setting that a migration must clear has to stay declared for as
+long as the migration runs. Mark it deprecated and give it no effect of its
+own, but do not remove it.
+
+The opposite mistake is silent: a `when` clause naming an undeclared
+setting is just false. `keymap-manifest.test.ts` fails if any `when` names
+a setting that is not declared.
+
 ### Verify every context key before putting it in a `when`
 
 A `when` clause that names a context key which does not exist never

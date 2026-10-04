@@ -19,6 +19,13 @@ const CURRENT = "enableGoToDeclarationOrUsages";
  * So the value moves once, at activation, and the deprecated key is cleared.
  * Only an explicit `false` is migrated; an unset or `true` legacy value is
  * left alone, and an already-set `CURRENT` always wins.
+ *
+ * 3.0.0 kept this, and kept `LEGACY` declared, on purpose. Someone who skips
+ * from 1.x straight past every 2.x release would otherwise lose their
+ * `false` and get `⌘B` back without a word. And the declaration cannot go:
+ * VS Code refuses to write a key that is not declared ("Unable to write to
+ * User Settings because … is not a registered configuration", measured on
+ * 1.140), so the clearing step above would fail on every machine.
  */
 export async function migrateLegacySettings(logger: Logger): Promise<void> {
   const config = vscode.workspace.getConfiguration(SECTION);

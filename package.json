@@ -87,14 +87,8 @@
         "customIntellijNav.enableBundledMacKeymap": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "**Deprecated.** Use `customIntellijNav.enableGoToDeclarationOrUsages`. A `false` here is migrated to the new setting automatically on the next activation.",
-          "deprecationMessage": "Deprecated in 2.0.0. Renamed to customIntellijNav.enableGoToDeclarationOrUsages. If you had set this to false, the extension moves that value to the new setting once on activation and clears this key. Removed in 3.0.0."
-        },
-        "customIntellijNav.enableExtendedMacKeymap": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "**Deprecated.** Its bindings moved into the functional category toggles. Leaving this `true` keeps them all enabled during migration.",
-          "deprecationMessage": "Deprecated in 2.0.0. Its 15 bindings moved into the functional categories (Navigation, Editing, Refactoring, ToolWindow, Workbench, Run, Debugging). Still honoured so existing settings keep working; it will be removed in 3.0.0."
+          "markdownDescription": "**Deprecated, no effect.** Use `customIntellijNav.enableGoToDeclarationOrUsages`. A `false` left here is moved to the new setting once on activation, and this key is cleared.",
+          "deprecationMessage": "Deprecated in 2.0.0 and has no effect. Renamed to customIntellijNav.enableGoToDeclarationOrUsages. A false here is moved to the new setting once on activation and this key is cleared. It stays declared only because VS Code cannot clear a key that is not declared."
         },
         "customIntellijNav.showErrorToasts": {
           "type": "boolean",
@@ -129,7 +123,7 @@
         "customIntellijNav.enableRefactoringKeymap": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable IntelliJ-style refactoring keys (shift+f6 rename, f6 move, etc). Extract Variable/Method/Constant/Inline are controlled by `enableExtendedMacKeymap`."
+          "markdownDescription": "Enable IntelliJ-style refactoring keys (shift+f6 rename, f6 move, cmd+alt+v/m/c extract, cmd+alt+n inline, etc)."
         },
         "customIntellijNav.enableVcsKeymap": {
           "type": "boolean",
@@ -182,72 +176,72 @@
       {
         "command": "editor.action.goToTypeDefinition",
         "mac": "cmd+shift+b",
-        "when": "isMac && editorHasTypeDefinitionProvider && editorTextFocus && (config.customIntellijNav.enableNavigationKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorHasTypeDefinitionProvider && editorTextFocus && config.customIntellijNav.enableNavigationKeymap"
       },
       {
         "command": "workbench.action.showAllSymbols",
         "mac": "cmd+alt+shift+n",
-        "when": "isMac && (config.customIntellijNav.enableNavigationKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && config.customIntellijNav.enableNavigationKeymap"
       },
       {
         "command": "explorer.newFile",
         "mac": "cmd+n",
-        "when": "isMac && explorerViewletFocus && (config.customIntellijNav.enableWorkbenchKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && explorerViewletFocus && config.customIntellijNav.enableWorkbenchKeymap"
       },
       {
         "command": "explorer.newFolder",
         "mac": "cmd+shift+n",
-        "when": "isMac && explorerViewletFocus && (config.customIntellijNav.enableWorkbenchKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && explorerViewletFocus && config.customIntellijNav.enableWorkbenchKeymap"
       },
       {
         "command": "workbench.view.explorer",
         "mac": "cmd+1",
-        "when": "isMac && !sideBarFocus && (config.customIntellijNav.enableToolWindowKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && !sideBarFocus && config.customIntellijNav.enableToolWindowKeymap"
       },
       {
         "command": "workbench.action.toggleSidebarVisibility",
         "mac": "cmd+1",
-        "when": "isMac && sideBarFocus && activeViewlet == 'workbench.view.explorer' && (config.customIntellijNav.enableToolWindowKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && sideBarFocus && activeViewlet == 'workbench.view.explorer' && config.customIntellijNav.enableToolWindowKeymap"
       },
       {
         "command": "testing.runAtCursor",
         "mac": "ctrl+shift+r",
-        "when": "isMac && editorTextFocus && (config.customIntellijNav.enableRunKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableRunKeymap"
       },
       {
         "command": "testing.debugAtCursor",
         "mac": "ctrl+shift+d",
-        "when": "isMac && editorTextFocus && (config.customIntellijNav.enableDebuggingKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorTextFocus && config.customIntellijNav.enableDebuggingKeymap"
       },
       {
         "command": "editor.action.addSelectionToNextFindMatch",
         "mac": "alt+j",
-        "when": "isMac && editorFocus && (config.customIntellijNav.enableEditingKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorFocus && config.customIntellijNav.enableEditingKeymap"
       },
       {
         "command": "editor.action.selectHighlights",
         "mac": "cmd+ctrl+g",
-        "when": "isMac && editorFocus && (config.customIntellijNav.enableEditingKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorFocus && config.customIntellijNav.enableEditingKeymap"
       },
       {
         "command": "intellij.extractVariable",
         "mac": "cmd+alt+v",
-        "when": "isMac && editorTextFocus && !editorReadonly && (config.customIntellijNav.enableRefactoringKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "intellij.extractMethod",
         "mac": "cmd+alt+m",
-        "when": "isMac && editorTextFocus && !editorReadonly && (config.customIntellijNav.enableRefactoringKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "intellij.extractConstant",
         "mac": "cmd+alt+c",
-        "when": "isMac && editorTextFocus && !editorReadonly && (config.customIntellijNav.enableRefactoringKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "intellij.inline",
         "mac": "cmd+alt+n",
-        "when": "isMac && editorTextFocus && !editorReadonly && (config.customIntellijNav.enableRefactoringKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && editorTextFocus && !editorReadonly && config.customIntellijNav.enableRefactoringKeymap"
       },
       {
         "command": "editor.action.commentLine",
@@ -982,12 +976,12 @@
       {
         "command": "workbench.view.explorer",
         "mac": "cmd+numpad1",
-        "when": "isMac && !sideBarFocus && (config.customIntellijNav.enableToolWindowKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && !sideBarFocus && config.customIntellijNav.enableToolWindowKeymap"
       },
       {
         "command": "workbench.action.toggleSidebarVisibility",
         "mac": "cmd+numpad1",
-        "when": "isMac && sideBarFocus && activeViewlet == 'workbench.view.explorer' && (config.customIntellijNav.enableToolWindowKeymap || config.customIntellijNav.enableExtendedMacKeymap)"
+        "when": "isMac && sideBarFocus && activeViewlet == 'workbench.view.explorer' && config.customIntellijNav.enableToolWindowKeymap"
       },
       {
         "command": "workbench.view.search",

@@ -1,6 +1,6 @@
 # Architecture
 
-A single VS Code extension. ~2,530 LOC across 23 files (10 of them tests, 1,424 LOC). Two user-facing capabilities:
+A single VS Code extension. ~2,562 LOC across 23 files (10 of them tests, 1,449 LOC). Two user-facing capabilities:
 
 1. **`cmd+B` Go to Declaration or Usages** — IntelliJ-style merged
    navigation. Single command (`intellij.goToDeclarationOrUsages`).
@@ -20,7 +20,7 @@ src/extension.ts (54 LOC) — builds the Logger, both port adapters and the
 │                            data table
 ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
 ├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
-├─ src/core/migrate-settings.ts (61 LOC) — one-time 2.0.0 setting move.
+├─ src/core/migrate-settings.ts (68 LOC) — one-time 2.0.0 setting move, kept in 3.0.0.
 │     A `when` clause sees only the *effective* value, so it cannot tell
 │     an explicit `false` from an unset default. That is why the
 │     deprecated-setting migration has to be code.
@@ -90,7 +90,7 @@ convention. `location-utils.ts` is deliberately outside the ring: it calls
 |---|---|---|
 | Commands | 8 | All in the `intellij.*` namespace |
 | Keybindings | 166 | Each gated by `config.customIntellijNav.enableXxxKeymap` |
-| Settings | 17 | 11 category toggles + 1 feature toggle + 2 deprecated + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
+| Settings | 16 | 11 category toggles + 1 feature toggle + 1 deprecated (`enableBundledMacKeymap`, kept for its migration) + `useCamelHumpsWords` + `showErrorToasts` + `showRefactorNotifications` |
 
 ### Keymap categories (gating)
 
@@ -130,9 +130,12 @@ Rename sat under Refactoring.
   is why most people install this. It is the only thing that is on out of
   the box.
 
-The two tier settings remain declared and honoured (`||`-ed into the moved
-bindings' `when`, and `&&`-ed into `⌘B`'s) so existing settings keep
-working. They go away in 3.0.0.
+Through 2.x the two tier settings stayed declared and honoured
+(`||`-ed into the moved bindings' `when`). 3.0.0 removed
+`enableExtendedMacKeymap` and those 16 clauses. `enableBundledMacKeymap`
+stays declared with no effect of its own: `migrateLegacySettings` still
+moves a `false` to `enableGoToDeclarationOrUsages` and clears the key, and
+VS Code cannot clear a key that is not declared.
 
 ### Staleness is a shared concern, not a navigation one
 
