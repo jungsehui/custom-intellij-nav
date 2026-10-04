@@ -6,7 +6,42 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.0.0] — 2026-10-04
+
+### Breaking — `enableExtendedMacKeymap` is removed
+
+Deprecated since 2.0.0. That release moved its keys into the category
+toggles but kept the old toggle working, through
+`|| config.customIntellijNav.enableExtendedMacKeymap` in 16 `when` clauses,
+so a `true` there kept them on. That bridge is gone. If your settings still
+say `"customIntellijNav.enableExtendedMacKeymap": true`, those keys are now
+off until you enable their categories; README, *Migrating to 2.0.0 and
+3.0.0*, shows how. Nothing changes for anyone who never set it.
+
+### Kept — the `⌘B` migration, on purpose
+
+The plan was to delete `enableBundledMacKeymap` and its migration as well,
+and to wait until 2026-10-19 so that every installed copy had time to run
+the migration first. Instead the migration stays, so there is nothing to
+wait for: someone upgrading from 1.x straight to 3.0.0 still keeps `⌘B`
+off if they had turned it off. The setting stays declared, marked
+deprecated and with no effect of its own, because VS Code refuses to write
+a key that is not declared ("… is not a registered configuration"), and
+clearing the old key is the migration's last step.
+
+### Added — a guard for the removal
+
+A new test fails if any `when` clause names a setting that is not declared.
+`config.x` of an undeclared key is silently false, so a removal that misses
+one clause switches that binding off for good, with no error. Checked
+against exactly that mistake: one leftover clause made it fail, naming the
+key.
+
+### Fixed — a stale settings description
+
+`enableRefactoringKeymap` said Extract Variable / Method / Constant and
+Inline were controlled by `enableExtendedMacKeymap`. They have been under
+`enableRefactoringKeymap` since 2.0.0.
 
 ### Added — a keybinding audit for maintainers
 
