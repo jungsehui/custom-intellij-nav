@@ -3,6 +3,7 @@
 Auto-loaded entry point for Claude Code, and for Codex via `AGENTS.md`, which
 is a symlink to this file. Never replace it with a copy. Keep this file under
 60 lines. Detail lives in `.claude/`.
+<!-- repo-verify: npm run check -->
 
 ## Project at a glance
 
@@ -10,8 +11,7 @@ VS Code extension that gives users an IntelliJ-style keymap with a working
 TypeScript Extract refactoring (the 4-year-old k--kato issue #142 fix). Single
 binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 
-- **Status**: v3.0.0 on GitHub, v2.3.4 on the Marketplace. 3.0.0 removes
-  `enableExtendedMacKeymap` and keeps the `⌘B` migration, so no date gate.
+- **Status**: v3.0.0 on GitHub and the Marketplace (live 2026-10-05 UTC).
   Publishing is a manual upload of the VSIX the tag build attaches to the
   GitHub Release.
 - **Source**: `src/` — 23 TypeScript files, ~2,562 LOC (1,449 of it tests, in

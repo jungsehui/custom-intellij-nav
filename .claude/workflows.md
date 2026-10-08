@@ -76,7 +76,7 @@ git push origin main
 ## Re-measure keybindings after a VS Code release
 
 ```bash
-npm run audit:keybindings -- --baseline 1.140.0
+npm run audit:keybindings -- --baseline 1.141.0
 ```
 
 macOS only. It asks VS Code for its own default keybindings (stable by

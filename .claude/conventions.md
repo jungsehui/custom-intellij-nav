@@ -335,6 +335,14 @@ Corollary for CI itself: this repo ran `check`, `compile` and `package` for
 months without ever running `lint` or `test`. A workflow that is green
 proves only that the steps it contains passed.
 
+The converse also holds: a red run is not always the code. On 2026-10-04
+run 37178103813 died with `CodeWindow: detected unresponsive` 16 seconds
+after VS Code started on the Linux runner, before mocha printed anything.
+Re-running the same commit passed (72), as did three later runs. Look for
+`passing` in the log before blaming the change; if it is absent, the
+suite never ran. And watch the run after *every* push: that failure sat
+unnoticed for two days because the next task started straight away.
+
 ### An audit that cannot separate scope is not an audit
 
 A sweep of all 154 chords against the full VS Code source reported 104
@@ -431,7 +439,10 @@ command. If the control is also zero, the instrument is broken.
 
 ### Re-measure each VS Code release by diffing tags
 
-**Baseline: 1.140.0, measured 2026-10-02.** Diff from there next time.
+**Baseline: 1.141.0, measured 2026-10-08** with `npm run audit:keybindings`:
+one difference from 1.140.0 on our chords, a narrower `when` on `⇧⌘A` →
+Open Agents Window, which our `⇧⌘A` already displaces and README already
+lists. Before that the baseline was 1.140.0, measured 2026-10-02.
 The corpus before it was `main` on 2026-08-21, which is newer than tag
 1.134.0 (2026-08-19), so `1.134.0..1.140.0` covered it. A range that
 starts too early only adds hits; one that starts too late hides them.
@@ -483,7 +494,7 @@ us, silently. Count them with the `when` stripped of those terms and of
 The tag diff above parses source, so it misses registrations split across
 lines and cannot tell a keybinding from a key handler, nor see a `when`
 change. VS Code will print its resolved defaults itself, which is the
-better instrument. **`npm run audit:keybindings -- --baseline 1.140.0`**
+better instrument. **`npm run audit:keybindings -- --baseline 1.141.0`**
 (`scripts/audit-default-keybindings.mjs`) does all of what follows; the
 tag diff is now the fallback. Proven against a known change: run on
 1.136.2 with the 1.140.0 baseline, it reports the Markdown Editor's `⌘E`
