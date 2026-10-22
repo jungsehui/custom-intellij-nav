@@ -17,21 +17,33 @@ on:
   # job is gated on a tag ref, so a scheduled run never publishes anything.
   schedule:
     - cron: "0 0 * * 1"
+  # A manual run can pick the runner image, to try a new one before the
+  # `ubuntu-latest` label moves to it: `gh workflow run ci-release -f
+  # runner=ubuntu-26.04`. Every other trigger leaves `inputs` empty, so it
+  # gets `ubuntu-latest`.
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Runner image for the build job"
+        required: false
+        default: ubuntu-latest
 
 permissions:
   contents: write
 
+# Actions are pinned to full commit SHAs, with the version in a comment. A
+# tag can be moved to other code; a SHA cannot. Bump them when CI warns, as
+# it did on 2026-10-19 about upload-artifact@v4 still running on Node.js 20.
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -54,7 +66,7 @@ jobs:
         run: npx @vscode/vsce package
 
       - name: Upload VSIX
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vsix
           path: "*.vsix"
@@ -80,10 +92,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download VSIX
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vsix
 
