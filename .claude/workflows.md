@@ -76,7 +76,7 @@ git push origin main
 ## Re-measure keybindings after a VS Code release
 
 ```bash
-npm run audit:keybindings -- --baseline 1.141.0
+npm run audit:keybindings -- --baseline 1.143.0
 ```
 
 macOS only. It asks VS Code for its own default keybindings (stable by
@@ -91,8 +91,22 @@ the baseline in `.claude/conventions.md` to the new version.
 
 ## Tests
 
-`npm test` exists but the suite is a single smoke test
-(`src/test/extension.test.ts`) that asserts
-`intellij.goToDeclarationOrUsages` is registered. Real verification is
-manual in an Extension Development Host. If you grow the test suite,
-favor integration tests via `@vscode/test-electron`.
+`npm test` compiles, lints, then runs 73 tests in 10 files under
+`src/test/` inside a real VS Code (the stable of the day, via
+`@vscode/test-cli`). Run it through `memguard -- npm test` on this
+machine. CI runs the same suite under `xvfb-run` on every push, PR and
+tag, and weekly on Monday 00:00 UTC. *Corrected 2026-10-22: this section
+used to say the suite was a single smoke test.*
+
+## CI
+
+- Actions in `.github/workflows/release.yml` are pinned to full commit
+  SHAs with the version in a comment. Bump them when CI warns (the
+  2026-10-19 cron warned that upload-artifact@v4 still targeted Node 20).
+- A manual run can choose the runner image, to try one before
+  `ubuntu-latest` moves to it:
+  `gh workflow run ci-release -f runner=ubuntu-26.04`. Ubuntu 26.04 passed
+  this way on 2026-10-22, and `ubuntu-latest` was already on it that day.
+- npm 11 blocks install scripts until allowed: `@vscode/vsce-sign`'s
+  postinstall does not run locally. Harmless here, it only matters for
+  signed publishing, which this repo does not do; `vsce package` works.

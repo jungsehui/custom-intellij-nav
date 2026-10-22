@@ -6,6 +6,23 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documented — TypeScript 7 (TypeScript Go) offers no refactorings yet
+
+With `js/ts.experimental.useTsgo` on, VS Code hands TS/JS to the TypeScript
+Go extension. Measured on VS Code 1.143 with its version 1.0.1: quick fixes
+work, refactorings do not exist, so this keymap's Extract, Inline and Move
+keys report "not available" for TS/JS. Listed under *Limitations*. The
+extension itself did not change.
+
+### Changed — maintenance only, nothing you can see
+
+TypeScript 6.0 (its output is byte-identical to 5.9's), ESLint 10,
+typescript-eslint 8.72, @vscode/vsce 4. CI actions moved to Node 24
+versions pinned to commit SHAs, and the suite passes on Ubuntu 26.04, the
+new `ubuntu-latest`.
+
 ## [3.0.0] — 2026-10-04
 
 ### Breaking — `enableExtendedMacKeymap` is removed

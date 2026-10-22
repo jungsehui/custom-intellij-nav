@@ -439,10 +439,13 @@ command. If the control is also zero, the instrument is broken.
 
 ### Re-measure each VS Code release by diffing tags
 
-**Baseline: 1.141.0, measured 2026-10-08** with `npm run audit:keybindings`:
-one difference from 1.140.0 on our chords, a narrower `when` on `⇧⌘A` →
-Open Agents Window, which our `⇧⌘A` already displaces and README already
-lists. Before that the baseline was 1.140.0, measured 2026-10-02.
+**Baseline: 1.143.0, measured 2026-10-22** with `npm run audit:keybindings`.
+Against 1.141.0 the only changes on our chords were `when` edits on chat
+and voice bindings (`⇧⌘Space`, `⌘⌫`) and one new key, `F2` →
+`markdown.editor.rename` inside the Markdown Editor; our `F2` needs
+`editorTextFocus`, which that webview never sets. Earlier baselines:
+1.141.0 (2026-10-08), whose one change was a narrower `when` on `⇧⌘A` →
+Open Agents Window, and 1.140.0 (2026-10-02).
 The corpus before it was `main` on 2026-08-21, which is newer than tag
 1.134.0 (2026-08-19), so `1.134.0..1.140.0` covered it. A range that
 starts too early only adds hits; one that starts too late hides them.
@@ -494,7 +497,7 @@ us, silently. Count them with the `when` stripped of those terms and of
 The tag diff above parses source, so it misses registrations split across
 lines and cannot tell a keybinding from a key handler, nor see a `when`
 change. VS Code will print its resolved defaults itself, which is the
-better instrument. **`npm run audit:keybindings -- --baseline 1.141.0`**
+better instrument. **`npm run audit:keybindings -- --baseline 1.143.0`**
 (`scripts/audit-default-keybindings.mjs`) does all of what follows; the
 tag diff is now the fallback. Proven against a known change: run on
 1.136.2 with the 1.140.0 baseline, it reports the Markdown Editor's `⌘E`
@@ -603,6 +606,35 @@ refactorings exist. They are enumerable at the source:
 
 k--kato binds all three anyway. Copying a competitor's keymap without
 checking the other side of the binding reproduces their dead keys.
+
+### TypeScript Go offers no refactorings (measured 2026-10-22)
+
+With `js/ts.experimental.useTsgo` on, VS Code turns its own TS/JS features
+off and the TypeScript Go extension (`TypeScriptTeam.native-preview`,
+"TypeScript 7") serves the language instead. Measured on VS Code 1.143.0
+with that extension at 1.0.1, same file, same selections, once per mode:
+
+| Kind we dispatch for TypeScript | built-in TS 6.0.3 | TypeScript Go 1.0.1 |
+|---|---|---|
+| `refactor.extract.constant` | 2 | 0 |
+| `refactor.extract.function` | 2 | 0 |
+| `refactor.inline.variable` | 1 | 0 |
+| `refactor.move` | 2 | 0 |
+| `source.overrideMethods` | 0 | 0 |
+
+Not a cold server: under TypeScript Go the same run reported three
+diagnostics in a deliberately broken file and offered its quick fix (`Add
+import from "./sample"`), and each refactor query was retried for 45 s.
+An unfiltered query returned only VS Code's own surround snippets and
+Copilot. So with TypeScript Go on, every refactor key in this keymap
+reports "not available" for TS/JS. README *Limitations* says so.
+
+How it was run: VS Code's CLI installed the extension into an isolated
+`--extensions-dir` under `.vscode-test/tsgo/` (with its own
+`--user-data-dir`, so the user's profile is untouched), and a test-host
+probe wrote `js/ts.experimental.useTsgo` true or false before each run.
+Re-measure when TypeScript Go releases; VS Code still defaults the setting
+to false in 1.143.
 
 ### Prefer the core command over a language-specific one
 
