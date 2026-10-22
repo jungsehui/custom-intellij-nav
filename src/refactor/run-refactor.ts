@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import type { CommandRunner } from "../core/command-runner";
 import type { Logger } from "../core/logger";
 import type { BeginRequest } from "../core/editor-request";
-import { getShowRefactorNotifications } from "../core/config";
+import { getShowRefactorNotifications, isTypeScriptGoServing } from "../core/config";
 import type { IntelliJAction } from "../types";
 import { describeOutcome, resolveAttempts } from "./policy";
 
@@ -100,7 +100,7 @@ export async function runRefactor(
     return;
   }
 
-  const outcome = describeOutcome(action, langId, sawError);
+  const outcome = describeOutcome(action, langId, sawError, isTypeScriptGoServing());
   logger.showStatus(outcome.status);
 
   if (outcome.notification && getShowRefactorNotifications()) {

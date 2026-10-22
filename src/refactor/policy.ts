@@ -59,16 +59,53 @@ export function shouldClaimUnsupported(
  * because the failure was an exception rather than an absence, or because
  * the language was never measured. The caller still decides whether to show
  * it, since that depends on a setting this file cannot read.
+ *
+ * `isTypeScriptGoServing` comes from the caller for the same reason: it
+ * depends on settings and installed extensions. When TypeScript Go is
+ * serving and lacks the refactoring, the generic message is true but
+ * useless; the user needs the cause and the switch.
  */
 export interface RefactorOutcome {
   readonly status: string;
   readonly notification?: string;
 }
 
+/**
+ * The refactorings TypeScript Go does not offer, in the languages it serves.
+ *
+ * With `js/ts.experimental.useTsgo` on and a TypeScript Go extension
+ * installed, VS Code turns its own TS/JS features off and TypeScript Go
+ * serves these four languages instead. Measured on 2026-10-22 (VS Code
+ * 1.143.0, TypeScript Go 1.0.1): the built-in TypeScript offers every action
+ * below in all four, TypeScript Go offers none of them. Override and
+ * Implement are missing from both, so they are not TypeScript Go's to lack.
+ *
+ * `npm run probe:tsgo` re-measures, and fails when this table and reality
+ * disagree. Change them together.
+ */
+const TYPESCRIPT_GO_LANGUAGES: ReadonlySet<string> = new Set([
+  "typescript",
+  "typescriptreact",
+  "javascript",
+  "javascriptreact",
+]);
+const TYPESCRIPT_GO_MISSING_ACTIONS: ReadonlySet<IntelliJAction> = new Set<IntelliJAction>([
+  "extractVariable",
+  "extractMethod",
+  "extractConstant",
+  "inline",
+  "move",
+]);
+
+export function isMissingInTypeScriptGo(action: IntelliJAction, langId: string): boolean {
+  return TYPESCRIPT_GO_LANGUAGES.has(langId) && TYPESCRIPT_GO_MISSING_ACTIONS.has(action);
+}
+
 export function describeOutcome(
   action: IntelliJAction,
   langId: string,
   sawError: boolean,
+  isTypeScriptGoServing: boolean,
 ): RefactorOutcome {
   const label = ACTION_LABELS[action];
 
@@ -77,6 +114,16 @@ export function describeOutcome(
   // exist for their language, which is the one message they would act on.
   if (sawError) {
     return { status: `${label} failed (see Output)` };
+  }
+
+  if (isTypeScriptGoServing && isMissingInTypeScriptGo(action, langId)) {
+    return {
+      status: `No ${label}: TypeScript Go has no refactorings yet`,
+      notification:
+        `Custom IntelliJ Nav: TypeScript Go is on (js/ts.experimental.useTsgo) ` +
+        `and offers no refactorings yet, so ${label} has nothing to run. ` +
+        `Turn that setting off to use VS Code's built-in TypeScript.`,
+    };
   }
 
   const status = `No ${label} available for ${langId}`;

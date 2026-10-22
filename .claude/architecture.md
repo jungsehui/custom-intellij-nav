@@ -19,7 +19,8 @@ src/extension.ts (54 LOC) — builds the Logger, both port adapters and the
 │                            request factory, registers 8 commands from a
 │                            data table
 ├─ src/core/logger.ts (33 LOC) — OutputChannel + status bar wrapper
-├─ src/core/config.ts (25 LOC) — getShowErrorToasts, etc.
+├─ src/core/config.ts (68 LOC) — getShowErrorToasts, etc., and
+│     isTypeScriptGoServing, which mirrors VS Code's own TypeScript Go switch
 ├─ src/core/migrate-settings.ts (68 LOC) — one-time 2.0.0 setting move, kept in 3.0.0.
 │     A `when` clause sees only the *effective* value, so it cannot tell
 │     an explicit `false` from an unset default. That is why the
@@ -37,8 +38,9 @@ src/extension.ts (54 LOC) — builds the Logger, both port adapters and the
 │  └─ src/navigation/location-utils.ts (76 LOC) — dedupe, normalize,
 │         and RawLocation
 └─ src/refactor/run-refactor.ts (109 LOC) — the adapter: talks to VS Code
-   └─ src/refactor/policy.ts (95 LOC) — the decisions: which chain, whether
-   │     we may call a language unsupported, what to say. No vscode.
+   └─ src/refactor/policy.ts (142 LOC) — the decisions: which chain, whether
+   │     we may call a language unsupported, what to say, and the measured
+   │     table of what TypeScript Go lacks. No vscode.
    └─ src/refactor/language-action-table.ts (186 LOC) — per-lang kind
          table + ACTION_LABELS + CodeActionAttempt. Carries the measured
          census of every refactor kind TypeScript emits; that census is
@@ -214,7 +216,10 @@ keypress
         else → editor.action.codeAction { kind, apply: "ifSingle" }
               (single match auto-applies, multi shows picker)
         return
-  if all kinds 0 → describeOutcome() decides what may be said
+  if all kinds 0:
+      if request.isStale() → return                       // superseded, say nothing
+      describeOutcome(action, langId, sawError, isTypeScriptGoServing())
+        decides what may be said                          // policy.ts
 ```
 
 The `apply: "ifSingle"` is load-bearing: it's what surfaces VS Code's
