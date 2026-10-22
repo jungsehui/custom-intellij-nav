@@ -89,9 +89,25 @@ explain. Dumps are cached in `.vscode-test/kbdump/` (gitignored), so a
 baseline is downloaded and dumped once. When the result is clean, move
 the baseline in `.claude/conventions.md` to the new version.
 
+## Re-measure TypeScript Go
+
+```bash
+npm run compile
+npm run probe:tsgo            # or: npm run probe:tsgo -- 1.143.0
+```
+
+Installs or updates the TypeScript Go extension into an isolated profile
+under `.vscode-test/tsgo/` (never your own), then runs the same four files
+twice, with VS Code's built-in TypeScript and with TypeScript Go. It checks
+its controls first, prints a table per language and refactoring, and exits
+1 when `policy.isMissingInTypeScriptGo` or `config.isTypeScriptGoServing`
+disagrees with what it measured. Run it when TypeScript Go releases; when
+it starts offering a refactoring, update the table in
+`src/refactor/policy.ts` and the probe will pass again.
+
 ## Tests
 
-`npm test` compiles, lints, then runs 73 tests in 10 files under
+`npm test` compiles, lints, then runs 83 tests in 11 files under
 `src/test/` inside a real VS Code (the stable of the day, via
 `@vscode/test-cli`). Run it through `memguard -- npm test` on this
 machine. CI runs the same suite under `xvfb-run` on every push, PR and

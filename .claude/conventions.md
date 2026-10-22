@@ -629,6 +629,33 @@ An unfiltered query returned only VS Code's own surround snippets and
 Copilot. So with TypeScript Go on, every refactor key in this keymap
 reports "not available" for TS/JS. README *Limitations* says so.
 
+`npm run probe:tsgo` (`scripts/probe-typescript-go.mjs`) now repeats this
+for all four languages it serves, `typescript`, `typescriptreact`,
+`javascript`, `javascriptreact`, using the kind chains the extension really
+dispatches (`resolveAttempts` from `out/`). Same result in all four: 2, 2,
+2, 1, 2 under the built-in TypeScript for Extract Variable, Method,
+Constant, Inline and Move, 0 under TypeScript Go. Its controls are
+language-independent: document symbols plus a syntax error per language
+(a missing-name error is not reported in these JS files, which a first
+version of the probe learned by failing its own control in both modes),
+and one quick fix per mode for the code-action pipeline.
+
+Since 3.0.1 the extension says so itself. `policy.ts` holds the measured
+table (`isMissingInTypeScriptGo`), and when `config.isTypeScriptGoServing()`
+is true the status bar and notification name TypeScript Go and the setting
+instead of the generic "the language server does not implement it, or the
+caret is not on something it applies to". `isTypeScriptGoServing` copies
+VS Code 1.143's own rule from `typescript-language-features`, read from
+its bundled `dist/extension.js`: `js/ts.experimental.useTsgo`, falling back
+to `typescript.experimental.useTsgo` when the first has no value of its
+own, **and** a TypeScript Go extension installed
+(`typescriptteam.vscode-typescript`, `-nightly`, or `native-preview`). The
+setting alone changes nothing in VS Code, so it must change nothing in our
+message; a test pins that, and a mutant that checked only the setting
+failed two tests. The probe also calls `isTypeScriptGoServing()` inside both
+modes and compares the table with the measurement, so either drifting
+fails it.
+
 How it was run: VS Code's CLI installed the extension into an isolated
 `--extensions-dir` under `.vscode-test/tsgo/` (with its own
 `--user-data-dir`, so the user's profile is untouched), and a test-host
