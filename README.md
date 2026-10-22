@@ -603,7 +603,7 @@ VS Code's contribution model imposes a few hard constraints:
 - **Postfix completion (`.var`, `.for`, `.return`)** — IntelliJ Live Templates have no first-class equivalent. Use VS Code snippets.
 - **Successively increasing code blocks** — `editor.action.smartSelect.expand` is close but not syntax-aware in the same way.
 - **Extract Field (`⌘⌥F`), Change Signature (`⌘F6`), Introduce Parameter (`⌘⌥P`)** — not shipped. Enumerating microsoft/TypeScript@v5.9.2 `src/services/refactors/` shows TypeScript emits no `refactor.extract.field`, `refactor.change.signature`, or `refactor.introduce.parameter`, so all three would be inert. `⌘⌥F` is additionally the macOS **Replace** shortcut (`editor.action.startFindReplaceAction`, `findController.ts` L1011), so binding it would cost a heavily-used default and return nothing. They will ship if and when a language server is measured to support them.
-- **TypeScript 7 (TypeScript Go)** — with `js/ts.experimental.useTsgo` on, VS Code hands TS/JS to the TypeScript Go extension (`TypeScriptTeam.native-preview`). Measured on VS Code 1.143 with its version 1.0.1, it offers quick fixes but no refactorings at all, so Extract Variable / Method / Constant, Inline and Move report "not available". Turn the setting off to use them; this will be re-measured as TypeScript Go develops.
+- **TypeScript 7 (TypeScript Go)** — with `js/ts.experimental.useTsgo` on, VS Code hands TS/JS to the TypeScript Go extension (`TypeScriptTeam.native-preview`). Measured on VS Code 1.143 with its version 1.0.1, in TS, TSX, JS and JSX alike, it offers quick fixes but no refactorings at all, so Extract Variable / Method / Constant, Inline and Move have nothing to run. Since 3.0.1 the status bar and notification say exactly that and name the setting; turn it off to use them. This is re-measured as TypeScript Go develops.
 
 ## Why this extension exists
 
@@ -627,7 +627,8 @@ Press `F5` in VS Code to open an Extension Development Host window.
 
 After a VS Code release, `npm run audit:keybindings -- --baseline 1.143.0`
 (macOS) checks this keymap against the default keybindings VS Code itself
-reports. See `.claude/workflows.md`.
+reports, and `npm run probe:tsgo` re-measures what the refactor keys get
+under TypeScript Go. See `.claude/workflows.md`.
 
 ## Packaging
 

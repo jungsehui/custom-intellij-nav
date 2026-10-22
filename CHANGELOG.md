@@ -6,15 +6,35 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [3.0.1] — 2026-10-22
 
-### Documented — TypeScript 7 (TypeScript Go) offers no refactorings yet
+### Fixed — under TypeScript Go, the refactor keys now say why they do nothing
 
-With `js/ts.experimental.useTsgo` on, VS Code hands TS/JS to the TypeScript
-Go extension. Measured on VS Code 1.143 with its version 1.0.1: quick fixes
-work, refactorings do not exist, so this keymap's Extract, Inline and Move
-keys report "not available" for TS/JS. Listed under *Limitations*. The
-extension itself did not change.
+With `js/ts.experimental.useTsgo` on and a TypeScript Go extension
+installed, VS Code hands TS/JS to TypeScript Go. Measured on VS Code 1.143
+with TypeScript Go 1.0.1, in TS, TSX, JS and JSX alike, it offers quick
+fixes but no refactorings at all, so Extract Variable / Method / Constant,
+Inline and Move have nothing to run. Until now that ended in the generic
+"typescript offers no Extract Variable at this position. Either the
+language server does not implement it, or the caret is not on something
+it applies to." Now the status bar says "No Extract Variable: TypeScript Go
+has no refactorings yet", and the notification names the setting to turn
+off. README *Limitations* says the same.
+
+The check follows VS Code's own rule for when TypeScript Go is in charge:
+the setting alone is not enough, a TypeScript Go extension has to be
+installed as well. With only the setting on, VS Code's built-in TypeScript
+keeps serving, the refactorings work, and nothing here changes. Override
+and Implement Methods keep their old message, since TypeScript never had
+them.
+
+### Added — `npm run probe:tsgo`, for maintainers
+
+Re-measures the above against a real VS Code: installs TypeScript Go into
+an isolated profile, runs the same four files with the built-in TypeScript
+and with TypeScript Go, checks its controls first, and fails when the table
+of what TypeScript Go lacks, or the check for when it is in charge,
+disagrees with what it measured. Excluded from the VSIX.
 
 ### Changed — maintenance only, nothing you can see
 
