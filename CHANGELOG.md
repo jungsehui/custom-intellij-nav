@@ -6,6 +6,22 @@ in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documented — `⌘B` works under TypeScript Go
+
+Measured on VS Code 1.143 with TypeScript Go 1.0.1: definition and usages
+answer exactly as with the built-in TypeScript, in TS, TSX, JS and JSX, so
+Go to Declaration or Usages works either way. Only the refactorings are
+missing there. README *Limitations* says so.
+
+### Changed — maintenance only, nothing you can see
+
+CI also type-checks the source with TypeScript 7, as an advisory step that
+cannot fail the build; it passes today. A test that flipped
+`js/ts.experimental.useTsgo` now waits for VS Code's TypeScript to settle
+first, which fixes a red tag build on 3.0.1.
+
 ## [3.0.1] — 2026-10-22
 
 ### Fixed — under TypeScript Go, the refactor keys now say why they do nothing

@@ -14,7 +14,7 @@ binary published to the Marketplace as `jungsehui.custom-intellij-nav`.
 - **Status**: v3.0.1 on GitHub, v3.0.0 on the Marketplace. 3.0.1 names
   TypeScript Go when it leaves the refactor keys nothing to run. Publishing
   is a manual upload of the VSIX the tag build attaches to the Release.
-- **Source**: `src/` — 24 TypeScript files, ~2,806 LOC (1,603 of it tests, in
+- **Source**: `src/` — 24 TypeScript files, ~2,873 LOC (1,670 of it tests, in
   11 files). `extension.ts` is a 54-line entry point that wires two ports and
   registers commands. Domain split: `core/` + `navigation/` + `refactor/`.
 - **Manifest**: `package.json` — 8 commands, 166 keybindings, 16 settings.
