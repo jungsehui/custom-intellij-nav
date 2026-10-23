@@ -99,9 +99,10 @@ npm run probe:tsgo            # or: npm run probe:tsgo -- 1.143.0
 Installs or updates the TypeScript Go extension into an isolated profile
 under `.vscode-test/tsgo/` (never your own), then runs the same four files
 twice, with VS Code's built-in TypeScript and with TypeScript Go. It checks
-its controls first, prints a table per language and refactoring, and exits
-1 when `policy.isMissingInTypeScriptGo` or `config.isTypeScriptGoServing`
-disagrees with what it measured. Run it when TypeScript Go releases; when
+its controls first, prints a table per language for the refactorings and
+for `⌘B`'s providers, and exits 1 when `policy.isMissingInTypeScriptGo` or
+`config.isTypeScriptGoServing` disagrees with what it measured, or when
+TypeScript Go stops answering `⌘B` where the built-in TypeScript does. Run it when TypeScript Go releases; when
 it starts offering a refactoring, update the table in
 `src/refactor/policy.ts` and the probe will pass again.
 

@@ -37,12 +37,21 @@ const SOCKET_PATH_LIMIT = 104;
 const TYPESCRIPT_GO_EXTENSION = "TypeScriptTeam.native-preview";
 const require = createRequire(import.meta.url);
 
+// One base name per language, so each `use-*` file imports its own sample.
 const LANGUAGES = [
-  { id: "typescript", file: "sample.ts", broken: "broken.ts", typed: true },
-  { id: "typescriptreact", file: "sample.tsx", broken: "broken.tsx", typed: true },
-  { id: "javascript", file: "sample.js", broken: "broken.js", typed: false },
-  { id: "javascriptreact", file: "sample.jsx", broken: "broken.jsx", typed: false },
-];
+  { id: "typescript", ext: "ts", typed: true },
+  { id: "typescriptreact", ext: "tsx", typed: true },
+  { id: "javascript", ext: "js", typed: false },
+  { id: "javascriptreact", ext: "jsx", typed: false },
+].map((l) => ({
+  ...l,
+  file: `sample-${l.ext}.${l.ext}`,
+  broken: `broken-${l.ext}.${l.ext}`,
+  use: `use-${l.ext}.${l.ext}`,
+  module: `./sample-${l.ext}`,
+}));
+// What ⌘B asks for, in the order src/navigation/go-to-declaration.ts asks.
+const NAVIGATION = ["declaration", "definition", "references"];
 const ACTIONS = [
   "extractVariable", "extractMethod", "extractConstant", "inline", "move",
   "overrideMethods", "implementMethods",
@@ -87,6 +96,8 @@ function writeWorkspace() {
     // import) shows the code-action pipeline answering. JS files do not
     // report the missing name here, which is why both are needed.
     fs.writeFileSync(path.join(ws, lang.broken), "export const r = compute();\nconst broken = ;\n");
+    // ⌘B's subject: a call to the sample's function from another file.
+    fs.writeFileSync(path.join(ws, lang.use), `import { compute } from "${lang.module}";\nexport const r = compute();\n`);
   }
   return ws;
 }
@@ -98,6 +109,7 @@ const OUT = process.env.PROBE_OUT;
 const REPO = process.env.PROBE_REPO;
 const LANGUAGES = ${JSON.stringify(LANGUAGES)};
 const ACTIONS = ${JSON.stringify(ACTIONS)};
+const NAVIGATION = ${JSON.stringify(NAVIGATION)};
 const log = (o) => fs.appendFileSync(OUT, JSON.stringify(o) + "\\n");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const nonEmpty = (x) => (x && x.length ? x : undefined);
@@ -156,8 +168,22 @@ exports.run = async function () {
       }
       counts[action] = found.length;
     }
+    // ⌘B: declaration, then definition, at a call site; usages at the
+    // definition itself. The same three commands go-to-declaration.ts runs.
+    const useUri = vscode.Uri.joinPath(root, lang.use);
+    const useDoc = await vscode.workspace.openTextDocument(useUri);
+    await vscode.window.showTextDocument(useDoc, { preview: false });
+    const callSite = useDoc.positionAt(useDoc.getText().lastIndexOf("compute(") + 2);
+    const definitionSite = doc.positionAt(doc.getText().indexOf("compute") + 2);
+    const ask = async (command, target, position) =>
+      ((await poll(async () => nonEmpty(await vscode.commands.executeCommand(command, target, position)), 10000)) || []).length;
+    const navigation = {
+      declaration: await ask("vscode.executeDeclarationProvider", useUri, callSite),
+      definition: await ask("vscode.executeDefinitionProvider", useUri, callSite),
+      references: await ask("vscode.executeReferenceProvider", uri, definitionSite),
+    };
     log({ type: "language", lang: lang.id, languageId: doc.languageId, symbols: symbols.length,
-          diagnostics: diagnostics.length, quickfixes: fixes.length, counts });
+          diagnostics: diagnostics.length, quickfixes: fixes.length, counts, navigation });
   }
 };
 `;
@@ -242,6 +268,11 @@ async function main() {
     controls.push([`${mode}: the code-action pipeline answers (a quick fix on typescript)`,
       (langs(mode).typescript?.quickfixes ?? 0) > 0]);
   }
+  for (const lang of LANGUAGES) {
+    const n = builtin[lang.id]?.navigation;
+    controls.push([`builtin: ${lang.id} resolves the definition and usages (the positions are valid)`,
+      Boolean(n && n.definition > 0 && n.references > 0)]);
+  }
   const detectorPresent = env("tsgo").detector !== "absent";
   if (detectorPresent) {
     controls.push(["config.isTypeScriptGoServing() is false with the built-in TypeScript", env("builtin").detector === false]);
@@ -259,6 +290,29 @@ async function main() {
   for (const action of ACTIONS) {
     const cells = LANGUAGES.map((l) => `${builtin[l.id].counts[action]} / ${tsgo[l.id].counts[action]}`.padEnd(17));
     console.log("  " + action.padEnd(17) + cells.join(""));
+  }
+
+  console.log("\n⌘B's providers (built-in TypeScript / TypeScript Go):");
+  console.log("  " + "".padEnd(17) + LANGUAGES.map((l) => l.id.padEnd(17)).join(""));
+  for (const step of NAVIGATION) {
+    const cells = LANGUAGES.map((l) => `${builtin[l.id].navigation[step]} / ${tsgo[l.id].navigation[step]}`.padEnd(17));
+    console.log("  " + step.padEnd(17) + cells.join(""));
+  }
+  // README says ⌘B works under TypeScript Go. Declaration is 0 under both
+  // (VS Code's TypeScript has no separate declaration provider; ⌘B falls
+  // through to definition), so the claim rests on definition and usages.
+  const navigationGaps = [];
+  for (const lang of LANGUAGES) {
+    for (const step of ["definition", "references"]) {
+      if (builtin[lang.id].navigation[step] > 0 && tsgo[lang.id].navigation[step] === 0) {
+        navigationGaps.push(`${lang.id} ${step}`);
+      }
+    }
+  }
+  console.log(`  missing under TypeScript Go where the built-in TypeScript answers: ${navigationGaps.join(", ") || "none"}`);
+  if (navigationGaps.length > 0) {
+    console.error("\n⌘B no longer works the same under TypeScript Go. Update README Limitations, then re-run.");
+    process.exitCode = 1;
   }
 
   // policy.isMissingInTypeScriptGo(action, langId) must equal the measurement:

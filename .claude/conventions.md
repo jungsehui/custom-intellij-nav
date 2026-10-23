@@ -656,6 +656,14 @@ failed two tests. The probe also calls `isTypeScriptGoServing()` inside both
 modes and compares the table with the measurement, so either drifting
 fails it.
 
+`⌘B` is measured too (2026-10-23): at a call site in another file,
+definition is 1 under both, usages at the definition 3 under both, in all
+four languages. Declaration is 0 under **both**: VS Code's TypeScript has
+no separate declaration provider, so `⌘B` has always landed through the
+definition step of its chain, and still does under TypeScript Go. README
+says `⌘B` works either way, and the probe fails if TypeScript Go stops
+answering definition or usages where the built-in TypeScript does.
+
 How it was run: VS Code's CLI installed the extension into an isolated
 `--extensions-dir` under `.vscode-test/tsgo/` (with its own
 `--user-data-dir`, so the user's profile is untouched), and a test-host
