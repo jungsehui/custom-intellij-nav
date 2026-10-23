@@ -11,8 +11,8 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Documented — `⌘B` works under TypeScript Go
 
 Measured on VS Code 1.143 with TypeScript Go 1.0.1: definition and usages
-answer exactly as with the built-in TypeScript, in TS, TSX, JS and JSX, so
-Go to Declaration or Usages works either way. Only the refactorings are
+answer in TS, TSX, JS and JSX, with as many results as the built-in
+TypeScript gives, so Go to Declaration or Usages works either way. Only the refactorings are
 missing there. README *Limitations* says so.
 
 ### Changed — maintenance only, nothing you can see
