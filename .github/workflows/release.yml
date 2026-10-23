@@ -54,6 +54,15 @@ jobs:
       - name: Type check
         run: npm run check
 
+      # TypeScript 7 readiness, advisory only. The build stays on 6.0 because
+      # typescript-eslint still requires `<6.1.0`; this step only says early
+      # whether the source would type-check under 7. `continue-on-error`
+      # keeps a failure here from failing the build, but the step still
+      # shows red, and the weekly run surfaces it without anyone pushing.
+      - name: Type check under TypeScript 7 (advisory)
+        continue-on-error: true
+        run: npm run check:ts7
+
       - name: Lint
         run: npm run lint
 

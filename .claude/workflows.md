@@ -123,6 +123,12 @@ used to say the suite was a single smoke test.*
   `ubuntu-latest` moves to it:
   `gh workflow run ci-release -f runner=ubuntu-26.04`. Ubuntu 26.04 passed
   this way on 2026-10-22, and `ubuntu-latest` was already on it that day.
+- `npm run check:ts7` type-checks with TypeScript 7 (`typescript@7`, via
+  npx). CI runs it as an advisory step (`continue-on-error`) after the
+  real type check: the build stays on 6.0 while typescript-eslint requires
+  `<6.1.0`, and this says early whether 7 would accept the source. On
+  2026-10-23, 7.0.2 did: 24 files, no errors, 0.7 s, and a planted
+  `TS2322` in a scratch project was reported, so the clean result counts.
 - npm 11 blocks install scripts until allowed: `@vscode/vsce-sign`'s
   postinstall does not run locally. Harmless here, it only matters for
   signed publishing, which this repo does not do; `vsce package` works.
