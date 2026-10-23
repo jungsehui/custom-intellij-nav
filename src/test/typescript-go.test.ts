@@ -96,14 +96,60 @@ class RecordingLogger extends Logger {
   }
 }
 
-function currentRequest(editor: vscode.TextEditor): BeginRequest {
+/**
+ * Wait until the TypeScript language server answers code-action queries.
+ *
+ * Same method as the wait in run-refactor.test.ts. Used twice here: at the
+ * start of the suite, because on the Linux runner the test files run in a
+ * different order and this file can run before anything has started the
+ * server; and right after flipping `js/ts.experimental.useTsgo`, which is
+ * what actually broke the v3.0.1 tag build (see the test below).
+ */
+async function waitForLanguageServer(): Promise<void> {
+  const doc = await vscode.workspace.openTextDocument({
+    content: "const a = 1 + 2;\n",
+    language: "typescript",
+  });
+  const editor = await vscode.window.showTextDocument(doc, { preview: false });
+  editor.selection = new vscode.Selection(new vscode.Position(0, 10), new vscode.Position(0, 15));
+
+  const deadline = Date.now() + 90_000;
+  let attempts = 0;
+  while (Date.now() < deadline) {
+    attempts += 1;
+    try {
+      const actions = await vscode.commands.executeCommand<vscode.CodeAction[]>(
+        "vscode.executeCodeActionProvider",
+        doc.uri,
+        editor.selection,
+        "refactor.extract.constant",
+      );
+      if (actions && actions.length > 0) {
+        await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+        return;
+      }
+    } catch {
+      // A cancelled probe is not an answer. Try again.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  await vscode.commands.executeCommand("workbench.action.closeAllEditors");
+  assert.fail(`the TypeScript language server never answered after ${attempts} attempts`);
+}
+
+function currentRequest(editor: vscode.TextEditor, logged: string[] = []): BeginRequest {
   const request: EditorRequest = {
     id: 1,
     editor,
     snapshot: captureSnapshot(editor),
     isStale: () => false,
     isSelectionStale: () => false,
-    log: () => undefined,
+    // Kept, so a failure can say what runRefactor saw (an exception's
+    // message lands here, not on the status bar).
+    log: (message) => {
+      logged.push(message);
+    },
   };
   return () => request;
 }
@@ -115,6 +161,11 @@ suite("TypeScript Go: when it counts as serving", () => {
   // message must not change either. This test host has no TypeScript Go;
   // the case where it is installed is what `npm run probe:tsgo` checks.
   const section = (): vscode.WorkspaceConfiguration => vscode.workspace.getConfiguration("js/ts");
+
+  suiteSetup(async function () {
+    this.timeout(120000);
+    await waitForLanguageServer();
+  });
 
   teardown(async () => {
     await section().update("experimental.useTsgo", undefined, vscode.ConfigurationTarget.Workspace);
@@ -138,17 +189,33 @@ suite("TypeScript Go: when it counts as serving", () => {
     assert.strictEqual(isTypeScriptGoServing(), false);
   });
 
-  test("runRefactor keeps the usual message in that case", async () => {
+  test("runRefactor keeps the usual message in that case", async function () {
+    this.timeout(120000);
     await section().update("experimental.useTsgo", true, vscode.ConfigurationTarget.Workspace);
+    // Flipping the setting makes the built-in TypeScript extension react, and
+    // a query sent straight after it came back `Canceled`: logged on
+    // 2026-10-22, locally and in the v3.0.1 tag build, where it read as
+    // "Extract Variable failed (see Output)". A cold server was the first
+    // guess and was wrong; warming it at suite start did not help. So wait
+    // until the server answers again. It has to: with no TypeScript Go
+    // installed, the built-in TypeScript keeps serving, which is this test's
+    // premise, and the wait only returns once it offers a refactoring.
+    await waitForLanguageServer();
+
     // An empty line: nothing to extract, so the prefetch comes back empty and
     // the outcome is what reaches the status bar.
     const doc = await vscode.workspace.openTextDocument({ content: "\n", language: "typescript" });
     const editor = await vscode.window.showTextDocument(doc, { preview: false });
     const logger = new RecordingLogger();
+    const logged: string[] = [];
 
-    await runRefactor("extractVariable", currentRequest(editor), createVscodeCommandRunner(vscode), logger);
+    await runRefactor("extractVariable", currentRequest(editor, logged), createVscodeCommandRunner(vscode), logger);
     logger.dispose();
 
-    assert.deepStrictEqual(logger.statuses, ["No Extract Variable available for typescript"]);
+    assert.deepStrictEqual(
+      logger.statuses,
+      ["No Extract Variable available for typescript"],
+      `runRefactor logged: ${JSON.stringify(logged)}`,
+    );
   });
 });
